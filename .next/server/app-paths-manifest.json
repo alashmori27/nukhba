@@ -1,0 +1,9 @@
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/page": "app/page.js",
+  "/company/candidates/page": "app/company/candidates/page.js",
+  "/company/post-job/page": "app/company/post-job/page.js",
+  "/company/dashboard/page": "app/company/dashboard/page.js",
+  "/api/chat/route": "app/api/chat/route.js",
+  "/interview/page": "app/interview/page.js"
+}
