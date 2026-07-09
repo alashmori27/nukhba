@@ -10,8 +10,8 @@ const C = {
 
 export default function CandidateJobs() {
   const router = useRouter()
-  const [user, setUser]   = useState(null)
-  const [jobs, setJobs]   = useState([])
+  const [user, setUser]     = useState(null)
+  const [jobs, setJobs]     = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
 
@@ -24,23 +24,24 @@ export default function CandidateJobs() {
 
   async function fetchJobs() {
     try {
-      const res = await fetch('/api/jobs')
+      const res  = await fetch('/api/jobs')
       const data = await res.json()
       setJobs(data.jobs || [])
     } catch(e) { console.error(e) }
     setLoading(false)
   }
 
-  function startJobInterview(job) {
+  function applyToJob(job) {
+    // حفظ بيانات الوظيفة في sessionStorage
     sessionStorage.setItem('nukhba_job', JSON.stringify(job))
-    router.push('/candidate/interview?job=' + job.id)
+    // التوجيه لصفحة المقابلة مع ID الوظيفة
+    router.push(`/candidate/interview?jobId=${job.id}`)
   }
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
-      {/* Nav */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
         <Link href="/candidate/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}` }}>← لوحة التحكم</Link>
@@ -67,7 +68,7 @@ export default function CandidateJobs() {
 
         <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
           {jobs.map(job => (
-            <div key={job.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:24, transition:'border-color .2s', cursor:'pointer' }}
+            <div key={job.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:24, transition:'border-color .2s' }}
               onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
               onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
             >
@@ -75,44 +76,41 @@ export default function CandidateJobs() {
                 <div style={{ flex:1 }}>
                   <div style={{ fontSize:18, fontWeight:700, color:C.text, marginBottom:6 }}>{job.title}</div>
                   <div style={{ fontSize:13, color:C.gold, marginBottom:10 }}>{job.company_name}</div>
-                  <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:14,
-                    display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden'
-                  }}>{job.description}</div>
-
+                  <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:14, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{job.description}</div>
                   <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
                     {job.location && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>📍 {job.location}</span>}
                     {job.salary_range && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>💰 {job.salary_range}</span>}
-                    {job.questions?.length && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:'rgba(200,160,74,.1)', border:`1px solid rgba(200,160,74,.3)`, color:C.gold }}>🎙️ {job.questions.length} أسئلة مقابلة</span>}
+                    {job.questions?.length > 0 && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:'rgba(200,160,74,.1)', border:`1px solid rgba(200,160,74,.3)`, color:C.gold }}>🎙️ {job.questions.length} أسئلة مقابلة</span>}
                   </div>
                 </div>
-
                 <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
-                  <button onClick={() => setSelected(selected?.id===job.id ? null : job)} style={{ padding:'8px 18px', borderRadius:9, fontSize:13, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  <button onClick={() => setSelected(selected?.id===job.id?null:job)} style={{ padding:'8px 18px', borderRadius:9, fontSize:13, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                     {selected?.id===job.id ? 'إخفاء ▲' : 'التفاصيل ▼'}
                   </button>
-                  <button onClick={() => startJobInterview(job)} style={{ padding:'8px 18px', borderRadius:9, fontSize:13, fontWeight:700, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  <button onClick={() => applyToJob(job)} style={{ padding:'8px 18px', borderRadius:9, fontSize:13, fontWeight:700, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                     تقدّم الآن
                   </button>
                 </div>
               </div>
 
-              {/* Expanded details */}
               {selected?.id===job.id && (
                 <div style={{ marginTop:20, paddingTop:20, borderTop:`1px solid ${C.border}` }}>
                   <div style={{ marginBottom:16 }}>
                     <div style={{ fontSize:11, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:8 }}>المتطلبات</div>
                     <div style={{ fontSize:13, color:C.text, lineHeight:1.8 }}>{job.requirements}</div>
                   </div>
-                  <div>
-                    <div style={{ fontSize:11, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:10 }}>أسئلة المقابلة</div>
-                    {job.questions?.map((q, i) => (
-                      <div key={i} style={{ display:'flex', gap:10, marginBottom:8, alignItems:'flex-start' }}>
-                        <div style={{ width:22, height:22, borderRadius:'50%', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#06060e', flexShrink:0 }}>{i+1}</div>
-                        <div style={{ fontSize:13, color:C.muted, lineHeight:1.7 }}>{q}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={() => startJobInterview(job)} style={{ marginTop:16, width:'100%', padding:'12px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  {job.questions?.length > 0 && (
+                    <div>
+                      <div style={{ fontSize:11, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:10 }}>أسئلة المقابلة</div>
+                      {job.questions.map((q,i) => (
+                        <div key={i} style={{ display:'flex', gap:10, marginBottom:8, alignItems:'flex-start' }}>
+                          <div style={{ width:22, height:22, borderRadius:'50%', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:11, fontWeight:700, color:'#06060e', flexShrink:0 }}>{i+1}</div>
+                          <div style={{ fontSize:13, color:C.muted, lineHeight:1.7 }}>{q}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button onClick={() => applyToJob(job)} style={{ marginTop:16, width:'100%', padding:'12px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                     🎙️ ابدأ مقابلة هذه الوظيفة
                   </button>
                 </div>
