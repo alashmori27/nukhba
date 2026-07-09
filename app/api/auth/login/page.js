@@ -164,5 +164,6 @@ export default function LoginPage() {
 
       <Link href="/" style={{ marginTop:20, fontSize:13, color:C.muted }}>← الرئيسية</Link>
     </div>
+    
   )
 }
