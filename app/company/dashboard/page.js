@@ -5,8 +5,14 @@ import { useRouter } from 'next/navigation'
 
 export default function CompanyDashboard() {
   const router = useRouter()
-  const [user, setUser] = useState(null)
+  const [user, setUser]   = useState(null)
   const [stats, setStats] = useState({ jobs:0, candidates:0, interviews:0 })
+  const [loading, setLoading] = useState(true)
+
+  const C = {
+    bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
+    border:'#252538', gold:'#c8a04a', goldDk:'#7a5e28', text:'#ede8df', muted:'#7a7690'
+  }
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -14,11 +20,28 @@ export default function CompanyDashboard() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
+    fetchStats(parsed.id)
   }, [])
 
-  const C = {
-    bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
-    border:'#252538', gold:'#c8a04a', goldDk:'#7a5e28', text:'#ede8df', muted:'#7a7690'
+  async function fetchStats(companyId) {
+    try {
+      // جلب الوظائف
+      const jobsRes = await fetch('/api/jobs')
+      const jobsData = await jobsRes.json()
+      const myJobs = (jobsData.jobs || []).filter(j => j.company_id === companyId)
+
+      // جلب المرشحين
+      const candsRes = await fetch('/api/candidates')
+      const candsData = await candsRes.json()
+      const candidates = candsData.candidates || []
+
+      setStats({
+        jobs: myJobs.length,
+        candidates: candidates.length,
+        interviews: candidates.length,
+      })
+    } catch(e) { console.error(e) }
+    setLoading(false)
   }
 
   function logout() {
@@ -30,7 +53,7 @@ export default function CompanyDashboard() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet"/>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
       {/* Nav */}
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
@@ -48,9 +71,9 @@ export default function CompanyDashboard() {
         {/* Stats */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:32 }}>
           {[
-            { icon:'📋', num:stats.jobs,       label:'وظائف منشورة' },
-            { icon:'👥', num:stats.candidates,  label:'متقدمون' },
-            { icon:'🎙️', num:stats.interviews,  label:'مقابلات مكتملة' },
+            { icon:'📋', num: loading ? '...' : stats.jobs,        label:'وظائف منشورة' },
+            { icon:'👥', num: loading ? '...' : stats.candidates,  label:'متقدمون' },
+            { icon:'🎙️', num: loading ? '...' : stats.interviews,  label:'مقابلات مكتملة' },
           ].map(s => (
             <div key={s.label} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:'24px 20px', textAlign:'center' }}>
               <div style={{ fontSize:28, marginBottom:8 }}>{s.icon}</div>
@@ -62,8 +85,6 @@ export default function CompanyDashboard() {
 
         {/* Actions */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
-
-          {/* Post Job */}
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
             onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
@@ -78,7 +99,6 @@ export default function CompanyDashboard() {
             </Link>
           </div>
 
-          {/* Browse Candidates */}
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
             onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
