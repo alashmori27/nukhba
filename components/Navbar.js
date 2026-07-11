@@ -1,10 +1,9 @@
 'use client'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 export default function Navbar() {
-  const path = useRouter()
   const [user, setUser] = useState(null)
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -25,15 +24,13 @@ export default function Navbar() {
       </Link>
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
         {user ? (
-          <>
-            <Link href={user.role==='company'?'/company/dashboard':'/candidate/dashboard'}
-              style={{ padding:'8px 18px', borderRadius:8, fontSize:13, fontWeight:700, border:'1px solid #252538', color:'#7a7690', background:'transparent' }}>
-              لوحة التحكم
-            </Link>
-          </>
+          <Link href={user.role==='company'?'/company/dashboard':'/candidate/dashboard'}
+            style={{ padding:'8px 18px', borderRadius:8, fontSize:13, fontWeight:700, border:'1px solid #252538', color:'#7a7690', background:'transparent' }}>
+            لوحة التحكم
+          </Link>
         ) : (
           <>
-            <Link href="/company/dashboard" style={{ padding:'8px 18px', borderRadius:8, fontSize:13, fontWeight:700, border:'1px solid #252538', color:'#7a7690', background:'transparent' }}>للشركات</Link>
+            <Link href="/for-companies" style={{ padding:'8px 18px', borderRadius:8, fontSize:13, fontWeight:700, border:'1px solid #252538', color:'#7a7690', background:'transparent' }}>للشركات</Link>
             <Link href="/auth/login" style={{ padding:'8px 20px', borderRadius:8, fontSize:13, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', border:'none' }}>تسجيل الدخول</Link>
           </>
         )}
