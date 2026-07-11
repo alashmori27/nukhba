@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [email, setEmail]   = useState('')
   const [password, setPass] = useState('')
   const [name, setName]     = useState('')
+  const [phone, setPhone]   = useState('')
   const [crn, setCrn]       = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
@@ -36,9 +37,9 @@ export default function LoginPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode, email, password, name, role: tab, crn })
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ mode, email, password, name, role:tab, crn, phone })
       })
       const data = await res.json()
       if (data.error) { setError(data.error); setLoading(false); return }
@@ -55,7 +56,7 @@ export default function LoginPage() {
     }
   }
 
-  const onKey = e => { if (e.key === 'Enter') handleSubmit() }
+  const onKey = e => { if (e.key==='Enter') handleSubmit() }
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:24, fontFamily:"'Tajawal',sans-serif" }}>
@@ -66,15 +67,17 @@ export default function LoginPage() {
         <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:12, letterSpacing:5, color:C.muted, textTransform:'uppercase' }}>Nukhba</div>
       </Link>
 
-      <div style={{ width:'100%', maxWidth:420, background:C.card, border:'1px solid #252538', borderRadius:20, overflow:'hidden' }}>
+      <div style={{ width:'100%', maxWidth:420, background:C.card, border:`1px solid ${C.border}`, borderRadius:20, overflow:'hidden' }}>
+
+        {/* Tab */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr' }}>
           {[['candidate','باحث عن عمل'],['company','شركة']].map(([val,label]) => (
-            <button key={val} onClick={() => { setTab(val); setError(''); setCrn('') }} style={{
+            <button key={val} onClick={() => { setTab(val); setError(''); setCrn(''); setPhone('') }} style={{
               padding:'15px', fontSize:14, fontWeight:700, cursor:'pointer', border:'none',
               fontFamily:"'Tajawal',sans-serif",
               background: tab===val ? 'linear-gradient(135deg,#7a5e28,#c8a04a)' : C.surface,
               color: tab===val ? '#06060e' : C.muted,
-              borderBottom: `2px solid ${tab===val ? C.gold : C.border}`,
+              borderBottom:`2px solid ${tab===val?C.gold:C.border}`,
             }}>{label}</button>
           ))}
         </div>
@@ -96,10 +99,28 @@ export default function LoginPage() {
                 </label>
                 <input value={name} onChange={e => setName(e.target.value)} onKeyDown={onKey}
                   placeholder={tab==='candidate' ? 'محمد العتيبي' : 'شركة الأمل للتوظيف'}
-                  style={{ width:'100%', background:C.surface, border:'1px solid #252538', borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+                  style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
               </div>
             )}
 
+            {/* رقم الجوال — للمتقدمين فقط عند التسجيل */}
+            {mode==='register' && tab==='candidate' && (
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>
+                  رقم الجوال <span style={{ color:'#7a7690', fontSize:11 }}>(اختياري)</span>
+                </label>
+                <input
+                  value={phone}
+                  onChange={e => setPhone(e.target.value.replace(/\D/g,'').slice(0,10))}
+                  onKeyDown={onKey}
+                  placeholder="05XXXXXXXX"
+                  dir="ltr"
+                  maxLength={10}
+                  style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+              </div>
+            )}
+
+            {/* السجل التجاري للشركات */}
             {mode==='register' && tab==='company' && (
               <div>
                 <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>رقم السجل التجاري</label>
@@ -110,18 +131,9 @@ export default function LoginPage() {
                   placeholder="7XXXXXXXXX"
                   dir="ltr"
                   maxLength={10}
-                  style={{
-                    width:'100%', background:C.surface, fontSize:14,
-                    fontFamily:"'Tajawal',sans-serif",
-                    border:`1px solid ${crn.length>0 && !validateCRN(crn) ? '#c94a4a' : '#252538'}`,
-                    borderRadius:10, padding:'11px 14px', color:C.text
-                  }}/>
-                {crn.length>0 && !validateCRN(crn) && (
-                  <p style={{ fontSize:11, color:'#c94a4a', marginTop:4 }}>يجب أن يبدأ بـ 7 ويتكون من 10 أرقام</p>
-                )}
-                {validateCRN(crn) && (
-                  <p style={{ fontSize:11, color:'#4a9c6e', marginTop:4 }}>✓ رقم السجل صحيح</p>
-                )}
+                  style={{ width:'100%', background:C.surface, border:`1px solid ${crn.length>0&&!validateCRN(crn)?'#c94a4a':C.border}`, borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+                {crn.length>0 && !validateCRN(crn) && <p style={{ fontSize:11, color:'#c94a4a', marginTop:4 }}>يجب أن يبدأ بـ 7 ويتكون من 10 أرقام</p>}
+                {validateCRN(crn) && <p style={{ fontSize:11, color:'#4a9c6e', marginTop:4 }}>✓ رقم السجل صحيح</p>}
               </div>
             )}
 
@@ -129,14 +141,14 @@ export default function LoginPage() {
               <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>البريد الإلكتروني</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} onKeyDown={onKey}
                 placeholder="example@email.com" dir="ltr"
-                style={{ width:'100%', background:C.surface, border:'1px solid #252538', borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
             </div>
 
             <div>
               <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>كلمة المرور</label>
               <input type="password" value={password} onChange={e => setPass(e.target.value)} onKeyDown={onKey}
                 placeholder="••••••••" dir="ltr"
-                style={{ width:'100%', background:C.surface, border:'1px solid #252538', borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
             </div>
           </div>
 
@@ -145,19 +157,19 @@ export default function LoginPage() {
 
           <button onClick={handleSubmit} disabled={loading} style={{
             width:'100%', marginTop:18, padding:'13px', borderRadius:10, border:'none',
-            background: loading ? '#252538' : 'linear-gradient(135deg,#7a5e28,#c8a04a)',
-            color: loading ? C.muted : '#06060e',
-            fontSize:15, fontWeight:800, cursor: loading ? 'default' : 'pointer',
+            background:loading?C.border:'linear-gradient(135deg,#7a5e28,#c8a04a)',
+            color:loading?C.muted:'#06060e',
+            fontSize:15, fontWeight:800, cursor:loading?'default':'pointer',
             fontFamily:"'Tajawal',sans-serif",
           }}>
-            {loading ? '...' : mode==='login' ? 'تسجيل الدخول' : 'إنشاء الحساب'}
+            {loading?'...':mode==='login'?'تسجيل الدخول':'إنشاء الحساب'}
           </button>
 
           <p style={{ textAlign:'center', marginTop:16, fontSize:13, color:C.muted }}>
-            {mode==='login' ? 'ما عندك حساب؟ ' : 'عندك حساب؟ '}
-            <button onClick={() => { setMode(mode==='login'?'register':'login'); setError(''); setSuccess(''); setCrn('') }}
+            {mode==='login'?'ما عندك حساب؟ ':'عندك حساب؟ '}
+            <button onClick={() => { setMode(mode==='login'?'register':'login'); setError(''); setSuccess(''); setCrn(''); setPhone('') }}
               style={{ background:'none', border:'none', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", fontSize:13, fontWeight:700 }}>
-              {mode==='login' ? 'أنشئ حساباً' : 'سجّل دخولك'}
+              {mode==='login'?'أنشئ حساباً':'سجّل دخولك'}
             </button>
           </p>
         </div>
