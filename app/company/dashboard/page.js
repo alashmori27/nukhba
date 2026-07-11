@@ -31,8 +31,8 @@ export default function CompanyDashboard() {
       ])
       const jobsData  = await jobsRes.json()
       const candsData = await candsRes.json()
-      const myJobs    = (jobsData.jobs || []).filter(j => j.company_id === companyId)
-      const cands     = candsData.candidates || []
+      const myJobs = (jobsData.jobs || []).filter(j => j.company_id === companyId)
+      const cands  = candsData.candidates || []
       setStats({ jobs: myJobs.length, candidates: cands.length, interviews: cands.length })
     } catch(e) { console.error(e) }
     setLoading(false)
@@ -46,9 +46,9 @@ export default function CompanyDashboard() {
   if (!user) return null
 
   const statCards = [
-    { icon:'📋', num: stats.jobs,        label:'وظائف منشورة', link:'/company/post-job' },
-    { icon:'👥', num: stats.candidates,  label:'متقدمون',       link:'/company/candidates' },
-    { icon:'🎙️', num: stats.interviews,  label:'مقابلات مكتملة', link:'/company/candidates' },
+    { icon:'📋', num:stats.jobs,       label:'وظائف منشورة',    link:'/company/jobs' },
+    { icon:'👥', num:stats.candidates, label:'متقدمون',          link:'/company/candidates' },
+    { icon:'🎙️', num:stats.interviews, label:'مقابلات مكتملة',  link:'/company/candidates' },
   ]
 
   return (
@@ -67,7 +67,7 @@ export default function CompanyDashboard() {
         <h1 style={{ fontSize:28, fontWeight:800, color:C.text, marginBottom:4 }}>لوحة التحكم</h1>
         <p style={{ fontSize:14, color:C.muted, marginBottom:36 }}>أنشئ وظيفة أو تصفح المرشحين</p>
 
-        {/* Stats — قابلة للضغط */}
+        {/* Stats قابلة للضغط */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:16, marginBottom:32 }}>
           {statCards.map(s => (
             <Link key={s.label} href={s.link} style={{ textDecoration:'none' }}>
@@ -93,7 +93,7 @@ export default function CompanyDashboard() {
           >
             <div style={{ fontSize:36, marginBottom:16 }}>📢</div>
             <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:8 }}>انشر وظيفة</div>
-            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>أنشئ إعلان وظيفة — الذكاء الاصطناعي يبني أسئلة مقابلة مخصصة لمتطلباتك تلقائياً</div>
+            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>أنشئ إعلان وظيفة — الذكاء الاصطناعي يبني أسئلة مقابلة مخصصة أو اكتب أسئلتك بنفسك</div>
             <Link href="/company/post-job" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e' }}>إنشاء وظيفة</Link>
           </div>
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
@@ -102,7 +102,7 @@ export default function CompanyDashboard() {
           >
             <div style={{ fontSize:36, marginBottom:16 }}>🔍</div>
             <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:8 }}>تصفح المرشحين</div>
-            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>تصفح ملفات المرشحين العامة — مرتبة حسب التقييم ومصفّاة حسب تخصصك</div>
+            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>تصفح ملفات المرشحين — مرتبة حسب التقييم ومصفّاة حسب تخصصك</div>
             <Link href="/company/candidates" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, border:`1px solid ${C.gold}`, color:C.gold, background:'transparent' }}>تصفح المرشحين</Link>
           </div>
         </div>
