@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState(null)
-  const [lang, setLang]       = useState('ar')
-  const [downloading, setDownloading] = useState(null)
+  const [downloading, setDownloading] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -14,230 +13,456 @@ export default function ProfilePage() {
     if (stored) setProfile(JSON.parse(stored))
   }, [])
 
-  function downloadPDF() {
-    window.print()
-  }
-
   async function downloadWord() {
-    setDownloading('word')
+    setDownloading(true)
     try {
-      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = await import('docx')
-      const p    = profile
-      const isAr = lang === 'ar'
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle, TableCell, TableRow, Table, WidthType, ShadingType } = await import('docx')
+      const p = profile
+
+      const goldColor = 'C8A04A'
+      const darkColor = '1a1a2e'
+
+      // ── Arabic Page ──
+      const arabicChildren = [
+        // Header
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: p.name || '', bold:true, size:52, color: goldColor, font:'Tajawal' })]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: p.specialization || '', size:28, color:'666666', font:'Tajawal' })]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: `📍 ${p.location||''} | 📧 ${p.availability||''}`, size:22, color:'888888', font:'Tajawal' })]
+        }),
+        new Paragraph({ text:'' }),
+        new Paragraph({ text:'' }),
+
+        // الملخص المهني
+        new Paragraph({ children:[new TextRun({ text:'الملخص المهني', bold:true, size:28, color:goldColor, font:'Tajawal' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+        new Paragraph({ text:'' }),
+        new Paragraph({ children:[new TextRun({ text:p.summary_ar||'', size:22, font:'Tajawal' })], alignment:AlignmentType.RIGHT }),
+        new Paragraph({ text:'' }),
+
+        // المعلومات الأساسية
+        new Paragraph({ children:[new TextRun({ text:'المعلومات الأساسية', bold:true, size:28, color:goldColor, font:'Tajawal' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+        new Paragraph({ text:'' }),
+        ...[
+          ['سنوات الخبرة', p.experience_years],
+          ['آخر وظيفة', p.last_role],
+          ['المؤهل العلمي', p.qualification],
+          ['الراتب المتوقع', p.salary_expectation],
+          ['الإتاحة للعمل', p.availability],
+          ['الاستعداد للتنقل', p.open_to_relocation],
+        ].filter(([,v]) => v).map(([l,v]) => new Paragraph({
+          alignment: AlignmentType.RIGHT,
+          children: [
+            new TextRun({ text: `${l}: `, bold:true, size:22, color:goldColor, font:'Tajawal' }),
+            new TextRun({ text: v||'—', size:22, font:'Tajawal' })
+          ]
+        })),
+        new Paragraph({ text:'' }),
+
+        // الإنجازات
+        ...(p.achievements?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'الإنجازات والقيمة المضافة', bold:true, size:28, color:goldColor, font:'Tajawal' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          ...p.achievements.map(a => new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            bullet: { level:0 },
+            children: [new TextRun({ text:a, size:22, font:'Tajawal' })]
+          })),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // نقاط القوة
+        ...(p.strengths?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'نقاط القوة', bold:true, size:28, color:goldColor, font:'Tajawal' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          ...p.strengths.map(s => new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            bullet: { level:0 },
+            children: [new TextRun({ text:s, size:22, font:'Tajawal' })]
+          })),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // المهارات
+        ...(p.soft_skills?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'المهارات الشخصية', bold:true, size:28, color:goldColor, font:'Tajawal' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [new TextRun({ text: p.soft_skills.join('  •  '), size:22, font:'Tajawal' })]
+          }),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // القيم المهنية
+        ...(p.work_values?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'القيم المهنية', bold:true, size:28, color:goldColor, font:'Tajawal' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [new TextRun({ text: p.work_values.join('  •  '), size:22, font:'Tajawal' })]
+          }),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // Footer Arabic
+        new Paragraph({ text:'' }),
+        new Paragraph({ text:'' }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text:'تم إنشاء هذا الملف بواسطة نخبة · nukhbahr.com', size:16, color:'aaaaaa', italics:true, font:'Tajawal' })]
+        }),
+      ]
+
+      // ── English Page (page break at start) ──
+      const englishChildren = [
+        // Page break
+        new Paragraph({ pageBreakBefore: true, text:'' }),
+
+        // Header
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: p.name || '', bold:true, size:52, color:goldColor })]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: p.specialization || '', size:28, color:'666666' })]
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text: `📍 ${p.location||''} | Available: ${p.availability||''}`, size:22, color:'888888' })]
+        }),
+        new Paragraph({ text:'' }),
+        new Paragraph({ text:'' }),
+
+        // Professional Summary
+        new Paragraph({ children:[new TextRun({ text:'PROFESSIONAL SUMMARY', bold:true, size:28, color:goldColor })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+        new Paragraph({ text:'' }),
+        new Paragraph({ children:[new TextRun({ text:p.summary_en||'', size:22 })] }),
+        new Paragraph({ text:'' }),
+
+        // Key Information
+        new Paragraph({ children:[new TextRun({ text:'KEY INFORMATION', bold:true, size:28, color:goldColor })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+        new Paragraph({ text:'' }),
+        ...[
+          ['Experience', p.experience_years],
+          ['Last Role', p.last_role],
+          ['Qualification', p.qualification],
+          ['Salary Expected', p.salary_expectation],
+          ['Availability', p.availability],
+          ['Relocation', p.open_to_relocation],
+        ].filter(([,v]) => v).map(([l,v]) => new Paragraph({
+          children: [
+            new TextRun({ text:`${l}: `, bold:true, size:22, color:goldColor }),
+            new TextRun({ text: v||'—', size:22 })
+          ]
+        })),
+        new Paragraph({ text:'' }),
+
+        // Achievements
+        ...(p.achievements?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'ACHIEVEMENTS', bold:true, size:28, color:goldColor })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          ...p.achievements.map(a => new Paragraph({ bullet:{level:0}, children:[new TextRun({ text:a, size:22 })] })),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // Strengths
+        ...(p.strengths?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'STRENGTHS', bold:true, size:28, color:goldColor })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          ...p.strengths.map(s => new Paragraph({ bullet:{level:0}, children:[new TextRun({ text:s, size:22 })] })),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // Skills
+        ...(p.soft_skills?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'SKILLS', bold:true, size:28, color:goldColor })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          new Paragraph({ children:[new TextRun({ text:p.soft_skills.join('  •  '), size:22 })] }),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // Work Values
+        ...(p.work_values?.length > 0 ? [
+          new Paragraph({ children:[new TextRun({ text:'PROFESSIONAL VALUES', bold:true, size:28, color:goldColor })], border:{ bottom:{ style:BorderStyle.SINGLE, size:6, color:goldColor } } }),
+          new Paragraph({ text:'' }),
+          new Paragraph({ children:[new TextRun({ text:p.work_values.join('  •  '), size:22 })] }),
+          new Paragraph({ text:'' }),
+        ] : []),
+
+        // Footer English
+        new Paragraph({ text:'' }),
+        new Paragraph({ text:'' }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ text:'Generated by Nukhba · nukhbahr.com', size:16, color:'aaaaaa', italics:true })]
+        }),
+      ]
 
       const doc = new Document({
         sections: [{
-          properties: {},
-          children: [
-            new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.name||'', bold:true, size:40, color:'C8A04A' })] }),
-            new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.specialization||'', size:24, color:'888888' })] }),
-            new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:`${p.location||''} | Score: ${p.overall_score||0}/100`, size:20, color:'888888' })] }),
-            new Paragraph({ text:'' }),
-
-            new Paragraph({ heading:HeadingLevel.HEADING_2, children:[new TextRun({ text:'الملخص المهني', color:'C8A04A', bold:true, size:24 })] }),
-            new Paragraph({ children:[new TextRun({ text:isAr?(p.summary_ar||''):(p.summary_en||''), size:20 })] }),
-            new Paragraph({ text:'' }),
-
-            new Paragraph({ heading:HeadingLevel.HEADING_2, children:[new TextRun({ text:'المعلومات الأساسية', color:'C8A04A', bold:true, size:24 })] }),
-            ...[
-              ['سنوات الخبرة', p.experience_years],
-              ['آخر وظيفة', p.last_role],
-              ['المؤهل', p.qualification],
-              ['الراتب المتوقع', p.salary_expectation],
-              ['الإتاحة', p.availability],
-              ['التنقل', p.open_to_relocation],
-            ].map(([l,v]) => new Paragraph({ children:[
-              new TextRun({ text:l+': ', bold:true, size:20 }),
-              new TextRun({ text:v||'—', size:20 })
-            ]})),
-            new Paragraph({ text:'' }),
-
-            ...(p.achievements?.length>0?[
-              new Paragraph({ heading:HeadingLevel.HEADING_2, children:[new TextRun({ text:'الإنجازات', color:'C8A04A', bold:true, size:24 })] }),
-              ...p.achievements.map(a => new Paragraph({ bullet:{level:0}, children:[new TextRun({ text:a, size:20 })] })),
-              new Paragraph({ text:'' }),
-            ]:[]),
-
-            ...(p.strengths?.length>0?[
-              new Paragraph({ heading:HeadingLevel.HEADING_2, children:[new TextRun({ text:'نقاط القوة', color:'C8A04A', bold:true, size:24 })] }),
-              ...p.strengths.map(s => new Paragraph({ bullet:{level:0}, children:[new TextRun({ text:s, size:20 })] })),
-              new Paragraph({ text:'' }),
-            ]:[]),
-
-            ...(p.soft_skills?.length>0?[
-              new Paragraph({ heading:HeadingLevel.HEADING_2, children:[new TextRun({ text:'المهارات', color:'C8A04A', bold:true, size:24 })] }),
-              new Paragraph({ children:[new TextRun({ text:p.soft_skills.join(' • '), size:20 })] }),
-            ]:[]),
-
-            new Paragraph({ text:'' }),
-            new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:'Generated by Nukhba · nukhba-inky.vercel.app', size:16, color:'888888', italics:true })] }),
-          ]
+          properties: {
+            page: {
+              margin: { top:1000, right:1000, bottom:1000, left:1000 }
+            }
+          },
+          children: [...arabicChildren, ...englishChildren]
         }]
       })
 
       const blob = await Packer.toBlob(doc)
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
-      a.href=url; a.download=`${p.name||'CV'}-Nukhba.docx`; a.click()
+      a.href = url
+      a.download = `${p.name||'CV'}-Nukhba.docx`
+      a.click()
       URL.revokeObjectURL(url)
-    } catch(e) { alert('خطأ في إنشاء Word: ' + e.message) }
-    setDownloading(null)
+    } catch(e) {
+      alert('خطأ: ' + e.message)
+    }
+    setDownloading(false)
+  }
+
+  function printCV() {
+    window.print()
   }
 
   if (!profile) return (
     <div style={{ minHeight:'100vh', background:'#080810', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, fontFamily:"'Tajawal',sans-serif" }}>
       <div style={{ fontSize:48 }}>🔍</div>
       <p style={{ color:'#7a7690', fontSize:16 }}>لا يوجد ملف — ابدأ مقابلة أولاً</p>
-      <Link href="/candidate/interview" style={{ padding:'12px 28px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e' }}>ابدأ المقابلة</Link>
+      <Link href="/candidate/interview" style={{ padding:'12px 28px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>ابدأ المقابلة</Link>
     </div>
   )
 
-  const sc      = profile.overall_score >= 80 ? '#4a9c6e' : profile.overall_score >= 60 ? '#c8a04a' : '#c94a4a'
-  const circ    = 2 * Math.PI * 28
-  const dash    = circ - (profile.overall_score / 100) * circ
-  const initial = (profile.name || '؟')[0]
-  const isAr    = lang === 'ar'
+  const p      = profile
+  const initial = (p.name||'؟')[0]
 
   return (
     <>
-      {/* Print CSS */}
+      {/* Print Styles */}
       <style>{`
         @media print {
-          body { background: white !important; color: #111 !important; font-family: 'Tajawal', sans-serif; }
-          .no-print { display: none !important; }
-          .print-card { background: white !important; border: none !important; box-shadow: none !important; border-radius: 0 !important; }
-          .print-header { background: #c8a04a !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .print-section { border-bottom: 1px solid #eee !important; }
-          .print-label { color: #c8a04a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-          @page { margin: 15mm; size: A4; }
+          .no-print { display:none!important }
+          .print-page { page-break-after: always }
+          body { background:white!important; font-family:'Tajawal',sans-serif; }
+          .cv-section-title { color:#C8A04A!important; border-bottom:2px solid #C8A04A!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          .cv-header-bg { background:linear-gradient(135deg,#1a1a2e,#2a1a0e)!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+          @page { margin:15mm; size:A4; }
+          @page :first { margin:15mm; }
+        }
+        @media screen {
+          .cv-ar, .cv-en { max-width:800px; margin:0 auto 40px; background:#181828; border:1px solid #252538; border-radius:16px; overflow:hidden; }
         }
       `}</style>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
-      <div style={{ minHeight:'100vh', background:'#080810', fontFamily:"'Tajawal',sans-serif" }}>
-        <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+      {/* Top bar */}
+      <div className="no-print" style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:'rgba(8,8,16,.95)', backdropFilter:'blur(16px)', borderBottom:'1px solid #252538' }}>
+        <Link href="/" style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', textDecoration:'none' }}>نخبة</Link>
+        <div style={{ display:'flex', gap:10 }}>
+          <Link href="/candidate/dashboard" style={{ padding:'7px 16px', borderRadius:8, fontSize:13, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>لوحة التحكم</Link>
+          <Link href="/candidate/interview" style={{ padding:'7px 16px', borderRadius:8, fontSize:13, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>مقابلة جديدة</Link>
+        </div>
+      </div>
 
-        {/* Top bar */}
-        <div className="no-print" style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:'rgba(8,8,16,.92)', backdropFilter:'blur(16px)', borderBottom:'1px solid #252538' }}>
-          <Link href="/" style={{ display:'flex', alignItems:'baseline', gap:8 }}>
-            <span style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</span>
-          </Link>
+      <div style={{ background:'#080810', minHeight:'100vh', padding:'32px 24px 60px' }}>
+
+        {/* Download buttons */}
+        <div className="no-print" style={{ maxWidth:800, margin:'0 auto 28px', display:'flex', gap:12, flexWrap:'wrap', alignItems:'center', justifyContent:'space-between' }}>
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:'#ede8df', marginBottom:4 }}>ملفك الاحترافي</div>
+            <div style={{ fontSize:13, color:'#7a7690' }}>صفحة عربية + صفحة إنجليزية</div>
+          </div>
           <div style={{ display:'flex', gap:10 }}>
-            <Link href="/candidate/interview" style={{ padding:'7px 16px', borderRadius:8, fontSize:13, fontWeight:700, border:'1px solid #252538', color:'#7a7690', background:'transparent' }}>مقابلة جديدة</Link>
-            <Link href="/candidate/dashboard" style={{ padding:'7px 16px', borderRadius:8, fontSize:13, fontWeight:700, border:'1px solid #252538', color:'#7a7690', background:'transparent' }}>لوحة التحكم</Link>
+            <button onClick={printCV} style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', border:'none', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+              📄 تحميل PDF
+            </button>
+            <button onClick={downloadWord} disabled={downloading} style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'transparent', border:'1px solid #c8a04a', color:'#c8a04a', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity:downloading?.7:1 }}>
+              {downloading ? '⏳...' : '📝 تحميل Word'}
+            </button>
           </div>
         </div>
 
-        <div style={{ maxWidth:720, margin:'0 auto', padding:'36px 24px 60px' }}>
+        {/* ── CV عربي ── */}
+        <div className="cv-ar print-page" style={{ fontFamily:"'Tajawal',sans-serif", direction:'rtl' }}>
 
-          {/* Lang toggle */}
-          <div className="no-print" style={{ display:'flex', gap:8, marginBottom:24 }}>
-            {['ar','en'].map(l => (
-              <button key={l} onClick={() => setLang(l)} style={{ padding:'5px 18px', borderRadius:20, fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${lang===l?'#c8a04a':'#252538'}`, background:lang===l?'rgba(200,160,74,.1)':'transparent', color:lang===l?'#c8a04a':'#7a7690' }}>
-                {l==='ar'?'العربية':'English'}
-              </button>
-            ))}
+          {/* Header */}
+          <div className="cv-header-bg" style={{ background:'linear-gradient(135deg,#1a1a2e,#2a1a0e)', padding:'36px 40px', textAlign:'center' }}>
+            <div style={{ width:64, height:64, borderRadius:'50%', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, fontWeight:800, color:'#06060e', margin:'0 auto 16px' }}>{initial}</div>
+            <div style={{ fontSize:28, fontWeight:800, color:'#f8f5ef', marginBottom:6 }}>{p.name}</div>
+            <div style={{ fontSize:16, color:'#c8a04a', marginBottom:8 }}>{p.specialization}</div>
+            <div style={{ fontSize:13, color:'#7a7690' }}>📍 {p.location}</div>
           </div>
 
-          <div className="print-card" style={{ background:'#181828', border:'1px solid #c8a04a', borderRadius:20, overflow:'hidden', direction:isAr?'rtl':'ltr' }}>
+          <div style={{ padding:'32px 40px' }}>
 
-            {/* Header */}
-            <div className="print-header" style={{ background:'linear-gradient(135deg,rgba(122,94,40,.25),rgba(200,160,74,.06))', borderBottom:'1px solid #252538', padding:'28px 32px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:16 }}>
-                <div style={{ width:56, height:56, borderRadius:'50%', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:800, color:'#06060e', flexShrink:0 }}>{initial}</div>
-                <div>
-                  <div style={{ fontSize:20, fontWeight:800, color:'#ede8df' }}>{profile.name}</div>
-                  <div style={{ fontSize:14, color:'#c8a04a', marginTop:4 }}>{profile.specialization}</div>
-                  <div style={{ fontSize:12, color:'#7a7690', marginTop:3 }}>📍 {profile.location}</div>
-                </div>
-              </div>
-              <div style={{ textAlign:'center', flexShrink:0 }}>
-                <div style={{ width:60, height:60, position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                  <svg width="60" height="60" viewBox="0 0 60 60" style={{ position:'absolute', transform:'rotate(-90deg)' }}>
-                    <circle cx="30" cy="30" r="28" fill="none" stroke="#252538" strokeWidth="4"/>
-                    <circle cx="30" cy="30" r="28" fill="none" stroke={sc} strokeWidth="4" strokeDasharray={circ} strokeDashoffset={dash} strokeLinecap="round"/>
-                  </svg>
-                  <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:18, fontWeight:600, color:sc }}>{profile.overall_score}</span>
-                </div>
-                <div style={{ fontSize:10, color:'#7a7690', marginTop:4 }}>تقييم نخبة</div>
-              </div>
+            {/* الملخص */}
+            <div style={{ marginBottom:28 }}>
+              <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>الملخص المهني</div>
+              <p style={{ fontSize:14, color:'#ede8df', lineHeight:1.9 }}>{p.summary_ar}</p>
             </div>
 
-            {/* Summary */}
-            <div className="print-section" style={{ padding:'22px 32px', borderBottom:'1px solid #252538' }}>
-              <div className="print-label" style={{ fontSize:10, letterSpacing:4, color:'#c8a04a', textTransform:'uppercase', fontFamily:"'Cormorant Garamond',serif", marginBottom:12 }}>{isAr?'الملخص المهني':'Professional Summary'}</div>
-              <p style={{ fontSize:14, color:'#ede8df', lineHeight:1.8 }}>{isAr ? profile.summary_ar : profile.summary_en}</p>
-            </div>
-
-            {/* Info grid */}
-            <div className="print-section" style={{ padding:'22px 32px', borderBottom:'1px solid #252538' }}>
-              <div className="print-label" style={{ fontSize:10, letterSpacing:4, color:'#c8a04a', textTransform:'uppercase', fontFamily:"'Cormorant Garamond',serif", marginBottom:14 }}>{isAr?'معلومات أساسية':'Key Info'}</div>
-              <div className="print-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+            {/* المعلومات */}
+            <div style={{ marginBottom:28 }}>
+              <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>المعلومات الأساسية</div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
                 {[
-                  [isAr?'سنوات الخبرة':'Experience', profile.experience_years],
-                  [isAr?'آخر وظيفة':'Last Role', profile.last_role],
-                  [isAr?'المؤهل':'Qualification', profile.qualification],
-                  [isAr?'الراتب المتوقع':'Salary', profile.salary_expectation],
-                  [isAr?'الإتاحة':'Availability', profile.availability],
-                  [isAr?'التنقل':'Relocation', profile.open_to_relocation],
-                ].map(([l,v]) => (
+                  ['سنوات الخبرة', p.experience_years],
+                  ['آخر وظيفة', p.last_role],
+                  ['المؤهل العلمي', p.qualification],
+                  ['الراتب المتوقع', p.salary_expectation],
+                  ['الإتاحة', p.availability],
+                  ['الاستعداد للتنقل', p.open_to_relocation],
+                ].filter(([,v]) => v).map(([l,v]) => (
                   <div key={l} style={{ background:'#13131f', borderRadius:8, padding:'10px 14px' }}>
                     <div style={{ fontSize:11, color:'#7a7690', marginBottom:3 }}>{l}</div>
-                    <div style={{ fontSize:14, color:'#ede8df', fontWeight:600 }}>{v||'—'}</div>
+                    <div style={{ fontSize:13, color:'#ede8df', fontWeight:600 }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* الإنجازات */}
+            {p.achievements?.length > 0 && (
+              <div style={{ marginBottom:28 }}>
+                <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>الإنجازات والقيمة المضافة</div>
+                {p.achievements.map((a,i) => (
+                  <div key={i} style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start' }}>
+                    <span style={{ color:'#c8a04a', fontSize:16, flexShrink:0, marginTop:1 }}>◆</span>
+                    <span style={{ fontSize:14, color:'#ede8df', lineHeight:1.75 }}>{a}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* نقاط القوة */}
+            {p.strengths?.length > 0 && (
+              <div style={{ marginBottom:28 }}>
+                <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>نقاط القوة</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {p.strengths.map((s,i) => (
+                    <div key={i} style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      <span style={{ color:'#4a9c6e', fontSize:14 }}>✓</span>
+                      <span style={{ fontSize:13, color:'#ede8df' }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* المهارات */}
+            {p.soft_skills?.length > 0 && (
+              <div style={{ marginBottom:28 }}>
+                <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>المهارات الشخصية</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                  {p.soft_skills.map((s,i) => (
+                    <span key={i} style={{ padding:'5px 14px', borderRadius:20, fontSize:12, background:'#13131f', border:'1px solid #c8a04a', color:'#c8a04a' }}>{s}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div style={{ marginTop:32, paddingTop:16, borderTop:'1px solid #252538', textAlign:'center', fontSize:11, color:'#7a7690' }}>
+              تم إنشاء هذا الملف بواسطة نخبة · nukhbahr.com
+            </div>
+          </div>
+        </div>
+
+        {/* ── CV English ── */}
+        <div className="cv-en" style={{ fontFamily:"'Tajawal',sans-serif", direction:'ltr', marginTop:40 }}>
+
+          {/* Header */}
+          <div className="cv-header-bg" style={{ background:'linear-gradient(135deg,#1a1a2e,#2a1a0e)', padding:'36px 40px', textAlign:'center' }}>
+            <div style={{ width:64, height:64, borderRadius:'50%', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, fontWeight:800, color:'#06060e', margin:'0 auto 16px' }}>{initial}</div>
+            <div style={{ fontSize:28, fontWeight:800, color:'#f8f5ef', marginBottom:6 }}>{p.name}</div>
+            <div style={{ fontSize:16, color:'#c8a04a', marginBottom:8 }}>{p.specialization}</div>
+            <div style={{ fontSize:13, color:'#7a7690' }}>📍 {p.location}</div>
+          </div>
+
+          <div style={{ padding:'32px 40px' }}>
+
+            {/* Summary */}
+            <div style={{ marginBottom:28 }}>
+              <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>Professional Summary</div>
+              <p style={{ fontSize:14, color:'#ede8df', lineHeight:1.9 }}>{p.summary_en}</p>
+            </div>
+
+            {/* Key Info */}
+            <div style={{ marginBottom:28 }}>
+              <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>Key Information</div>
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                {[
+                  ['Experience', p.experience_years],
+                  ['Last Role', p.last_role],
+                  ['Qualification', p.qualification],
+                  ['Salary Expected', p.salary_expectation],
+                  ['Availability', p.availability],
+                  ['Relocation', p.open_to_relocation],
+                ].filter(([,v]) => v).map(([l,v]) => (
+                  <div key={l} style={{ background:'#13131f', borderRadius:8, padding:'10px 14px' }}>
+                    <div style={{ fontSize:11, color:'#7a7690', marginBottom:3 }}>{l}</div>
+                    <div style={{ fontSize:13, color:'#ede8df', fontWeight:600 }}>{v}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Achievements */}
-            {profile.achievements?.length > 0 && (
-              <div className="print-section" style={{ padding:'22px 32px', borderBottom:'1px solid #252538' }}>
-                <div className="print-label" style={{ fontSize:10, letterSpacing:4, color:'#c8a04a', textTransform:'uppercase', fontFamily:"'Cormorant Garamond',serif", marginBottom:12 }}>🏆 {isAr?'الإنجازات':'Achievements'}</div>
-                {profile.achievements.map((a,i) => <p key={i} style={{ fontSize:14, color:'#ede8df', lineHeight:1.75, marginBottom:8 }}>· {a}</p>)}
+            {p.achievements?.length > 0 && (
+              <div style={{ marginBottom:28 }}>
+                <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>Achievements</div>
+                {p.achievements.map((a,i) => (
+                  <div key={i} style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start' }}>
+                    <span style={{ color:'#c8a04a', fontSize:16, flexShrink:0, marginTop:1 }}>◆</span>
+                    <span style={{ fontSize:14, color:'#ede8df', lineHeight:1.75 }}>{a}</span>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Strengths + Flags */}
-            <div className="print-section" style={{ padding:'22px 32px', borderBottom:'1px solid #252538', display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
-              {profile.strengths?.length > 0 && (
-                <div>
-                  <div style={{ fontSize:10, letterSpacing:3, color:'#4a9c6e', textTransform:'uppercase', fontFamily:"'Cormorant Garamond',serif", marginBottom:10 }}>✅ {isAr?'نقاط القوة':'Strengths'}</div>
-                  {profile.strengths.map((s,i) => <p key={i} style={{ fontSize:13, color:'#ede8df', marginBottom:6 }}>· {s}</p>)}
+            {/* Strengths */}
+            {p.strengths?.length > 0 && (
+              <div style={{ marginBottom:28 }}>
+                <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>Strengths</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                  {p.strengths.map((s,i) => (
+                    <div key={i} style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      <span style={{ color:'#4a9c6e', fontSize:14 }}>✓</span>
+                      <span style={{ fontSize:13, color:'#ede8df' }}>{s}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {profile.flags?.length > 0 && (
-                <div>
-                  <div style={{ fontSize:10, letterSpacing:3, color:'#c94a4a', textTransform:'uppercase', fontFamily:"'Cormorant Garamond',serif", marginBottom:10 }}>⚠️ {isAr?'ملاحظات':'Flags'}</div>
-                  {profile.flags.map((f,i) => <p key={i} style={{ fontSize:13, color:'#ede8df', marginBottom:6 }}>· {f}</p>)}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Skills */}
-            {profile.soft_skills?.length > 0 && (
-              <div className="print-section" style={{ padding:'22px 32px', borderBottom:'1px solid #252538' }}>
-                <div className="print-label" style={{ fontSize:10, letterSpacing:4, color:'#c8a04a', textTransform:'uppercase', fontFamily:"'Cormorant Garamond',serif", marginBottom:12 }}>{isAr?'المهارات':'Skills'}</div>
+            {p.soft_skills?.length > 0 && (
+              <div style={{ marginBottom:28 }}>
+                <div className="cv-section-title" style={{ fontSize:13, fontWeight:800, color:'#c8a04a', letterSpacing:3, textTransform:'uppercase', paddingBottom:8, borderBottom:'2px solid #c8a04a', marginBottom:16 }}>Skills</div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                  {profile.soft_skills.map((s,i) => <span key={i} style={{ padding:'5px 14px', borderRadius:20, fontSize:12, background:'#13131f', border:'1px solid #252538', color:'#ede8df' }}>{s}</span>)}
+                  {p.soft_skills.map((s,i) => (
+                    <span key={i} style={{ padding:'5px 14px', borderRadius:20, fontSize:12, background:'#13131f', border:'1px solid #c8a04a', color:'#c8a04a' }}>{s}</span>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* Download buttons */}
-            <div className="no-print" style={{ padding:'24px 32px', background:'rgba(200,160,74,.04)', display:'flex', gap:12, flexWrap:'wrap', alignItems:'center' }}>
-              <div style={{ flex:1 }}>
-                <div style={{ fontSize:14, fontWeight:700, color:'#ede8df', marginBottom:3 }}>حمّل سيرتك الذاتية</div>
-                <div style={{ fontSize:12, color:'#7a7690' }}>PDF احترافي بدعم كامل للعربي</div>
-              </div>
-              <button onClick={downloadPDF} style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', border:'none', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                📄 تحميل PDF
-              </button>
-              <button onClick={downloadWord} disabled={downloading==='word'} style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'transparent', border:'1px solid #c8a04a', color:'#c8a04a', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity:downloading==='word'?.7:1 }}>
-                {downloading==='word'?'⏳...':'📝 تحميل Word'}
-              </button>
+            {/* Footer */}
+            <div style={{ marginTop:32, paddingTop:16, borderTop:'1px solid #252538', textAlign:'center', fontSize:11, color:'#7a7690' }}>
+              Generated by Nukhba · nukhbahr.com
             </div>
           </div>
         </div>
+
       </div>
     </>
   )
