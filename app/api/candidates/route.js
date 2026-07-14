@@ -7,19 +7,32 @@ const supabase = createClient(
 
 export async function POST(req) {
   try {
-    const { profile, userId, jobId, transcript } = await req.json()
+    const { profile, userId, jobId, companyId, transcript } = await req.json()
+
+    // إذا تقدم على وظيفة — نجلب company_id من الوظيفة
+    let resolvedCompanyId = companyId || null
+    if (jobId && !resolvedCompanyId) {
+      const { data: job } = await supabase
+        .from('jobs')
+        .select('company_id')
+        .eq('id', jobId)
+        .single()
+      if (job) resolvedCompanyId = job.company_id
+    }
 
     const { data, error } = await supabase
       .from('candidates')
       .insert([{
-        name:           profile.name,
-        specialization: profile.specialization,
-        location:       profile.location,
+        name:             profile.name,
+        specialization:   profile.specialization,
+        location:         profile.location,
         experience_years: profile.experience_years,
-        score:          profile.overall_score || 0,
-        profile_json:   profile,
-        transcript:     transcript || null,
-        created_at:     new Date().toISOString()
+        score:            profile.overall_score || 0,
+        profile_json:     profile,
+        transcript:       transcript || null,
+        job_id:           jobId || null,
+        company_id:       resolvedCompanyId,
+        created_at:       new Date().toISOString()
       }])
       .select()
       .single()
@@ -31,13 +44,22 @@ export async function POST(req) {
   }
 }
 
-export async function GET() {
+export async function GET(req) {
   try {
-    const { data, error } = await supabase
+    const { searchParams } = new URL(req.url)
+    const companyId = searchParams.get('company_id')
+
+    let query = supabase
       .from('candidates')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('score', { ascending: false })
 
+    // إذا طلبت شركة معينة — أرجع متقدمي وظائفها فقط
+    if (companyId) {
+      query = query.eq('company_id', companyId)
+    }
+
+    const { data, error } = await query
     if (error) throw error
     return Response.json({ candidates: data })
   } catch(e) {

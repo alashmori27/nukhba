@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 export default function CompanyDashboard() {
   const router = useRouter()
   const [user, setUser]   = useState(null)
-  const [stats, setStats] = useState({ jobs:0, candidates:0 })
+  const [stats, setStats] = useState({ jobs:0, applicants:0 })
   const [loading, setLoading] = useState(true)
 
   const C = {
@@ -25,15 +25,18 @@ export default function CompanyDashboard() {
 
   async function fetchStats(companyId) {
     try {
-      const [jobsRes, candsRes] = await Promise.all([
+      const [jobsRes, appRes] = await Promise.all([
         fetch('/api/jobs'),
-        fetch('/api/candidates')
+        fetch(`/api/candidates?company_id=${companyId}`)
       ])
-      const jobsData  = await jobsRes.json()
-      const candsData = await candsRes.json()
+      const jobsData = await jobsRes.json()
+      const appData  = await appRes.json()
+
       const myJobs = (jobsData.jobs || []).filter(j => j.company_id === companyId)
-      const cands  = candsData.candidates || []
-      setStats({ jobs: myJobs.length, candidates: cands.length })
+      setStats({
+        jobs:       myJobs.length,
+        applicants: (appData.candidates || []).length,
+      })
     } catch(e) { console.error(e) }
     setLoading(false)
   }
@@ -59,65 +62,58 @@ export default function CompanyDashboard() {
 
       <div style={{ maxWidth:1000, margin:'0 auto', padding:'40px 24px' }}>
         <h1 style={{ fontSize:28, fontWeight:800, color:C.text, marginBottom:4 }}>لوحة التحكم</h1>
-        <p style={{ fontSize:14, color:C.muted, marginBottom:36 }}>مرحباً {user.name} — إليك ملخص نشاطك</p>
+        <p style={{ fontSize:14, color:C.muted, marginBottom:36 }}>أنشئ وظيفة أو تصفح المرشحين</p>
 
-        {/* إحصائيتان فقط — واضحتان */}
+        {/* إحصائيتان واضحتان */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:32 }}>
+
+          {/* وظائفي */}
           <Link href="/company/jobs" style={{ textDecoration:'none' }}>
             <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:'28px 24px', textAlign:'center', cursor:'pointer', transition:'all .2s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(200,160,74,.4)'; e.currentTarget.style.transform='translateY(-2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform='none' }}
             >
-              <div style={{ fontSize:32, marginBottom:10 }}>📋</div>
+              <div style={{ fontSize:28, marginBottom:10 }}>📋</div>
               <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:42, fontWeight:600, color:C.gold, lineHeight:1 }}>{loading?'...':stats.jobs}</div>
               <div style={{ fontSize:13, color:C.muted, marginTop:8 }}>وظائفي المنشورة</div>
               <div style={{ fontSize:11, color:C.gold, marginTop:4 }}>اضغط للعرض →</div>
             </div>
           </Link>
 
-          <Link href="/company/candidates" style={{ textDecoration:'none' }}>
+          {/* المتقدمون على وظائفي */}
+          <Link href="/company/applicants" style={{ textDecoration:'none' }}>
             <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:'28px 24px', textAlign:'center', cursor:'pointer', transition:'all .2s' }}
               onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(200,160,74,.4)'; e.currentTarget.style.transform='translateY(-2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform='none' }}
             >
-              <div style={{ fontSize:32, marginBottom:10 }}>👥</div>
-              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:42, fontWeight:600, color:C.gold, lineHeight:1 }}>{loading?'...':stats.candidates}</div>
-              <div style={{ fontSize:13, color:C.muted, marginTop:8 }}>المرشحون المتاحون</div>
-              <div style={{ fontSize:11, color:C.gold, marginTop:4 }}>اضغط للتصفح →</div>
+              <div style={{ fontSize:28, marginBottom:10 }}>🎯</div>
+              <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:42, fontWeight:600, color:C.gold, lineHeight:1 }}>{loading?'...':stats.applicants}</div>
+              <div style={{ fontSize:13, color:C.muted, marginTop:8 }}>تقدموا على وظائفي</div>
+              <div style={{ fontSize:11, color:C.gold, marginTop:4 }}>اضغط للعرض →</div>
             </div>
           </Link>
         </div>
 
         {/* الإجراءات */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
-          {/* نشر وظيفة */}
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
             onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
           >
             <div style={{ fontSize:36, marginBottom:16 }}>📢</div>
             <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:8 }}>انشر وظيفة جديدة</div>
-            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>
-              أنشئ إعلان وظيفة — اكتب أسئلتك بنفسك أو دع الذكاء الاصطناعي يولّدها لك
-            </div>
-            <Link href="/company/post-job" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e' }}>
-              + إنشاء وظيفة
-            </Link>
+            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>اكتب أسئلتك بنفسك أو دع الذكاء الاصطناعي يولّدها لك</div>
+            <Link href="/company/post-job" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>+ إنشاء وظيفة</Link>
           </div>
 
-          {/* تصفح المرشحين */}
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
             onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
           >
             <div style={{ fontSize:36, marginBottom:16 }}>🔍</div>
-            <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:8 }}>تصفح المرشحين</div>
-            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>
-              ملفات مرشحين بُنيت من مقابلات ذكية — مرتبة حسب التقييم
-            </div>
-            <Link href="/company/candidates" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, border:`1px solid ${C.gold}`, color:C.gold, background:'transparent' }}>
-              تصفح المرشحين
-            </Link>
+            <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:8 }}>تصفح جميع المرشحين</div>
+            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>جميع المرشحين في المنصة — مرتبون حسب التقييم</div>
+            <Link href="/company/candidates" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, border:`1px solid ${C.gold}`, color:C.gold, background:'transparent', textDecoration:'none' }}>تصفح المرشحين</Link>
           </div>
         </div>
       </div>
