@@ -161,7 +161,7 @@ export default function CompanyCandidates() {
 
                 {/* ملخص */}
                 {p.summary_ar && (
-                  <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, margin:'12px 0 0', paddingTop:12, borderTop:`1px solid ${C.border}`, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
+                  <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, margin:'12px 0 0', paddingTop:12, borderTop:`1px solid ${C.border}`, display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
                     {p.summary_ar}
                   </div>
                 )}
