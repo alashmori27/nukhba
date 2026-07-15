@@ -35,7 +35,7 @@ const C  = {
 
 function SectionTitle({ children }) {
   return (
-    <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>
+    <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14, unicodeBidi:'embed' }}>
       {children}
     </div>
   )
@@ -43,31 +43,32 @@ function SectionTitle({ children }) {
 
 function CVContent({ p, lang='ar' }) {
   const isAr = lang === 'ar'
-
-  // helpers — يستخدم الحقل الإنجليزي إذا موجود وإلا يترجم
-  const enVal  = (enField, arField) => p[enField] || tr(p[arField] || '')
-  const enArr  = (enField, arField) => (p[enField]?.length > 0 ? p[enField] : (p[arField] || []).map(tr))
+  const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
+  const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF] || []).map(tr)
 
   return (
-    <div style={{ background:'#080810', fontFamily:"'Tajawal',sans-serif", direction:isAr?'rtl':'ltr', width:'100%' }}>
+    <div style={{ background:'#080810', fontFamily:"'Tajawal',sans-serif", direction:isAr?'rtl':'ltr', width:'100%', unicodeBidi:'embed' }}>
 
       {/* Header */}
-      <div style={{ background:`linear-gradient(135deg,#1a1a2e,#2a1a0e)`, padding:'36px 40px', textAlign:'center', borderBottom:`2px solid ${G}` }}>
-        <div style={{ fontSize:28, fontWeight:800, color:'#f8f5ef', marginBottom:6 }}>{p.name}</div>
-        <div style={{ fontSize:15, color:G, marginBottom:6 }}>{isAr ? p.specialization : enVal('specialization_en','specialization')}</div>
-        <div style={{ fontSize:12, color:'#7a7690' }}>📍 {isAr ? p.location : tr(p.location)}</div>
+      <div style={{ background:`linear-gradient(135deg,#1a1a2e,#2a1a0e)`, padding:'32px 36px', textAlign:'center', borderBottom:`2px solid ${G}` }}>
+        <div style={{ fontSize:26, fontWeight:800, color:'#f8f5ef', marginBottom:6 }}>{p.name}</div>
+        <div style={{ fontSize:14, color:G, marginBottom:6 }}>{isAr ? p.specialization : enVal('specialization_en','specialization')}</div>
+        <div style={{ fontSize:12, color:'#7a7690', display:'flex', justifyContent:'center', gap:16, flexWrap:'wrap' }}>
+          {p.location && <span>📍 {isAr ? p.location : tr(p.location)}</span>}
+          {p.phone && <span>📱 {p.phone}</span>}
+        </div>
       </div>
 
-      <div style={{ padding:'28px 36px' }}>
+      <div style={{ padding:'24px 32px' }}>
 
         {/* Summary */}
-        <div style={{ marginBottom:22 }}>
+        <div style={{ marginBottom:20 }}>
           <SectionTitle>{isAr ? 'الملخص المهني' : 'Professional Summary'}</SectionTitle>
-          <p style={{ fontSize:13, color:'#ede8df', lineHeight:1.85 }}>{isAr ? p.summary_ar : p.summary_en}</p>
+          <p style={{ fontSize:13, color:'#ede8df', lineHeight:1.85, direction:isAr?'rtl':'ltr' }}>{isAr ? p.summary_ar : p.summary_en}</p>
         </div>
 
         {/* Info Grid */}
-        <div style={{ marginBottom:22 }}>
+        <div style={{ marginBottom:20 }}>
           <SectionTitle>{isAr ? 'المعلومات الأساسية' : 'Key Information'}</SectionTitle>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
             {(isAr ? [
@@ -87,7 +88,7 @@ function CVContent({ p, lang='ar' }) {
             ]).filter(([,v]) => v && v !== '—').map(([l,v]) => (
               <div key={l} style={{ background:'#13131f', borderRadius:8, padding:'9px 12px' }}>
                 <div style={{ fontSize:10, color:'#7a7690', marginBottom:2 }}>{l}</div>
-                <div style={{ fontSize:12, color:'#ede8df', fontWeight:600 }}>{v}</div>
+                <div style={{ fontSize:12, color:'#ede8df', fontWeight:600, direction:isAr?'rtl':'ltr' }}>{v}</div>
               </div>
             ))}
           </div>
@@ -95,10 +96,10 @@ function CVContent({ p, lang='ar' }) {
 
         {/* Achievements */}
         {p.achievements?.length > 0 && (
-          <div style={{ marginBottom:22 }}>
+          <div style={{ marginBottom:20 }}>
             <SectionTitle>{isAr ? 'الإنجازات' : 'Achievements'}</SectionTitle>
             {(isAr ? p.achievements : enArr('achievements_en','achievements')).map((a,i) => (
-              <div key={i} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'flex-start' }}>
+              <div key={i} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'flex-start', direction:isAr?'rtl':'ltr' }}>
                 <span style={{ color:G, fontSize:12, flexShrink:0, marginTop:2 }}>◆</span>
                 <span style={{ fontSize:13, color:'#ede8df', lineHeight:1.75 }}>{a}</span>
               </div>
@@ -108,11 +109,11 @@ function CVContent({ p, lang='ar' }) {
 
         {/* Strengths */}
         {p.strengths?.length > 0 && (
-          <div style={{ marginBottom:22 }}>
+          <div style={{ marginBottom:20 }}>
             <SectionTitle>{isAr ? 'نقاط القوة' : 'Strengths'}</SectionTitle>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
               {(isAr ? p.strengths : enArr('strengths_en','strengths')).map((s,i) => (
-                <div key={i} style={{ display:'flex', gap:6, alignItems:'center' }}>
+                <div key={i} style={{ display:'flex', gap:6, alignItems:'center', direction:isAr?'rtl':'ltr' }}>
                   <span style={{ color:'#4a9c6e', fontSize:12 }}>✓</span>
                   <span style={{ fontSize:12, color:'#ede8df' }}>{s}</span>
                 </div>
@@ -123,7 +124,7 @@ function CVContent({ p, lang='ar' }) {
 
         {/* Skills */}
         {p.soft_skills?.length > 0 && (
-          <div style={{ marginBottom:22 }}>
+          <div style={{ marginBottom:20 }}>
             <SectionTitle>{isAr ? 'المهارات' : 'Skills'}</SectionTitle>
             <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
               {(isAr ? p.soft_skills : enArr('soft_skills_en','soft_skills')).map((s,i) => (
@@ -159,7 +160,17 @@ export default function ProfilePage() {
     setLoad(key, true)
     try {
       const html2canvas = (await import('html2canvas')).default
-      const canvas = await html2canvas(ref.current, { backgroundColor:'#080810', scale:2, useCORS:true, logging:false })
+      const canvas = await html2canvas(ref.current, {
+        backgroundColor:'#080810',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        onclone: (doc) => {
+          // إصلاح RTL في الصورة
+          const el = doc.querySelector('[data-cv]')
+          if (el) el.style.direction = ref.current.style.direction
+        }
+      })
       const a = document.createElement('a')
       a.href = canvas.toDataURL('image/png')
       a.download = filename
@@ -176,43 +187,95 @@ export default function ProfilePage() {
       const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
       const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF]||[]).map(tr)
 
-      const sec = (t) => new Paragraph({ children:[new TextRun({ text:t, bold:true, size:26, color:'C8A04A' })], border:{ bottom:{ style:BorderStyle.SINGLE, size:8, color:'C8A04A' } }, spacing:{after:120} })
-      const row = (l,v,ar=false) => new Paragraph({ alignment:ar?AlignmentType.RIGHT:AlignmentType.LEFT, children:[new TextRun({ text:`${l}: `, bold:true, size:20, color:'C8A04A', font:ar?'Tajawal':'Calibri' }), new TextRun({ text:v||'—', size:20, font:ar?'Tajawal':'Calibri' })], spacing:{after:80} })
-      const bul = (t,ar=false) => new Paragraph({ bullet:{level:0}, alignment:ar?AlignmentType.RIGHT:AlignmentType.LEFT, children:[new TextRun({ text:t||'', size:20, font:ar?'Tajawal':'Calibri' })], spacing:{after:80} })
-      const sp  = () => new Paragraph({ text:'', spacing:{after:160} })
+      // دالة فقرة عربية مع RTL صحيح
+      const arPara = (children, opts={}) => new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        bidirectional: true,
+        ...opts,
+        children: children.map(c => ({ ...c, font: { name: 'Arial' } }))
+      })
+
+      const sec = (t, isAr=false) => new Paragraph({
+        alignment: isAr ? AlignmentType.RIGHT : AlignmentType.LEFT,
+        bidirectional: isAr,
+        children:[new TextRun({ text:t, bold:true, size:26, color:'C8A04A', font:{ name: isAr?'Arial':'Calibri' } })],
+        border:{ bottom:{ style:BorderStyle.SINGLE, size:8, color:'C8A04A' } },
+        spacing:{after:120}
+      })
+
+      const row = (l, v, isAr=false) => new Paragraph({
+        alignment: isAr ? AlignmentType.RIGHT : AlignmentType.LEFT,
+        bidirectional: isAr,
+        children:[
+          new TextRun({ text:`${l}: `, bold:true, size:20, color:'C8A04A', font:{ name: isAr?'Arial':'Calibri' } }),
+          new TextRun({ text:v||'—', size:20, font:{ name: isAr?'Arial':'Calibri' } })
+        ],
+        spacing:{after:80}
+      })
+
+      const bul = (t, isAr=false) => new Paragraph({
+        bullet:{level:0},
+        alignment: isAr ? AlignmentType.RIGHT : AlignmentType.LEFT,
+        bidirectional: isAr,
+        children:[new TextRun({ text:t||'', size:20, font:{ name: isAr?'Arial':'Calibri' } })],
+        spacing:{after:80}
+      })
+
+      const sp = () => new Paragraph({ text:'', spacing:{after:160} })
 
       const doc = new Document({ sections:[{ properties:{ page:{ margin:{ top:900, right:900, bottom:900, left:900 } } }, children:[
-        // Arabic
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A', font:'Tajawal' })], spacing:{after:100} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.specialization||'', size:28, color:'666666', font:'Tajawal' })], spacing:{after:80} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:`📍 ${p.location||''}`, size:22, color:'888888', font:'Tajawal' })], spacing:{after:240} }),
-        sec('الملخص المهني'),
-        new Paragraph({ alignment:AlignmentType.RIGHT, children:[new TextRun({ text:p.summary_ar||'', size:22, font:'Tajawal' })], spacing:{after:200} }),
-        sec('المعلومات الأساسية'),
-        row('سنوات الخبرة',p.experience_years,true), row('آخر وظيفة',p.last_role,true),
-        row('المؤهل',p.qualification,true), row('الراتب المتوقع',p.salary_expectation,true),
-        row('الإتاحة',p.availability,true), row('التنقل',p.open_to_relocation,true), sp(),
-        ...(p.achievements?.length>0?[sec('الإنجازات'),...p.achievements.map(a=>bul(a,true)),sp()]:[]),
-        ...(p.strengths?.length>0?[sec('نقاط القوة'),...p.strengths.map(s=>bul(s,true)),sp()]:[]),
-        ...(p.soft_skills?.length>0?[sec('المهارات'),new Paragraph({ alignment:AlignmentType.RIGHT, children:[new TextRun({ text:p.soft_skills.join('  •  '), size:20, font:'Tajawal' })], spacing:{after:200} })]:[]),
+
+        // ══ Arabic Page ══
+        new Paragraph({ alignment:AlignmentType.CENTER, bidirectional:true, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A', font:{name:'Arial'} })], spacing:{after:100} }),
+        new Paragraph({ alignment:AlignmentType.CENTER, bidirectional:true, children:[new TextRun({ text:p.specialization||'', size:28, color:'666666', font:{name:'Arial'} })], spacing:{after:80} }),
+        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:[p.location, p.phone].filter(Boolean).join('  |  '), size:22, color:'888888', font:{name:'Arial'} })], spacing:{after:240} }),
+
+        sec('الملخص المهني', true),
+        new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, children:[new TextRun({ text:p.summary_ar||'', size:22, font:{name:'Arial'} })], spacing:{after:200} }),
+
+        sec('المعلومات الأساسية', true),
+        row('سنوات الخبرة', p.experience_years, true),
+        row('آخر وظيفة', p.last_role, true),
+        row('المؤهل', p.qualification, true),
+        row('الراتب المتوقع', p.salary_expectation, true),
+        row('الإتاحة', p.availability, true),
+        row('التنقل', p.open_to_relocation, true),
+        sp(),
+
+        ...(p.achievements?.length>0 ? [sec('الإنجازات', true), ...p.achievements.map(a=>bul(a,true)), sp()] : []),
+        ...(p.strengths?.length>0 ? [sec('نقاط القوة', true), ...p.strengths.map(s=>bul(s,true)), sp()] : []),
+        ...(p.soft_skills?.length>0 ? [
+          sec('المهارات', true),
+          new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, children:[new TextRun({ text:p.soft_skills.join('  •  '), size:20, font:{name:'Arial'} })], spacing:{after:200} }),
+        ] : []),
+
         new Paragraph({ children:[new TextRun({ text:'' })], pageBreakBefore:true }),
-        // English
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A' })], spacing:{after:100} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:enVal('specialization_en','specialization'), size:28, color:'666666' })], spacing:{after:80} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:`📍 ${tr(p.location||'')}`, size:22, color:'888888' })], spacing:{after:240} }),
+
+        // ══ English Page ══
+        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A', font:{name:'Calibri'} })], spacing:{after:100} }),
+        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:enVal('specialization_en','specialization'), size:28, color:'666666', font:{name:'Calibri'} })], spacing:{after:80} }),
+        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:[tr(p.location), p.phone].filter(Boolean).join('  |  '), size:22, color:'888888', font:{name:'Calibri'} })], spacing:{after:240} }),
+
         sec('PROFESSIONAL SUMMARY'),
-        new Paragraph({ children:[new TextRun({ text:p.summary_en||'', size:22 })], spacing:{after:200} }),
+        new Paragraph({ children:[new TextRun({ text:p.summary_en||'', size:22, font:{name:'Calibri'} })], spacing:{after:200} }),
+
         sec('KEY INFORMATION'),
-        row('Experience', enVal('experience_years_en','experience_years')),
-        row('Last Role', enVal('last_role_en','last_role')),
-        row('Qualification', enVal('qualification_en','qualification')),
+        row('Experience',      enVal('experience_years_en','experience_years')),
+        row('Last Role',       enVal('last_role_en','last_role')),
+        row('Qualification',   enVal('qualification_en','qualification')),
         row('Salary Expected', enVal('salary_expectation_en','salary_expectation')),
-        row('Availability', enVal('availability_en','availability')),
-        row('Relocation', enVal('open_to_relocation_en','open_to_relocation')), sp(),
-        ...(p.achievements?.length>0?[sec('ACHIEVEMENTS'),...enArr('achievements_en','achievements').map(a=>bul(a)),sp()]:[]),
-        ...(p.strengths?.length>0?[sec('STRENGTHS'),...enArr('strengths_en','strengths').map(s=>bul(s)),sp()]:[]),
-        ...(p.soft_skills?.length>0?[sec('SKILLS'),new Paragraph({ children:[new TextRun({ text:enArr('soft_skills_en','soft_skills').join('  •  '), size:20 })], spacing:{after:200} })]:[]),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:'Generated by Nukhba · nukhbahr.com', size:16, color:'aaaaaa', italics:true })], spacing:{before:400} }),
+        row('Availability',    enVal('availability_en','availability')),
+        row('Relocation',      enVal('open_to_relocation_en','open_to_relocation')),
+        sp(),
+
+        ...(p.achievements?.length>0 ? [sec('ACHIEVEMENTS'), ...enArr('achievements_en','achievements').map(a=>bul(a)), sp()] : []),
+        ...(p.strengths?.length>0 ? [sec('STRENGTHS'), ...enArr('strengths_en','strengths').map(s=>bul(s)), sp()] : []),
+        ...(p.soft_skills?.length>0 ? [
+          sec('SKILLS'),
+          new Paragraph({ children:[new TextRun({ text:enArr('soft_skills_en','soft_skills').join('  •  '), size:20, font:{name:'Calibri'} })], spacing:{after:200} }),
+        ] : []),
+
+        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:'Generated by Nukhba · nukhbahr.com', size:16, color:'aaaaaa', italics:true, font:{name:'Calibri'} })], spacing:{before:400} }),
       ]}]})
 
       const blob = await Packer.toBlob(doc)
@@ -238,14 +301,21 @@ export default function ProfilePage() {
     <>
       <style>{`
         @media print {
-          .no-print{display:none!important}
-          .cv-ar{page-break-after:always}
-          body{background:#080810!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          @page{margin:10mm;size:A4}
+          .no-print { display:none!important }
+          .cv-ar { page-break-after: always }
+          body { background:#080810!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; margin:0; }
+          .cv-ar, .cv-en { border-radius:0!important; border:none!important; margin:0!important; }
+          @page { margin:12mm; size:A4; }
+          @page :first { margin:12mm; }
+        }
+        @media print {
+          /* إخفاء ترويسة وتذييل المتصفح */
+          @page { margin-top: 12mm; margin-bottom: 12mm; }
         }
       `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
+      {/* Topbar */}
       <div className="no-print" style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:'rgba(8,8,16,.95)', backdropFilter:'blur(16px)', borderBottom:`1px solid #252538` }}>
         <Link href="/" style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${GD},${G})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', textDecoration:'none' }}>نخبة</Link>
         <div style={{ display:'flex', gap:8 }}>
@@ -257,9 +327,10 @@ export default function ProfilePage() {
       <div style={{ background:'#080810', minHeight:'100vh', padding:'28px 20px 60px' }}>
         <div style={{ maxWidth:760, margin:'0 auto' }}>
 
+          {/* Download buttons */}
           <div className="no-print" style={{ marginBottom:24 }}>
             <div style={{ fontSize:18, fontWeight:800, color:'#ede8df', marginBottom:4 }}>ملفك الاحترافي</div>
-            <div style={{ fontSize:13, color:'#7a7690', marginBottom:16 }}>صفحة عربية + صفحة إنجليزية — حمّله بأي صيغة</div>
+            <div style={{ fontSize:13, color:'#7a7690', marginBottom:16 }}>صفحة عربية + صفحة إنجليزية</div>
             <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:10 }}>
               {[
                 { label:'📄 PDF', onClick:() => window.print(), bg:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', border:'none' },
@@ -267,7 +338,7 @@ export default function ProfilePage() {
                 { label:loading.imgAr?'⏳...':'🖼️ صورة عربي', onClick:() => downloadImage(arRef,`${p.name}-AR.png`,'imgAr'), bg:'transparent', color:'#4a9c6e', border:'1px solid #4a9c6e' },
                 { label:loading.imgEn?'⏳...':'🖼️ Image EN', onClick:() => downloadImage(enRef,`${p.name}-EN.png`,'imgEn'), bg:'transparent', color:'#4a6fa5', border:'1px solid #4a6fa5' },
               ].map((btn,i) => (
-                <button key={i} onClick={btn.onClick} style={{ padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:btn.bg, border:btn.border, color:btn.color, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
+                <button key={i} onClick={btn.onClick} style={{ padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:btn.bg, border:btn.border, color:btn.color, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                   {btn.label}
                 </button>
               ))}
@@ -275,12 +346,12 @@ export default function ProfilePage() {
           </div>
 
           {/* Arabic CV */}
-          <div className="cv-ar" ref={arRef} style={{ marginBottom:32, borderRadius:16, overflow:'hidden', border:`1px solid #252538` }}>
+          <div className="cv-ar" ref={arRef} data-cv="ar" style={{ marginBottom:32, borderRadius:16, overflow:'hidden', border:`1px solid #252538`, direction:'rtl' }}>
             <CVContent p={p} lang="ar"/>
           </div>
 
           {/* English CV */}
-          <div className="cv-en" ref={enRef} style={{ borderRadius:16, overflow:'hidden', border:`1px solid #252538` }}>
+          <div className="cv-en" ref={enRef} data-cv="en" style={{ borderRadius:16, overflow:'hidden', border:`1px solid #252538`, direction:'ltr' }}>
             <CVContent p={p} lang="en"/>
           </div>
 
