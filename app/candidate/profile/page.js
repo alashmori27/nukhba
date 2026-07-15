@@ -179,6 +179,8 @@ export default function ProfilePage() {
     setLoad(key, false)
   }
 
+// استبدل دالة downloadWord كاملة بهذا الكود
+
   async function downloadWord() {
     setLoad('word', true)
     try {
@@ -187,95 +189,128 @@ export default function ProfilePage() {
       const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
       const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF]||[]).map(tr)
 
-      // دالة فقرة عربية مع RTL صحيح
-      const arPara = (children, opts={}) => new Paragraph({
+      // فقرة عربية
+      const arPara = (text, opts={}) => new Paragraph({
         alignment: AlignmentType.RIGHT,
         bidirectional: true,
         ...opts,
-        children: children.map(c => ({ ...c, font: { name: 'Arial' } }))
+        children: [new TextRun({ text, rightToLeft: true, font:{ name:'Arial' }, size: opts.size||22 })]
       })
 
-      const sec = (t, isAr=false) => new Paragraph({
-        alignment: isAr ? AlignmentType.RIGHT : AlignmentType.LEFT,
-        bidirectional: isAr,
-        children:[new TextRun({ text:t, bold:true, size:26, color:'C8A04A', font:{ name: isAr?'Arial':'Calibri' } })],
+      // فقرة إنجليزية
+      const enPara = (text, opts={}) => new Paragraph({
+        alignment: AlignmentType.LEFT,
+        ...opts,
+        children: [new TextRun({ text, font:{ name:'Calibri' }, size: opts.size||22 })]
+      })
+
+      // عنوان قسم
+      const arSec = (t) => new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        bidirectional: true,
         border:{ bottom:{ style:BorderStyle.SINGLE, size:8, color:'C8A04A' } },
-        spacing:{after:120}
+        spacing:{ after:120 },
+        children:[new TextRun({ text:t, bold:true, rightToLeft:true, size:26, color:'C8A04A', font:{ name:'Arial' } })]
       })
 
-      const row = (l, v, isAr=false) => new Paragraph({
-        alignment: isAr ? AlignmentType.RIGHT : AlignmentType.LEFT,
-        bidirectional: isAr,
+      const enSec = (t) => new Paragraph({
+        alignment: AlignmentType.LEFT,
+        border:{ bottom:{ style:BorderStyle.SINGLE, size:8, color:'C8A04A' } },
+        spacing:{ after:120 },
+        children:[new TextRun({ text:t, bold:true, size:26, color:'C8A04A', font:{ name:'Calibri' } })]
+      })
+
+      // صف معلومات عربي
+      const arRow = (l, v) => new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        bidirectional: true,
+        spacing:{ after:80 },
         children:[
-          new TextRun({ text:`${l}: `, bold:true, size:20, color:'C8A04A', font:{ name: isAr?'Arial':'Calibri' } }),
-          new TextRun({ text:v||'—', size:20, font:{ name: isAr?'Arial':'Calibri' } })
-        ],
-        spacing:{after:80}
+          new TextRun({ text:`${v||'—'}  `, rightToLeft:true, size:20, font:{ name:'Arial' } }),
+          new TextRun({ text:`${l}: `, bold:true, rightToLeft:true, size:20, color:'C8A04A', font:{ name:'Arial' } }),
+        ]
       })
 
-      const bul = (t, isAr=false) => new Paragraph({
-        bullet:{level:0},
-        alignment: isAr ? AlignmentType.RIGHT : AlignmentType.LEFT,
-        bidirectional: isAr,
-        children:[new TextRun({ text:t||'', size:20, font:{ name: isAr?'Arial':'Calibri' } })],
-        spacing:{after:80}
+      // صف معلومات إنجليزي
+      const enRow = (l, v) => new Paragraph({
+        alignment: AlignmentType.LEFT,
+        spacing:{ after:80 },
+        children:[
+          new TextRun({ text:`${l}: `, bold:true, size:20, color:'C8A04A', font:{ name:'Calibri' } }),
+          new TextRun({ text:v||'—', size:20, font:{ name:'Calibri' } }),
+        ]
       })
 
-      const sp = () => new Paragraph({ text:'', spacing:{after:160} })
+      const arBul = (t) => new Paragraph({
+        alignment: AlignmentType.RIGHT,
+        bidirectional: true,
+        bullet:{ level:0 },
+        spacing:{ after:80 },
+        children:[new TextRun({ text:t||'', rightToLeft:true, size:20, font:{ name:'Arial' } })]
+      })
+
+      const enBul = (t) => new Paragraph({
+        alignment: AlignmentType.LEFT,
+        bullet:{ level:0 },
+        spacing:{ after:80 },
+        children:[new TextRun({ text:t||'', size:20, font:{ name:'Calibri' } })]
+      })
+
+      const sp = () => new Paragraph({ text:'', spacing:{ after:160 } })
 
       const doc = new Document({ sections:[{ properties:{ page:{ margin:{ top:900, right:900, bottom:900, left:900 } } }, children:[
 
-        // ══ Arabic Page ══
-        new Paragraph({ alignment:AlignmentType.CENTER, bidirectional:true, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A', font:{name:'Arial'} })], spacing:{after:100} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, bidirectional:true, children:[new TextRun({ text:p.specialization||'', size:28, color:'666666', font:{name:'Arial'} })], spacing:{after:80} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:[p.location, p.phone].filter(Boolean).join('  |  '), size:22, color:'888888', font:{name:'Arial'} })], spacing:{after:240} }),
+        // ══ الصفحة العربية ══
+        new Paragraph({ alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:100}, children:[new TextRun({ text:p.name||'', bold:true, rightToLeft:true, size:56, color:'C8A04A', font:{name:'Arial'} })] }),
+        new Paragraph({ alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:80}, children:[new TextRun({ text:p.specialization||'', rightToLeft:true, size:28, color:'666666', font:{name:'Arial'} })] }),
+        new Paragraph({ alignment:AlignmentType.CENTER, spacing:{after:240}, children:[new TextRun({ text:[p.location, p.phone].filter(Boolean).join('  |  '), size:22, color:'888888', font:{name:'Arial'} })] }),
 
-        sec('الملخص المهني', true),
-        new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, children:[new TextRun({ text:p.summary_ar||'', size:22, font:{name:'Arial'} })], spacing:{after:200} }),
+        arSec('الملخص المهني'),
+        arPara(p.summary_ar||'', { spacing:{after:200} }),
 
-        sec('المعلومات الأساسية', true),
-        row('سنوات الخبرة', p.experience_years, true),
-        row('آخر وظيفة', p.last_role, true),
-        row('المؤهل', p.qualification, true),
-        row('الراتب المتوقع', p.salary_expectation, true),
-        row('الإتاحة', p.availability, true),
-        row('التنقل', p.open_to_relocation, true),
+        arSec('المعلومات الأساسية'),
+        arRow('سنوات الخبرة', p.experience_years),
+        arRow('آخر وظيفة', p.last_role),
+        arRow('المؤهل', p.qualification),
+        arRow('الراتب المتوقع', p.salary_expectation),
+        arRow('الإتاحة', p.availability),
+        arRow('التنقل', p.open_to_relocation),
         sp(),
 
-        ...(p.achievements?.length>0 ? [sec('الإنجازات', true), ...p.achievements.map(a=>bul(a,true)), sp()] : []),
-        ...(p.strengths?.length>0 ? [sec('نقاط القوة', true), ...p.strengths.map(s=>bul(s,true)), sp()] : []),
+        ...(p.achievements?.length>0 ? [arSec('الإنجازات'), ...p.achievements.map(a=>arBul(a)), sp()] : []),
+        ...(p.strengths?.length>0 ? [arSec('نقاط القوة'), ...p.strengths.map(s=>arBul(s)), sp()] : []),
         ...(p.soft_skills?.length>0 ? [
-          sec('المهارات', true),
-          new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, children:[new TextRun({ text:p.soft_skills.join('  •  '), size:20, font:{name:'Arial'} })], spacing:{after:200} }),
+          arSec('المهارات'),
+          arPara(p.soft_skills.join('  •  '), { spacing:{after:200} }),
         ] : []),
 
         new Paragraph({ children:[new TextRun({ text:'' })], pageBreakBefore:true }),
 
         // ══ English Page ══
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A', font:{name:'Calibri'} })], spacing:{after:100} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:enVal('specialization_en','specialization'), size:28, color:'666666', font:{name:'Calibri'} })], spacing:{after:80} }),
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:[tr(p.location), p.phone].filter(Boolean).join('  |  '), size:22, color:'888888', font:{name:'Calibri'} })], spacing:{after:240} }),
+        new Paragraph({ alignment:AlignmentType.CENTER, spacing:{after:100}, children:[new TextRun({ text:p.name||'', bold:true, size:56, color:'C8A04A', font:{name:'Calibri'} })] }),
+        new Paragraph({ alignment:AlignmentType.CENTER, spacing:{after:80}, children:[new TextRun({ text:enVal('specialization_en','specialization'), size:28, color:'666666', font:{name:'Calibri'} })] }),
+        new Paragraph({ alignment:AlignmentType.CENTER, spacing:{after:240}, children:[new TextRun({ text:[tr(p.location), p.phone].filter(Boolean).join('  |  '), size:22, color:'888888', font:{name:'Calibri'} })] }),
 
-        sec('PROFESSIONAL SUMMARY'),
-        new Paragraph({ children:[new TextRun({ text:p.summary_en||'', size:22, font:{name:'Calibri'} })], spacing:{after:200} }),
+        enSec('PROFESSIONAL SUMMARY'),
+        enPara(p.summary_en||'', { spacing:{after:200} }),
 
-        sec('KEY INFORMATION'),
-        row('Experience',      enVal('experience_years_en','experience_years')),
-        row('Last Role',       enVal('last_role_en','last_role')),
-        row('Qualification',   enVal('qualification_en','qualification')),
-        row('Salary Expected', enVal('salary_expectation_en','salary_expectation')),
-        row('Availability',    enVal('availability_en','availability')),
-        row('Relocation',      enVal('open_to_relocation_en','open_to_relocation')),
+        enSec('KEY INFORMATION'),
+        enRow('Experience',      enVal('experience_years_en','experience_years')),
+        enRow('Last Role',       enVal('last_role_en','last_role')),
+        enRow('Qualification',   enVal('qualification_en','qualification')),
+        enRow('Salary Expected', enVal('salary_expectation_en','salary_expectation')),
+        enRow('Availability',    enVal('availability_en','availability')),
+        enRow('Relocation',      enVal('open_to_relocation_en','open_to_relocation')),
         sp(),
 
-        ...(p.achievements?.length>0 ? [sec('ACHIEVEMENTS'), ...enArr('achievements_en','achievements').map(a=>bul(a)), sp()] : []),
-        ...(p.strengths?.length>0 ? [sec('STRENGTHS'), ...enArr('strengths_en','strengths').map(s=>bul(s)), sp()] : []),
+        ...(p.achievements?.length>0 ? [enSec('ACHIEVEMENTS'), ...enArr('achievements_en','achievements').map(a=>enBul(a)), sp()] : []),
+        ...(p.strengths?.length>0 ? [enSec('STRENGTHS'), ...enArr('strengths_en','strengths').map(s=>enBul(s)), sp()] : []),
         ...(p.soft_skills?.length>0 ? [
-          sec('SKILLS'),
-          new Paragraph({ children:[new TextRun({ text:enArr('soft_skills_en','soft_skills').join('  •  '), size:20, font:{name:'Calibri'} })], spacing:{after:200} }),
+          enSec('SKILLS'),
+          enPara(enArr('soft_skills_en','soft_skills').join('  •  '), { spacing:{after:200} }),
         ] : []),
 
-        new Paragraph({ alignment:AlignmentType.CENTER, children:[new TextRun({ text:'Generated by Nukhba · nukhbahr.com', size:16, color:'aaaaaa', italics:true, font:{name:'Calibri'} })], spacing:{before:400} }),
+        new Paragraph({ alignment:AlignmentType.CENTER, spacing:{before:400}, children:[new TextRun({ text:'Generated by Nukhba · nukhbahr.com', size:16, color:'aaaaaa', italics:true, font:{name:'Calibri'} })] }),
       ]}]})
 
       const blob = await Packer.toBlob(doc)
@@ -285,6 +320,7 @@ export default function ProfilePage() {
       URL.revokeObjectURL(url)
     } catch(e) { alert('خطأ: ' + e.message) }
     setLoad('word', false)
+  }
   }
 
   if (!profile) return (
