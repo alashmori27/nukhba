@@ -9,14 +9,9 @@ export async function POST(req) {
   try {
     const { profile, userId, jobId, companyId, transcript } = await req.json()
 
-    // إذا تقدم على وظيفة — نجلب company_id من الوظيفة
     let resolvedCompanyId = companyId || null
     if (jobId && !resolvedCompanyId) {
-      const { data: job } = await supabase
-        .from('jobs')
-        .select('company_id')
-        .eq('id', jobId)
-        .single()
+      const { data: job } = await supabase.from('jobs').select('company_id').eq('id', jobId).single()
       if (job) resolvedCompanyId = job.company_id
     }
 
@@ -32,6 +27,8 @@ export async function POST(req) {
         transcript:       transcript || null,
         job_id:           jobId || null,
         company_id:       resolvedCompanyId,
+        user_id:          userId || null,
+        is_visible:       true,
         created_at:       new Date().toISOString()
       }])
       .select()
@@ -48,16 +45,12 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url)
     const companyId = searchParams.get('company_id')
+    const userId    = searchParams.get('user_id')
 
-    let query = supabase
-      .from('candidates')
-      .select('*')
-      .order('score', { ascending: false })
+    let query = supabase.from('candidates').select('*').order('created_at', { ascending: false })
 
-    // إذا طلبت شركة معينة — أرجع متقدمي وظائفها فقط
-    if (companyId) {
-      query = query.eq('company_id', companyId)
-    }
+    if (companyId) query = query.eq('company_id', companyId)
+    if (userId)    query = query.eq('user_id', userId)
 
     const { data, error } = await query
     if (error) throw error
