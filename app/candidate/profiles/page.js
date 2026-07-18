@@ -62,7 +62,7 @@ export default function CandidateProfiles() {
 
  function viewProfile(c) {
   sessionStorage.setItem('nukhba_profile', JSON.stringify(c.profile_json))
-  window.location.href = '/candidate/profile'
+  router.push('/candidate/profile')
 }
 
   const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : C.error
