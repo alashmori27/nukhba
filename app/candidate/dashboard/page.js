@@ -46,7 +46,7 @@ export default function CandidateDashboard() {
       await fetch(`/api/candidates/${id}`, {
         method:'PATCH',
         headers: authHeaders(user),
-        body: JSON.stringify({ is_visible: !current })
+        body: JSON.stringify({ is_visible: current ? false : true })
       })
       setProfiles(p => p.map(c => c.id===id ? {...c, is_visible:!current} : c))
     } catch(e) { alert('خطأ') }
@@ -157,7 +157,7 @@ export default function CandidateDashboard() {
                       </div>
                       <div style={{ display:'flex', gap:6, flexShrink:0 }}>
                         <button onClick={() => viewProfile(c)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>عرض</button>
-                        <button onClick={() => toggleVisibility(c.id, c.is_visible!==false)} style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer' }}>
+                        <button onClick={() => toggleVisibility(c.id, c.is_visible===true || c.is_visible===null || c.is_visible===undefined)} style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer' }}>
                           {c.is_visible===false ? '👁️' : '🙈'}
                         </button>
                         <button onClick={() => deleteProfile(c.id)} style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.error}`, background:'transparent', color:C.error, cursor:'pointer' }}>🗑️</button>
