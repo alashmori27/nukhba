@@ -5,6 +5,23 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
+// التحقق من وجود مستخدم مسجل
+async function getAuthUser(req) {
+  const userId = req.headers.get('x-user-id')
+  const userRole = req.headers.get('x-user-role')
+  if (!userId || !userRole) return null
+
+  // تحقق من وجود المستخدم في DB
+  const { data } = await supabase
+    .from('users')
+    .select('id, role')
+    .eq('id', userId)
+    .single()
+
+  if (!data || data.id !== userId) return null
+  return data
+}
+
 export async function POST(req) {
   try {
     const { profile, userId, jobId, companyId, transcript } = await req.json()
@@ -43,14 +60,38 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
+    // ── تحقق من الهوية ──
+    const user = await getAuthUser(req)
+    if (!user) {
+      return Response.json({ error: 'غير مصرح' }, { status: 401 })
+    }
+
     const { searchParams } = new URL(req.url)
     const companyId = searchParams.get('company_id')
     const userId    = searchParams.get('user_id')
 
     let query = supabase.from('candidates').select('*').order('created_at', { ascending: false })
 
-    if (companyId) query = query.eq('company_id', companyId)
-    if (userId)    query = query.eq('user_id', userId)
+    // الشركة ترى متقدميها فقط
+    if (user.role === 'company') {
+      if (companyId && companyId === user.id) {
+        query = query.eq('company_id', companyId)
+      } else if (!companyId) {
+        // تصفح عام — تظهر الملفات المرئية فقط بدون معلومات تواصل
+        query = query.eq('is_visible', true)
+      } else {
+        return Response.json({ error: 'غير مصرح' }, { status: 403 })
+      }
+    }
+
+    // المتقدم يرى ملفاته فقط
+    if (user.role === 'candidate') {
+      if (userId && userId === user.id) {
+        query = query.eq('user_id', userId)
+      } else {
+        return Response.json({ error: 'غير مصرح' }, { status: 403 })
+      }
+    }
 
     const { data, error } = await query
     if (error) throw error

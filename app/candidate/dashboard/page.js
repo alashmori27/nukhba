@@ -9,6 +9,14 @@ const C = {
   success:'#4a9c6e', error:'#c94a4a'
 }
 
+function authHeaders(user) {
+  return {
+    'Content-Type': 'application/json',
+    'x-user-id':   user.id,
+    'x-user-role': user.role,
+  }
+}
+
 export default function CandidateDashboard() {
   const router = useRouter()
   const [user, setUser]         = useState(null)
@@ -21,12 +29,12 @@ export default function CandidateDashboard() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'candidate') { router.push('/company/dashboard'); return }
     setUser(parsed)
-    fetchMyProfiles(parsed.id)
+    fetchMyProfiles(parsed)
   }, [])
 
-  async function fetchMyProfiles(userId) {
+  async function fetchMyProfiles(u) {
     try {
-      const res  = await fetch(`/api/candidates?user_id=${userId}`)
+      const res  = await fetch(`/api/candidates?user_id=${u.id}`, { headers: authHeaders(u) })
       const data = await res.json()
       setProfiles(data.candidates || [])
     } catch(e) { console.error(e) }
@@ -36,7 +44,8 @@ export default function CandidateDashboard() {
   async function toggleVisibility(id, current) {
     try {
       await fetch(`/api/candidates/${id}`, {
-        method:'PATCH', headers:{'Content-Type':'application/json'},
+        method:'PATCH',
+        headers: authHeaders(user),
         body: JSON.stringify({ is_visible: !current })
       })
       setProfiles(p => p.map(c => c.id===id ? {...c, is_visible:!current} : c))
@@ -46,7 +55,7 @@ export default function CandidateDashboard() {
   async function deleteProfile(id) {
     if (!confirm('هل أنت متأكد من الحذف؟')) return
     try {
-      await fetch(`/api/candidates/${id}`, { method:'DELETE' })
+      await fetch(`/api/candidates/${id}`, { method:'DELETE', headers: authHeaders(user) })
       setProfiles(p => p.filter(c => c.id !== id))
     } catch(e) { alert('خطأ') }
   }
@@ -72,7 +81,6 @@ export default function CandidateDashboard() {
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
-      {/* Nav */}
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:58, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -88,7 +96,6 @@ export default function CandidateDashboard() {
 
       <div style={{ maxWidth:860, margin:'0 auto', padding:'32px 20px' }}>
 
-        {/* ── إذا ما عنده ملف ── */}
         {!loading && !hasProfile && (
           <div style={{ background:C.card, border:`2px solid ${C.gold}`, borderRadius:18, padding:'48px 32px', textAlign:'center' }}>
             <div style={{ fontSize:52, marginBottom:16 }}>🎙️</div>
@@ -97,36 +104,25 @@ export default function CandidateDashboard() {
               ابدأ مقابلتك الذكية المجانية — الذكاء الاصطناعي يسألك ويبني ملفك المهني الاحترافي تلقائياً
             </p>
             <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-              <Link href="/candidate/interview" style={{ padding:'13px 32px', borderRadius:10, fontSize:15, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>
-                🎙️ ابدأ المقابلة المجانية
-              </Link>
-              <Link href="/candidate/jobs" style={{ padding:'13px 32px', borderRadius:10, fontSize:15, fontWeight:700, border:`1px solid ${C.border}`, color:C.muted, background:'transparent', textDecoration:'none' }}>
-                🏢 تصفح الوظائف
-              </Link>
+              <Link href="/candidate/interview" style={{ padding:'13px 32px', borderRadius:10, fontSize:15, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>🎙️ ابدأ المقابلة المجانية</Link>
+              <Link href="/candidate/jobs" style={{ padding:'13px 32px', borderRadius:10, fontSize:15, fontWeight:700, border:`1px solid ${C.border}`, color:C.muted, background:'transparent', textDecoration:'none' }}>🏢 تصفح الوظائف</Link>
             </div>
           </div>
         )}
 
-        {/* ── إذا عنده ملفات ── */}
         {!loading && hasProfile && (
           <>
-            {/* Header + أزرار صغيرة */}
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24, flexWrap:'wrap', gap:12 }}>
               <div>
                 <h1 style={{ fontSize:20, fontWeight:800, color:C.text, marginBottom:3 }}>أهلاً {user.name} 👋</h1>
                 <p style={{ fontSize:12, color:C.muted }}>لديك {profiles.length} ملف مهني</p>
               </div>
               <div style={{ display:'flex', gap:8 }}>
-                <Link href="/candidate/interview" style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>
-                  + مقابلة جديدة
-                </Link>
-                <Link href="/candidate/jobs" style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.border}`, color:C.muted, background:'transparent', textDecoration:'none' }}>
-                  🏢 الوظائف
-                </Link>
+                <Link href="/candidate/interview" style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>+ مقابلة جديدة</Link>
+                <Link href="/candidate/jobs" style={{ padding:'8px 16px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.border}`, color:C.muted, background:'transparent', textDecoration:'none' }}>🏢 الوظائف</Link>
               </div>
             </div>
 
-            {/* قائمة الملفات */}
             <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
               {profiles.map((c, idx) => {
                 const p    = c.profile_json || {}
@@ -134,12 +130,9 @@ export default function CandidateDashboard() {
                 const circ = 2 * Math.PI * 18
                 const dash = circ - (c.score / 100) * circ
                 const date = new Date(c.created_at).toLocaleDateString('ar-SA')
-
                 return (
-                  <div key={c.id} style={{ background:C.card, border:`1px solid ${c.is_visible===false?C.border:C.gold+'33'}`, borderRadius:13, padding:18, transition:'border-color .2s' }}>
+                  <div key={c.id} style={{ background:C.card, border:`1px solid ${c.is_visible===false?C.border:C.gold+'33'}`, borderRadius:13, padding:18 }}>
                     <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:14 }}>
-
-                      {/* Score + Info */}
                       <div style={{ display:'flex', gap:12, alignItems:'center', flex:1 }}>
                         <div style={{ textAlign:'center', flexShrink:0 }}>
                           <div style={{ width:40, height:40, position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -151,36 +144,25 @@ export default function CandidateDashboard() {
                           </div>
                           <div style={{ fontSize:8, color:sc, marginTop:1, fontWeight:700 }}>{scoreLabel(c.score)}</div>
                         </div>
-
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:14, fontWeight:700, color:C.text, marginBottom:2, display:'flex', alignItems:'center', gap:6 }}>
                             {p.specialization || 'ملف مهني'}
                             {idx===0 && <span style={{ fontSize:9, background:'rgba(200,160,74,.15)', color:C.gold, padding:'2px 7px', borderRadius:8 }}>الأحدث</span>}
                           </div>
-                          <div style={{ fontSize:11, color:C.muted, marginBottom:2 }}>
-                            📍 {p.location}{p.experience_years ? ` · ${p.experience_years}` : ''}
-                          </div>
+                          <div style={{ fontSize:11, color:C.muted, marginBottom:2 }}>📍 {p.location}{p.experience_years ? ` · ${p.experience_years}` : ''}</div>
                           <div style={{ fontSize:10, color:c.is_visible===false?C.error:C.success }}>
                             {c.is_visible===false ? '🙈 مخفي عن الشركات' : '👁️ ظاهر للشركات'} · {date}
                           </div>
                         </div>
                       </div>
-
-                      {/* Actions */}
                       <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-                        <button onClick={() => viewProfile(c)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                          عرض
-                        </button>
-                        <button onClick={() => toggleVisibility(c.id, c.is_visible!==false)} title={c.is_visible===false?'إظهار':'إخفاء'} style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer' }}>
+                        <button onClick={() => viewProfile(c)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>عرض</button>
+                        <button onClick={() => toggleVisibility(c.id, c.is_visible!==false)} style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer' }}>
                           {c.is_visible===false ? '👁️' : '🙈'}
                         </button>
-                        <button onClick={() => deleteProfile(c.id)} title="حذف" style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.error}`, background:'transparent', color:C.error, cursor:'pointer' }}>
-                          🗑️
-                        </button>
+                        <button onClick={() => deleteProfile(c.id)} style={{ padding:'7px 10px', borderRadius:8, fontSize:13, border:`1px solid ${C.error}`, background:'transparent', color:C.error, cursor:'pointer' }}>🗑️</button>
                       </div>
                     </div>
-
-                    {/* ملخص */}
                     {p.summary_ar && (
                       <p style={{ fontSize:12, color:C.muted, lineHeight:1.7, marginTop:10, paddingTop:10, borderTop:`1px solid ${C.border}`, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
                         {p.summary_ar}
@@ -194,7 +176,6 @@ export default function CandidateDashboard() {
         )}
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}
-
       </div>
     </div>
   )
