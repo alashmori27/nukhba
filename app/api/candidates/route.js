@@ -5,19 +5,11 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
-// التحقق من وجود مستخدم مسجل
 async function getAuthUser(req) {
-  const userId = req.headers.get('x-user-id')
+  const userId   = req.headers.get('x-user-id')
   const userRole = req.headers.get('x-user-role')
   if (!userId || !userRole) return null
-
-  // تحقق من وجود المستخدم في DB
-  const { data } = await supabase
-    .from('users')
-    .select('id, role')
-    .eq('id', userId)
-    .single()
-
+  const { data } = await supabase.from('users').select('id, role').eq('id', userId).single()
   if (!data || data.id !== userId) return null
   return data
 }
@@ -60,36 +52,28 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    // ── تحقق من الهوية ──
     const user = await getAuthUser(req)
-    if (!user) {
-      return Response.json({ error: 'غير مصرح' }, { status: 401 })
-    }
+    if (!user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
     const companyId = searchParams.get('company_id')
     const userId    = searchParams.get('user_id')
 
-    let query = supabase.from('candidates').select('*').order('created_at', { ascending: false })
+    let query = supabase.from('candidates').select('*').order('score', { ascending: false })
 
-    // الشركة ترى متقدميها فقط
-    if (user.role === 'company') {
-      if (companyId && companyId === user.id) {
-        query = query.eq('company_id', companyId)
-      } else if (!companyId) {
-        // تصفح عام — تظهر الملفات المرئية فقط بدون معلومات تواصل
-        query = query.eq('is_visible', true)
-      } else {
-        return Response.json({ error: 'غير مصرح' }, { status: 403 })
-      }
+    if (user.role === 'candidate') {
+      // المتقدم يرى ملفاته فقط
+      if (!userId || userId !== user.id) return Response.json({ error: 'غير مصرح' }, { status: 403 })
+      query = query.eq('user_id', userId)
     }
 
-    // المتقدم يرى ملفاته فقط
-    if (user.role === 'candidate') {
-      if (userId && userId === user.id) {
-        query = query.eq('user_id', userId)
+    if (user.role === 'company') {
+      if (companyId) {
+        // متقدمو وظائف الشركة
+        query = query.eq('company_id', companyId)
       } else {
-        return Response.json({ error: 'غير مصرح' }, { status: 403 })
+        // تصفح عام — الملفات الظاهرة فقط
+        query = query.eq('is_visible', true)
       }
     }
 
