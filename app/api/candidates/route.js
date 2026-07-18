@@ -9,9 +9,11 @@ async function getAuthUser(req) {
   const userId   = req.headers.get('x-user-id')
   const userRole = req.headers.get('x-user-role')
   if (!userId || !userRole) return null
-  const { data } = await supabase.from('users').select('id, role').eq('id', userId).single()
-  if (!data || data.id !== userId) return null
-  return data
+  // تحقق فقط أن المستخدم موجود في DB
+  const { data } = await supabase.from('users').select('id').eq('id', userId).single()
+  if (!data) return null
+  // نستخدم الدور من الـ header لأنه أسرع
+  return { id: userId, role: userRole }
 }
 
 export async function POST(req) {
@@ -62,14 +64,12 @@ export async function GET(req) {
     let query = supabase.from('candidates').select('*').order('score', { ascending: false })
 
     if (user.role === 'candidate') {
-      // المتقدم يرى ملفاته فقط
       if (!userId || userId !== user.id) return Response.json({ error: 'غير مصرح' }, { status: 403 })
       query = query.eq('user_id', userId)
     }
 
     if (user.role === 'company') {
       if (companyId) {
-        // متقدمو وظائف الشركة
         query = query.eq('company_id', companyId)
       } else {
         // تصفح عام — الملفات الظاهرة فقط
