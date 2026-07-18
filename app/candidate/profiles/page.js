@@ -60,10 +60,10 @@ export default function CandidateProfiles() {
     } catch(e) { alert('خطأ') }
   }
 
-  function viewProfile(c) {
-    sessionStorage.setItem('nukhba_profile', JSON.stringify(c.profile_json))
-    router.push('/candidate/profile')
-  }
+ function viewProfile(c) {
+  sessionStorage.setItem('nukhba_profile', JSON.stringify(c.profile_json))
+  window.location.href = '/candidate/profile'
+}
 
   const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : C.error
   const scoreLabel = s => s >= 80 ? 'ممتاز' : s >= 60 ? 'جيد' : 'يحتاج تطوير'
