@@ -2,6 +2,13 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import NotificationBell from '@/components/NotificationBell'
+
+const C = {
+  bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
+  border:'#252538', gold:'#c8a04a', goldDk:'#7a5e28', text:'#ede8df', muted:'#7a7690',
+  success:'#4a9c6e'
+}
 
 export default function CompanyDashboard() {
   const router = useRouter()
@@ -9,34 +16,26 @@ export default function CompanyDashboard() {
   const [stats, setStats] = useState({ jobs:0, applicants:0 })
   const [loading, setLoading] = useState(true)
 
-  const C = {
-    bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
-    border:'#252538', gold:'#c8a04a', goldDk:'#7a5e28', text:'#ede8df', muted:'#7a7690'
-  }
-
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
     if (!u) { router.push('/auth/login'); return }
     const parsed = JSON.parse(u)
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
-    fetchStats(parsed.id)
+    fetchStats(parsed)
   }, [])
 
-  async function fetchStats(companyId) {
+  async function fetchStats(u) {
     try {
+      const headers = { 'Content-Type':'application/json', 'x-user-id':u.id, 'x-user-role':u.role }
       const [jobsRes, appRes] = await Promise.all([
         fetch('/api/jobs'),
-        fetch(`/api/candidates?company_id=${companyId}`)
+        fetch(`/api/candidates?company_id=${u.id}`, { headers })
       ])
       const jobsData = await jobsRes.json()
       const appData  = await appRes.json()
-
-      const myJobs = (jobsData.jobs || []).filter(j => j.company_id === companyId)
-      setStats({
-        jobs:       myJobs.length,
-        applicants: (appData.candidates || []).length,
-      })
+      const myJobs   = (jobsData.jobs || []).filter(j => j.company_id === u.id)
+      setStats({ jobs: myJobs.length, applicants: (appData.candidates || []).length })
     } catch(e) { console.error(e) }
     setLoading(false)
   }
@@ -50,11 +49,12 @@ export default function CompanyDashboard() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
-        <div style={{ fontSize:20, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · للشركات</div>
-        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+        <div style={{ fontSize:20, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · للشركات</div>
+        <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+          <NotificationBell userId={user.id} />
           <span style={{ fontSize:14, color:C.muted }}>{user.name}</span>
           <button onClick={logout} style={{ padding:'7px 16px', borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>خروج</button>
         </div>
@@ -64,13 +64,11 @@ export default function CompanyDashboard() {
         <h1 style={{ fontSize:28, fontWeight:800, color:C.text, marginBottom:4 }}>لوحة التحكم</h1>
         <p style={{ fontSize:14, color:C.muted, marginBottom:36 }}>أنشئ وظيفة أو تصفح المرشحين</p>
 
-        {/* إحصائيتان واضحتان */}
+        {/* إحصائيتان */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:32 }}>
-
-          {/* وظائفي */}
           <Link href="/company/jobs" style={{ textDecoration:'none' }}>
             <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:'28px 24px', textAlign:'center', cursor:'pointer', transition:'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(200,160,74,.4)'; e.currentTarget.style.transform='translateY(-2px)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor=C.gold; e.currentTarget.style.transform='translateY(-2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform='none' }}
             >
               <div style={{ fontSize:28, marginBottom:10 }}>📋</div>
@@ -80,10 +78,9 @@ export default function CompanyDashboard() {
             </div>
           </Link>
 
-          {/* المتقدمون على وظائفي */}
           <Link href="/company/applicants" style={{ textDecoration:'none' }}>
             <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:'28px 24px', textAlign:'center', cursor:'pointer', transition:'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor='rgba(200,160,74,.4)'; e.currentTarget.style.transform='translateY(-2px)' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor=C.gold; e.currentTarget.style.transform='translateY(-2px)' }}
               onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.transform='none' }}
             >
               <div style={{ fontSize:28, marginBottom:10 }}>🎯</div>
@@ -97,17 +94,17 @@ export default function CompanyDashboard() {
         {/* الإجراءات */}
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:20 }}>
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
+            onMouseEnter={e => e.currentTarget.style.borderColor=C.gold}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
           >
             <div style={{ fontSize:36, marginBottom:16 }}>📢</div>
             <div style={{ fontSize:18, fontWeight:800, color:C.text, marginBottom:8 }}>انشر وظيفة جديدة</div>
-            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>اكتب أسئلتك بنفسك أو دع الذكاء الاصطناعي يولّدها لك</div>
-            <Link href="/company/post-job" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>+ إنشاء وظيفة</Link>
+            <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:24 }}>اكتب أسئلتك بنفسك أو دع الذكاء الاصطناعي يولّدها</div>
+            <Link href="/company/post-job" style={{ display:'inline-flex', padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>+ إنشاء وظيفة</Link>
           </div>
 
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32, transition:'border-color .2s' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
+            onMouseEnter={e => e.currentTarget.style.borderColor=C.gold}
             onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
           >
             <div style={{ fontSize:36, marginBottom:16 }}>🔍</div>

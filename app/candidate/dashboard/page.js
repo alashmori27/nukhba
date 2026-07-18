@@ -19,9 +19,10 @@ function authHeaders(user) {
 
 export default function CandidateDashboard() {
   const router = useRouter()
-  const [user, setUser]       = useState(null)
+  const [user, setUser]         = useState(null)
   const [profileCount, setCount] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [unreadCount, setUnread] = useState(0)
+  const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -29,14 +30,19 @@ export default function CandidateDashboard() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'candidate') { router.push('/company/dashboard'); return }
     setUser(parsed)
-    fetchCount(parsed)
+    fetchData(parsed)
   }, [])
 
-  async function fetchCount(u) {
+  async function fetchData(u) {
     try {
-      const res  = await fetch(`/api/candidates?user_id=${u.id}`, { headers: authHeaders(u) })
-      const data = await res.json()
-      setCount((data.candidates || []).length)
+      const [profRes, notifRes] = await Promise.all([
+        fetch(`/api/candidates?user_id=${u.id}`, { headers: authHeaders(u) }),
+        fetch(`/api/notifications?user_id=${u.id}`)
+      ])
+      const profData  = await profRes.json()
+      const notifData = await notifRes.json()
+      setCount((profData.candidates || []).length)
+      setUnread((notifData.notifications || []).filter(n => !n.is_read).length)
     } catch(e) { console.error(e) }
     setLoading(false)
   }
@@ -69,6 +75,16 @@ export default function CandidateDashboard() {
       badge: hasProfile ? profileCount : null,
     },
     {
+      icon: '📊',
+      title: 'تتبع طلباتي',
+      desc: unreadCount > 0 ? `لديك ${unreadCount} تحديث جديد` : 'تابع حالة طلباتك ووظائفك',
+      link: '/candidate/applications',
+      btn: 'عرض التحديثات',
+      gold: false,
+      badge: unreadCount > 0 ? unreadCount : null,
+      badgeRed: true,
+    },
+    {
       icon: '🏢',
       title: 'تصفح الوظائف',
       desc: 'تقدّم على وظيفة بمقابلة مخصصة لمتطلباتها',
@@ -90,7 +106,6 @@ export default function CandidateDashboard() {
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
-      {/* Nav */}
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 28px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontSize:20, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -106,7 +121,6 @@ export default function CandidateDashboard() {
 
       <div style={{ maxWidth:860, margin:'0 auto', padding:'40px 20px' }}>
 
-        {/* Hero إذا ما عنده ملف */}
         {!loading && !hasProfile && (
           <div style={{ background:`linear-gradient(135deg,rgba(122,94,40,.15),rgba(200,160,74,.05))`, border:`2px solid ${C.gold}`, borderRadius:20, padding:'48px 32px', textAlign:'center', marginBottom:32 }}>
             <div style={{ fontSize:52, marginBottom:14 }}>🎙️</div>
@@ -120,7 +134,6 @@ export default function CandidateDashboard() {
           </div>
         )}
 
-        {/* Greeting إذا عنده ملف */}
         {!loading && hasProfile && (
           <div style={{ marginBottom:28 }}>
             <h1 style={{ fontSize:20, fontWeight:800, color:C.text, marginBottom:4 }}>أهلاً {user.name} 👋</h1>
@@ -128,21 +141,18 @@ export default function CandidateDashboard() {
           </div>
         )}
 
-        {/* Cards */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:14 }}>
           {cards.map(card => (
             <Link key={card.title} href={card.link} style={{ textDecoration:'none' }}>
-              <div style={{ background:C.card, border:`1px solid ${card.gold ? C.gold : C.border}`, borderRadius:14, padding:22, height:'100%', transition:'all .2s', cursor:'pointer', position:'relative' }}
+              <div style={{ background:C.card, border:`1px solid ${card.gold?C.gold:C.border}`, borderRadius:14, padding:22, height:'100%', transition:'all .2s', cursor:'pointer', position:'relative' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor=C.gold; e.currentTarget.style.transform='translateY(-3px)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=card.gold?C.gold:C.border; e.currentTarget.style.transform='none' }}
               >
-                {/* Badge */}
                 {card.badge && (
-                  <div style={{ position:'absolute', top:14, left:14, width:22, height:22, borderRadius:'50%', background:C.gold, color:'#06060e', fontSize:11, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                  <div style={{ position:'absolute', top:12, left:12, minWidth:20, height:20, borderRadius:10, background:card.badgeRed?C.error:C.gold, color:'#fff', fontSize:10, fontWeight:800, display:'flex', alignItems:'center', justifyContent:'center', padding:'0 5px' }}>
                     {card.badge}
                   </div>
                 )}
-
                 <div style={{ fontSize:30, marginBottom:12 }}>{card.icon}</div>
                 <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:6 }}>{card.title}</div>
                 <div style={{ fontSize:12, color:C.muted, lineHeight:1.7, marginBottom:16 }}>{card.desc}</div>
