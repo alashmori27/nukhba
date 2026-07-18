@@ -200,7 +200,7 @@ export default function InterviewClient() {
         body: JSON.stringify({ profile, userId:u.id, jobId: currentJob?.id || null, transcript }),
       })
       sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
-      router.push('/candidate/profile')
+      router.push('/candidate/interview-complete')
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ تعذّر إنشاء الملف: ${e.message}` }])
     }
