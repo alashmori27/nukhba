@@ -8,10 +8,17 @@ const supabase = createClient(
 export async function PATCH(req, { params }) {
   try {
     const body = await req.json()
+    
+    // بناء object التحديث بشكل صريح
+    const updates = {}
+    if (body.is_visible !== undefined) updates.is_visible = body.is_visible === true || body.is_visible === 'true'
+    if (body.notes !== undefined) updates.notes = body.notes
+    
     const { error } = await supabase
       .from('candidates')
-      .update(body)
+      .update(updates)
       .eq('id', params.id)
+      
     if (error) throw error
     return Response.json({ success: true })
   } catch(e) {
@@ -21,7 +28,10 @@ export async function PATCH(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const { error } = await supabase.from('candidates').delete().eq('id', params.id)
+    const { error } = await supabase
+      .from('candidates')
+      .delete()
+      .eq('id', params.id)
     if (error) throw error
     return Response.json({ success: true })
   } catch(e) {
