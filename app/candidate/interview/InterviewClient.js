@@ -195,10 +195,28 @@ export default function InterviewClient() {
       const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], profileSys)
       const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
       const u       = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
-      await fetch('/api/candidates', {
+
+      // حفظ الملف
+      const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ profile, userId:u.id, jobId: currentJob?.id || null, transcript }),
       })
+      const saveData = await saveRes.json()
+
+      // إشعار للشركة إذا تقدم على وظيفة
+      if (currentJob?.company_id) {
+        await fetch('/api/notifications', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            user_id: currentJob.company_id,
+            type: 'new_applicant',
+            title: `مرشح جديد تقدم على وظيفة "${currentJob.title}"`,
+            body: `${profile.name || 'مرشح'} — ${profile.specialization || ''} — تقييم: ${profile.overall_score || 0}/100`,
+            meta: { candidate_id: saveData.id, job_id: currentJob.id }
+          })
+        })
+      }
+
       sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
       router.push('/candidate/interview-complete')
     } catch(e) {
