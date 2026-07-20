@@ -158,7 +158,7 @@ export default function ForCompanies() {
           <div style={{ background:'rgba(200,160,74,.05)', border:'2px solid rgba(200,160,74,.4)', borderRadius:16, padding:32, textAlign:'right', position:'relative' }}>
             <div style={{ position:'absolute', top:-12, right:'50%', transform:'translateX(50%)', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', fontSize:11, fontWeight:800, padding:'4px 14px', borderRadius:20, whiteSpace:'nowrap' }}>الأكثر شيوعاً</div>
             <div style={{ fontSize:13, fontWeight:700, color:'#c8a04a', marginBottom:16 }}>بالوظيفة</div>
-            <div style={{ fontSize:40, fontWeight:800, color:'#f8f5ef', marginBottom:4 }}>١٩٩<span style={{ fontSize:16, color:'#7a7690' }}> ريال</span></div>
+            <div style={{ fontSize:40, fontWeight:800, color:'#f8f5ef', marginBottom:4 }}>199<span style={{ fontSize:16, color:'#7a7690' }}> ريال</span></div>
             <div style={{ fontSize:12, color:'#7a7690', marginBottom:28 }}>لكل وظيفة منشورة</div>
             {['وظائف غير محدودة','تقييم ذكي لكل مرشح','نص المقابلة كاملاً','واتساب وإيميل مباشر','إشعارات فورية'].map(f => (
               <div key={f} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, fontSize:13, color:'#ede8df' }}>
@@ -172,7 +172,7 @@ export default function ForCompanies() {
 
           <div style={{ background:'#181828', border:'1px solid #252538', borderRadius:16, padding:32, textAlign:'right' }}>
             <div style={{ fontSize:13, fontWeight:700, color:'#7a7690', marginBottom:16 }}>شهري</div>
-            <div style={{ fontSize:40, fontWeight:800, color:'#f8f5ef', marginBottom:4 }}>٤٩٩<span style={{ fontSize:16, color:'#7a7690' }}> ريال</span></div>
+            <div style={{ fontSize:40, fontWeight:800, color:'#f8f5ef', marginBottom:4 }}>499<span style={{ fontSize:16, color:'#7a7690' }}> ريال</span></div>
             <div style={{ fontSize:12, color:'#7a7690', marginBottom:28 }}>شهرياً — وظائف غير محدودة</div>
             {['كل مميزات الخطة السابقة','وظائف غير محدودة','أولوية في الدعم','تقارير شهرية'].map(f => (
               <div key={f} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10, fontSize:13, color:'#ede8df' }}>
