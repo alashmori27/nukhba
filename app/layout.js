@@ -16,7 +16,7 @@ export const metadata = {
   keywords: ['توظيف', 'وظائف', 'مقابلة ذكية', 'ذكاء اصطناعي', 'السعودية', 'CV', 'نخبة'],
   authors: [{ name: 'نخبة · Nukhba' }],
   verification: {
-    google: 'f5ff43b35931ac2e',
+    google: 'PZghiEyYiWM7FgvzVjF_OZ51gK4umXbChgzJ4qzbomI',
   },
   openGraph: {
     title: 'نخبة · منصة التوظيف الذكية',
