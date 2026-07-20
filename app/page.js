@@ -143,7 +143,7 @@ export default function Home() {
         {/* FOOTER */}
         <footer className="footer-wrap" style={{ borderTop:'1px solid var(--border)' }}>
           <div style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · Nukhba</div>
-          <p style={{ fontSize:12, color:'var(--muted)' }}>© 2025 نخبة. جميع الحقوق محفوظة.</p>
+          <p style={{ fontSize:12, color:'var(--muted)' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
           <div className="footer-links" style={{ display:'flex', gap:24 }}>
             {[['سياسة الخصوصية','/privacy'],['الشروط','/terms'],['تواصل معنا','/contact']].map(([l,href]) => (
               <Link key={l} href={href} style={{ fontSize:13, color:'var(--muted)', textDecoration:'none' }}>{l}</Link>
