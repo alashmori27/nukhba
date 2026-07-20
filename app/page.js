@@ -1,10 +1,6 @@
+'use client'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
-
-export const metadata = {
-  title: 'نخبة · منصة التوظيف الذكية',
-  description: 'مقابلات AI تكشف قيمتك الحقيقية — CV احترافي للباحثين، ومرشحون موثوقون للشركات',
-}
 
 export default function Home() {
   return (
@@ -12,35 +8,35 @@ export default function Home() {
       <style>{`
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         @keyframes glow  { 0%,100%{opacity:.07} 50%{opacity:.13} }
-        @keyframes slideIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
 
-        .hero-title { font-size: clamp(42px, 7vw, 84px); }
-        .hero-sub   { font-size: clamp(15px, 2vw, 20px); }
-        .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .split-card { border-radius: 20px; padding: 44px 36px; transition: all .3s; cursor: default; position: relative; overflow: hidden; }
+        .hero-title   { font-size: clamp(42px, 7vw, 84px); }
+        .hero-sub     { font-size: clamp(15px, 2vw, 20px); }
+        .split-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .split-card   { border-radius: 20px; padding: 44px 36px; transition: all .3s; position: relative; overflow: hidden; }
         .split-card:hover { transform: translateY(-6px); }
         .split-card::before { content:''; position:absolute; inset:0; opacity:0; transition:opacity .3s; }
         .split-card.candidate::before { background: radial-gradient(ellipse at top right, rgba(200,160,74,.08), transparent 70%); }
-        .split-card.company::before   { background: radial-gradient(ellipse at top left,  rgba(74,156,110,.06), transparent 70%); }
+        .split-card.company::before   { background: radial-gradient(ellipse at top left, rgba(74,156,110,.06), transparent 70%); }
         .split-card:hover::before { opacity: 1; }
-        .stat-num { font-family: 'Cormorant Garamond', serif; font-size: 38px; font-weight: 600; color: var(--gold); line-height: 1; }
-        .how-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 2px; border-radius: 16px; overflow: hidden; }
-        .feature-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-        .cta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .stat-num     { font-family:'Cormorant Garamond',serif; font-size:38px; font-weight:600; color:var(--gold); line-height:1; }
+        .how-grid     { display:grid; grid-template-columns:repeat(3,1fr); gap:2px; border-radius:16px; overflow:hidden; }
+        .feature-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+        .cta-grid     { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .section-pad  { padding: 90px 40px; }
 
-        @media(max-width: 768px) {
-          .split-grid  { grid-template-columns: 1fr; gap: 14px; }
-          .split-card  { padding: 32px 24px; }
-          .how-grid    { grid-template-columns: 1fr; gap: 2px; }
-          .feature-grid{ grid-template-columns: 1fr 1fr; gap: 12px; }
-          .cta-grid    { grid-template-columns: 1fr; }
-          .stats-row   { gap: 28px !important; }
-          .hide-sm     { display: none !important; }
-          .section-pad { padding: 60px 20px !important; }
+        @media(max-width:768px){
+          .split-grid   { grid-template-columns:1fr; gap:14px; }
+          .split-card   { padding:32px 24px; }
+          .how-grid     { grid-template-columns:1fr; gap:2px; }
+          .feature-grid { grid-template-columns:1fr 1fr; gap:12px; }
+          .cta-grid     { grid-template-columns:1fr; }
+          .stats-row    { gap:28px !important; }
+          .hide-sm      { display:none !important; }
+          .section-pad  { padding:60px 20px !important; }
         }
-        @media(max-width: 480px) {
-          .feature-grid { grid-template-columns: 1fr; }
-          .hero-title   { font-size: 38px !important; }
+        @media(max-width:480px){
+          .feature-grid { grid-template-columns:1fr; }
+          .hero-title   { font-size:38px !important; }
         }
       `}</style>
 
@@ -51,19 +47,16 @@ export default function Home() {
         {/* ══ HERO ══ */}
         <section style={{ minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', padding:'80px 20px 60px', position:'relative', overflow:'hidden' }}>
 
-          {/* Ambient glow */}
           <div style={{ position:'absolute', top:'40%', left:'50%', transform:'translate(-50%,-50%)', width:800, height:800, background:'radial-gradient(ellipse,rgba(200,160,74,.07) 0%,transparent 65%)', pointerEvents:'none', animation:'glow 4s ease-in-out infinite' }}/>
           <div style={{ position:'absolute', top:'40%', left:'50%', transform:'translate(-50%,-50%)', width:500, height:500, border:'1px solid rgba(200,160,74,.06)', borderRadius:'50%', animation:'float 8s ease-in-out infinite', pointerEvents:'none' }}/>
 
-          {/* Badge */}
           <div className="fade-up" style={{ display:'inline-flex', alignItems:'center', gap:8, background:'rgba(200,160,74,.06)', border:'1px solid rgba(200,160,74,.2)', padding:'7px 20px', borderRadius:24, fontSize:11, color:'var(--gold)', marginBottom:32, fontFamily:"'Cormorant Garamond',serif", letterSpacing:5, textTransform:'uppercase', animationDelay:'.05s' }}>
             ✦ AI · Talent · Platform · السعودية
           </div>
 
-          {/* Headline */}
           <h1 className="fade-up hero-title" style={{ fontWeight:800, lineHeight:1.05, color:'#f8f5ef', marginBottom:16, animationDelay:'.15s' }}>
             التوظيف الذكي<br/>
-            <span style={{ background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', backgroundSize:'200% auto', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
+            <span style={{ background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
               يبدأ من هنا
             </span>
           </h1>
@@ -80,7 +73,6 @@ export default function Home() {
           {/* Split CTA */}
           <div className="fade-up split-grid" style={{ width:'100%', maxWidth:720, animationDelay:'.45s' }}>
 
-            {/* للباحث */}
             <div className="split-card candidate" style={{ background:'var(--card)', border:'1px solid var(--border)' }}>
               <div style={{ fontSize:36, marginBottom:16 }}>🎙️</div>
               <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:4, color:'var(--gold)', textTransform:'uppercase', marginBottom:10 }}>باحث عن عمل</div>
@@ -93,7 +85,6 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* للشركة */}
             <div className="split-card company" style={{ background:'var(--card)', border:'1px solid var(--border)' }}>
               <div style={{ fontSize:36, marginBottom:16 }}>🏢</div>
               <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:4, color:'var(--success)', textTransform:'uppercase', marginBottom:10 }}>شركة توظيف</div>
@@ -119,7 +110,7 @@ export default function Home() {
         </section>
 
         {/* ══ HOW IT WORKS ══ */}
-        <section className="section-pad" style={{ padding:'90px 40px', background:'var(--bg2)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
+        <section className="section-pad" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
           <div style={{ maxWidth:1100, margin:'0 auto' }}>
             <div style={{ textAlign:'center', marginBottom:52 }}>
               <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:12 }}>كيف يعمل</p>
@@ -127,12 +118,12 @@ export default function Home() {
             </div>
             <div className="how-grid" style={{ background:'var(--border)' }}>
               {[
-                { num:'01', icon:'🎙️', title:'مقابلة ذكية', desc:'AI يسألك بعمق عن خبراتك وإنجازاتك — مثل مقابلة حقيقية مع متخصص HR، في أي وقت.', color:'var(--gold)' },
-                { num:'02', icon:'✨', title:'ملف احترافي', desc:'يحوّل إجاباتك لملف مرشح شامل — عربي وإنجليزي — يُعرض للشركات المناسبة تلقائياً.', color:'var(--gold)' },
-                { num:'03', icon:'📄', title:'CV جاهز', desc:'احصل على سيرتك الذاتية بصيغة PDF و Word بتصميم احترافي جاهز للتقديم الفوري.', color:'var(--gold)' },
+                { num:'01', icon:'🎙️', title:'مقابلة ذكية', desc:'AI يسألك بعمق عن خبراتك وإنجازاتك — مثل مقابلة حقيقية مع متخصص HR، في أي وقت.' },
+                { num:'02', icon:'✨', title:'ملف احترافي', desc:'يحوّل إجاباتك لملف مرشح شامل — عربي وإنجليزي — يُعرض للشركات المناسبة تلقائياً.' },
+                { num:'03', icon:'📄', title:'CV جاهز', desc:'احصل على سيرتك بصيغة PDF و Word بتصميم احترافي جاهز للتقديم الفوري.' },
               ].map(c => (
                 <div key={c.num} style={{ background:'var(--surface)', padding:'36px 28px' }}>
-                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:48, fontWeight:300, color:c.color, opacity:.2, lineHeight:1, marginBottom:20 }}>{c.num}</div>
+                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:48, fontWeight:300, color:'var(--gold)', opacity:.2, lineHeight:1, marginBottom:20 }}>{c.num}</div>
                   <div style={{ fontSize:28, marginBottom:14 }}>{c.icon}</div>
                   <div style={{ fontSize:16, fontWeight:700, color:'#f8f5ef', marginBottom:10 }}>{c.title}</div>
                   <div style={{ fontSize:13, color:'var(--muted)', lineHeight:1.8 }}>{c.desc}</div>
@@ -143,19 +134,19 @@ export default function Home() {
         </section>
 
         {/* ══ FEATURES ══ */}
-        <section className="section-pad" style={{ padding:'90px 40px', maxWidth:1100, margin:'0 auto' }}>
+        <section className="section-pad" style={{ maxWidth:1100, margin:'0 auto' }}>
           <div style={{ textAlign:'center', marginBottom:52 }}>
             <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:12 }}>المميزات</p>
             <h2 style={{ fontSize:'clamp(22px,4vw,38px)', fontWeight:800, color:'#f8f5ef' }}>لماذا نخبة؟</h2>
           </div>
           <div className="feature-grid">
             {[
-              { icon:'🤖', title:'AI عميق', desc:'٦ محاور تقييم — خبرة، إنجازات، شخصية، مهارات، توقعات، ملاءمة.' },
-              { icon:'🎯', title:'تقييم موضوعي', desc:'تقييم من 100 لكل مرشح — بدون تحيز، بدون تأثير شخصي.' },
-              { icon:'🌐', title:'ثنائي اللغة', desc:'ملف مهني عربي وإنجليزي — ترجمة احترافية تلقائية.' },
-              { icon:'⚡', title:'توفير الوقت', desc:'بدل مئات الـ CV — ملفات مرتبة جاهزة في دقائق.' },
-              { icon:'🔒', title:'خصوصية تامة', desc:'بياناتك محمية — لا تُشارك بدون إذنك الصريح.' },
-              { icon:'📱', title:'من أي جهاز', desc:'جوال أو كمبيوتر — المقابلة في أي وقت ومن أي مكان.' },
+              { icon:'🤖', title:'AI عميق',        desc:'٦ محاور تقييم — خبرة، إنجازات، شخصية، مهارات، توقعات، ملاءمة.' },
+              { icon:'🎯', title:'تقييم موضوعي',   desc:'تقييم من 100 لكل مرشح — بدون تحيز، بدون تأثير شخصي.' },
+              { icon:'🌐', title:'ثنائي اللغة',    desc:'ملف مهني عربي وإنجليزي — ترجمة احترافية تلقائية.' },
+              { icon:'⚡', title:'توفير الوقت',    desc:'بدل مئات الـ CV — ملفات مرتبة جاهزة في دقائق.' },
+              { icon:'🔒', title:'خصوصية تامة',   desc:'بياناتك محمية — لا تُشارك بدون إذنك الصريح.' },
+              { icon:'📱', title:'من أي جهاز',    desc:'جوال أو كمبيوتر — المقابلة في أي وقت ومن أي مكان.' },
             ].map(f => (
               <div key={f.title} className="card-hover" style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:14, padding:'24px 20px' }}>
                 <div style={{ fontSize:26, marginBottom:12 }}>{f.icon}</div>
@@ -167,7 +158,7 @@ export default function Home() {
         </section>
 
         {/* ══ COMPARISON ══ */}
-        <section className="section-pad" style={{ padding:'90px 40px', background:'var(--bg2)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
+        <section className="section-pad" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
           <div style={{ maxWidth:800, margin:'0 auto' }}>
             <div style={{ textAlign:'center', marginBottom:48 }}>
               <h2 style={{ fontSize:'clamp(22px,4vw,36px)', fontWeight:800, color:'#f8f5ef' }}>نخبة مقابل الطريقة التقليدية</h2>
@@ -194,7 +185,7 @@ export default function Home() {
         </section>
 
         {/* ══ CTA FINAL ══ */}
-        <section className="section-pad" style={{ padding:'110px 40px', textAlign:'center' }}>
+        <section className="section-pad" style={{ textAlign:'center' }}>
           <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:16 }}>ابدأ الآن</p>
           <h2 style={{ fontSize:'clamp(28px,5vw,52px)', fontWeight:800, color:'#f8f5ef', marginBottom:16, lineHeight:1.1 }}>
             وظّف بثقة.<br/>
@@ -206,16 +197,10 @@ export default function Home() {
             سواء كنت باحثاً عن عمل أو شركة توظيف — نخبة تبدأ معك مجاناً.
           </p>
           <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-            <Link href="/auth/login" style={{ padding:'14px 36px', borderRadius:10, fontSize:15, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none', transition:'filter .2s, transform .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.filter='brightness(1.1)'; e.currentTarget.style.transform='translateY(-2px)' }}
-              onMouseLeave={e => { e.currentTarget.style.filter='none'; e.currentTarget.style.transform='none' }}
-            >
+            <Link href="/auth/login" style={{ padding:'14px 36px', borderRadius:10, fontSize:15, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>
               ابدأ مقابلتك المجانية
             </Link>
-            <Link href="/auth/login?role=company" style={{ padding:'14px 36px', borderRadius:10, fontSize:15, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none', transition:'all .2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor='var(--gold)'; e.currentTarget.style.color='var(--gold)' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor='var(--border)'; e.currentTarget.style.color='var(--muted)' }}
-            >
+            <Link href="/auth/login?role=company" style={{ padding:'14px 36px', borderRadius:10, fontSize:15, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none' }}>
               للشركات — انشر وظيفة
             </Link>
           </div>
@@ -232,10 +217,7 @@ export default function Home() {
         <p style={{ fontSize:12, color:'var(--muted)' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
         <div style={{ display:'flex', gap:20, flexWrap:'wrap' }}>
           {[['سياسة الخصوصية','/privacy'],['الشروط','/terms'],['تواصل معنا','/contact'],['للشركات','/for-companies']].map(([label,href]) => (
-            <Link key={href} href={href} style={{ fontSize:12, color:'var(--muted)', textDecoration:'none', transition:'color .2s' }}
-              onMouseEnter={e => e.currentTarget.style.color='var(--gold)'}
-              onMouseLeave={e => e.currentTarget.style.color='var(--muted)'}
-            >{label}</Link>
+            <Link key={href} href={href} style={{ fontSize:12, color:'var(--muted)', textDecoration:'none' }}>{label}</Link>
           ))}
         </div>
       </footer>
