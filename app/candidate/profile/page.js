@@ -331,7 +331,7 @@ export default function ProfilePage() {
           <div className="no-print" style={{ marginBottom:24 }}>
             <div style={{ fontSize:18, fontWeight:800, color:'#ede8df', marginBottom:4 }}>ملفك الاحترافي</div>
             <div style={{ fontSize:13, color:'#7a7690', marginBottom:16 }}>صفحة عربية + صفحة إنجليزية</div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(130px,1fr))', gap:10 }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
               {[
                 { label:'📄 PDF', onClick:() => window.print(), bg:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', border:'none' },
                 { label:loading.word?'⏳...':'📝 Word', onClick:downloadWord, bg:'transparent', color:G, border:`1px solid ${G}` },
