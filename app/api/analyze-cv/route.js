@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-export const config = { api: { bodyParser: false } }
+export const runtime = 'nodejs'
 
 export async function POST(req) {
   try {
@@ -12,7 +12,6 @@ export async function POST(req) {
     const bytes  = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // قراءة PDF
     const pdfParse = (await import('pdf-parse')).default
     const data = await pdfParse(buffer)
     const text = data.text?.trim()
@@ -21,7 +20,6 @@ export async function POST(req) {
       return NextResponse.json({ error: 'تعذّر قراءة الملف — تأكد أن الملف نصي وليس صورة' }, { status: 400 })
     }
 
-    // تحليل مجاني بـ Claude
     const prompt = `أنت خبير HR سعودي متخصص في تحليل السير الذاتية.
 
 حلّل السيرة الذاتية التالية وأعطِ:
@@ -54,7 +52,7 @@ ${text.slice(0, 3000)}
     const raw    = aiData.content?.[0]?.text || '{}'
     const result = JSON.parse(raw.replace(/```json|```/g, '').trim())
 
-    return NextResponse.json({ success: true, ...result, textLength: text.length })
+    return NextResponse.json({ success: true, ...result })
 
   } catch(e) {
     console.error(e)
