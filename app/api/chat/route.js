@@ -15,7 +15,7 @@ export async function POST(req) {
 
     // نبقي أول رسالتين (تعريف المستخدم) + آخر 10 رسائل
     let trimmedMessages = messages
-    if (!isProfileGen && messages.length > 12) {
+    if (!isProfileGen && messages.length > 30) {
       trimmedMessages = [
         ...messages.slice(0, 2),
         ...messages.slice(-10)
