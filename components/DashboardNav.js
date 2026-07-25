@@ -7,6 +7,8 @@ export default function DashboardNav({ user, children }) {
 
   function logout() {
     localStorage.removeItem('nukhba_user')
+    localStorage.removeItem('nukhba_profile_edited')
+    sessionStorage.clear()
     router.push('/auth/login')
   }
 
