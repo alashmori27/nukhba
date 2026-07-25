@@ -10,8 +10,8 @@ const C = {
 
 export default function CandidateJobs() {
   const router = useRouter()
-  const [user, setUser]     = useState(null)
-  const [jobs, setJobs]     = useState([])
+  const [user, setUser]       = useState(null)
+  const [jobs, setJobs]       = useState([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState(null)
 
@@ -26,16 +26,14 @@ export default function CandidateJobs() {
     try {
       const res  = await fetch('/api/jobs')
       const data = await res.json()
-      setJobs(data.jobs || [])
+      setJobs((data.jobs || []).filter(j => j.status !== 'closed'))
     } catch(e) { console.error(e) }
     setLoading(false)
   }
 
   function applyToJob(job) {
-    // حفظ بيانات الوظيفة في sessionStorage
     sessionStorage.setItem('nukhba_job', JSON.stringify(job))
-    // التوجيه لصفحة المقابلة مع ID الوظيفة
-    router.push(`/candidate/interview?jobId=${job.id}`)
+    router.push(`/candidate/jobs/pay?jobId=${job.id}`)
   }
 
   return (
@@ -44,12 +42,12 @@ export default function CandidateJobs() {
 
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
-        <Link href="/candidate/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}` }}>← لوحة التحكم</Link>
+        <Link href="/candidate/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}`, textDecoration:'none' }}>← لوحة التحكم</Link>
       </div>
 
       <div style={{ maxWidth:900, margin:'0 auto', padding:'36px 24px' }}>
         <h1 style={{ fontSize:26, fontWeight:800, marginBottom:6 }}>الوظائف المتاحة</h1>
-        <p style={{ fontSize:14, color:C.muted, marginBottom:32 }}>تقدّم على وظيفة محددة وأجرِ مقابلة ذكية مخصصة لمتطلباتها</p>
+        <p style={{ fontSize:14, color:C.muted, marginBottom:32 }}>تقدّم على وظيفة وأجرِ مقابلة ذكية مخصصة لمتطلباتها</p>
 
         {loading && (
           <div style={{ textAlign:'center', padding:60, color:C.muted }}>
@@ -81,6 +79,7 @@ export default function CandidateJobs() {
                     {job.location && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>📍 {job.location}</span>}
                     {job.salary_range && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>💰 {job.salary_range}</span>}
                     {job.questions?.length > 0 && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:'rgba(200,160,74,.1)', border:`1px solid rgba(200,160,74,.3)`, color:C.gold }}>🎙️ {job.questions.length} أسئلة مقابلة</span>}
+                    <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:'rgba(74,156,110,.1)', border:'1px solid rgba(74,156,110,.3)', color:'#4a9c6e' }}>💳 39 ريال</span>
                   </div>
                 </div>
                 <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
@@ -111,7 +110,7 @@ export default function CandidateJobs() {
                     </div>
                   )}
                   <button onClick={() => applyToJob(job)} style={{ marginTop:16, width:'100%', padding:'12px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                    🎙️ ابدأ مقابلة هذه الوظيفة
+                    🎙️ تقدّم على هذه الوظيفة — 39 ريال
                   </button>
                 </div>
               )}
