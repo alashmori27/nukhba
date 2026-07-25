@@ -22,10 +22,8 @@ function Dots() {
   )
 }
 
-// نظام للمقابلة العامة
 const GENERAL_SYSTEM = INTERVIEW_SYSTEM
 
-// نظام مخصص لوظيفة محددة — يستخدم أسئلة الشركة فقط
 function buildJobSystem(job) {
   const questionsText = job.questions?.map((q,i) => `${i+1}. ${q}`).join('\n') || ''
   return `You are Nukhba's AI interviewer conducting a job interview.
@@ -39,16 +37,26 @@ You are interviewing for this specific position:
 - Description: ${job.description}
 - Requirements: ${job.requirements}
 
-IMPORTANT: Use ONLY these questions provided by the company — do not invent new questions:
+CRITICAL RULES:
+1. Review the ENTIRE conversation history before every response
+2. NEVER ask about information already provided
+3. Ask ONE question at a time only
+
+PHASE 1 - COLLECT CANDIDATE INFO (do this FIRST):
+Start by welcoming the candidate warmly in Arabic and introducing the job briefly.
+Then collect in order (ONE at a time):
+1. Full name (الاسم الكامل)
+2. Mobile number - tell them: "رقم جوالك سيظهر للشركة للتواصل معك"
+3. Email address
+
+After collecting all 3, say "شكراً، سنبدأ الآن بأسئلة المقابلة" then move to Phase 2.
+
+PHASE 2 - JOB INTERVIEW QUESTIONS:
+Use ONLY these questions provided by the company — do not invent new questions:
 ${questionsText}
 
-Instructions:
-- Ask ONE question at a time in a warm conversational way
-- Start by welcoming the candidate and introducing the job
-- Ask each question naturally, wait for answer, then ask the next
-- You may add one brief follow-up if an answer is vague
-- After ALL questions are answered completely, say a warm closing and end with exactly: [STAGE_COMPLETE]
-- Do NOT end the interview before asking all questions`
+After ALL job questions are answered completely, say a warm closing and end with exactly: [STAGE_COMPLETE]
+Do NOT end the interview before completing Phase 1 AND all Phase 2 questions.`
 }
 
 export default function InterviewClient() {
@@ -112,7 +120,7 @@ export default function InterviewClient() {
     try {
       const sys  = buildJobSystem(jobData)
       const text = await callChat(
-        [{ role:'user', content:`ابدأ مقابلة العمل لوظيفة "${jobData.title}" في "${jobData.company_name}". رحّب بالمتقدم باللغة العربية، عرّفه على الوظيفة بإيجاز، ثم ابدأ بأول سؤال.` }],
+        [{ role:'user', content:`ابدأ مقابلة العمل لوظيفة "${jobData.title}" في "${jobData.company_name}". رحّب بالمتقدم باللغة العربية، عرّفه على الوظيفة بإيجاز، ثم اطلب اسمه الكامل.` }],
         sys
       )
       setMessages([{ role:'assistant', content:text.replace('[STAGE_COMPLETE]','').trim() }])
@@ -152,10 +160,8 @@ export default function InterviewClient() {
 
     if (done) {
       if (jobRef.current) {
-        // وظيفة محددة — أنشئ الملف مباشرة
         await buildProfile([...nextMsgs, aMsg])
       } else {
-        // مقابلة عامة — انتقل للمرحلة التالية
         const ni = stageRef.current + 1
         if (ni < STAGES.length) {
           setStageIdx(ni); stageRef.current = ni
@@ -196,14 +202,12 @@ export default function InterviewClient() {
       const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
       const u       = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
 
-      // حفظ الملف
       const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ profile, userId:u.id, jobId: currentJob?.id || null, transcript }),
       })
       const saveData = await saveRes.json()
 
-      // إشعار للشركة إذا تقدم على وظيفة
       if (currentJob?.company_id) {
         await fetch('/api/notifications', {
           method:'POST', headers:{'Content-Type':'application/json'},
@@ -218,7 +222,7 @@ export default function InterviewClient() {
       }
 
       sessionStorage.setItem('nukhba_candidate_id', saveData.id)
-sessionStorage.setItem('nukhba_profile', JSON.stringify(profile)) 
+      sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
       router.push('/candidate/interview-complete')
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ تعذّر إنشاء الملف: ${e.message}` }])
@@ -232,8 +236,8 @@ sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
     e.target.style.height='auto'
     e.target.style.height=Math.min(e.target.scrollHeight,130)+'px'
   }
-  const stage   = STAGES[stageIdx]
-  const canSend = input.trim() && !typing
+  const stage      = STAGES[stageIdx]
+  const canSend    = input.trim() && !typing
   const currentJob = job
 
   return (
