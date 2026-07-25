@@ -9,14 +9,22 @@ const C = {
   success:'#4a9c6e', error:'#c94a4a'
 }
 
+const PROMO_CODES = {
+  'HA2030': { discount: 100, label: 'خصم 100% — مجاني تماماً!' },
+  'HA2026': { discount: 50,  label: 'خصم 50% — فقط 9.5 ريال' },
+}
+
 export default function CVAnalyzePage() {
   const router   = useRouter()
   const fileRef  = useRef(null)
-  const [file, setFile]       = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult]   = useState(null)
-  const [error, setError]     = useState('')
-  const [dragging, setDragging] = useState(false)
+  const [file, setFile]           = useState(null)
+  const [loading, setLoading]     = useState(false)
+  const [result, setResult]       = useState(null)
+  const [error, setError]         = useState('')
+  const [dragging, setDragging]   = useState(false)
+  const [promoCode, setPromoCode] = useState('')
+  const [promoApplied, setPromoApplied] = useState(null)
+  const [promoMsg, setPromoMsg]   = useState('')
 
   function handleFile(f) {
     if (!f) return
@@ -41,6 +49,18 @@ export default function CVAnalyzePage() {
     setLoading(false)
   }
 
+  function applyPromo() {
+    const code = promoCode.trim().toUpperCase()
+    if (PROMO_CODES[code]) {
+      setPromoApplied(PROMO_CODES[code])
+      setPromoMsg(`✓ ${PROMO_CODES[code].label}`)
+    } else {
+      setPromoApplied(null)
+      setPromoMsg('❌ كود غير صحيح')
+    }
+  }
+
+  const finalPrice = promoApplied ? Math.round(19 - (19 * promoApplied.discount / 100) * 10) / 10 : 19
   const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : C.error
   const scoreLabel = s => s >= 80 ? 'ممتاز' : s >= 60 ? 'جيد' : 'يحتاج تطوير'
   const circ = 2 * Math.PI * 45
@@ -109,7 +129,7 @@ export default function CVAnalyzePage() {
           </button>
         )}
 
-        {/* النتائج المجانية */}
+        {/* النتائج */}
         {result && (
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
@@ -155,27 +175,57 @@ export default function CVAnalyzePage() {
             </div>
 
             {/* قفل المدفوع */}
-            <div style={{ background:`linear-gradient(135deg,rgba(122,94,40,.15),rgba(200,160,74,.05))`, border:`2px solid ${C.gold}`, borderRadius:16, padding:28, textAlign:'center', position:'relative', overflow:'hidden' }}>
+            <div style={{ background:`linear-gradient(135deg,rgba(122,94,40,.15),rgba(200,160,74,.05))`, border:`2px solid ${C.gold}`, borderRadius:16, padding:28, textAlign:'center' }}>
               <div style={{ fontSize:32, marginBottom:12 }}>🔓</div>
               <div style={{ fontSize:17, fontWeight:800, color:C.text, marginBottom:8 }}>احصل على التحليل الكامل</div>
-              <p style={{ fontSize:13, color:C.muted, lineHeight:1.8, marginBottom:20, maxWidth:400, margin:'0 auto 20px' }}>
+              <p style={{ fontSize:13, color:C.muted, lineHeight:1.8, marginBottom:16, maxWidth:400, margin:'0 auto 16px' }}>
                 توصيات محددة قابلة للتطبيق + نسخة محسّنة من سيرتك الذاتية جاهزة للتحميل
               </p>
-              <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginBottom:16 }}>
+              <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginBottom:20 }}>
                 {['📋 تحليل كامل مفصّل','✏️ توصيات قابلة للتطبيق','📄 نسخة محسّنة جاهزة'].map(f => (
                   <div key={f} style={{ fontSize:12, color:C.gold, display:'flex', alignItems:'center', gap:4 }}>
                     <span style={{ color:C.success }}>✓</span> {f}
                   </div>
                 ))}
               </div>
-              <button onClick={() => alert('الدفع قريباً!')} style={{ padding:'13px 32px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                احصل على التحليل الكامل — ١٩ ريال
+
+              {/* كود الخصم */}
+              <div style={{ maxWidth:320, margin:'0 auto 12px', display:'flex', gap:8 }}>
+                <input
+                  value={promoCode}
+                  onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoMsg('') }}
+                  onKeyDown={e => e.key==='Enter' && applyPromo()}
+                  placeholder="كود الخصم (اختياري)"
+                  style={{ flex:1, background:C.surface, border:`1px solid ${promoApplied?C.success:C.border}`, borderRadius:9, padding:'9px 12px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13, outline:'none', letterSpacing:1 }}
+                />
+                <button onClick={applyPromo} style={{ padding:'9px 14px', borderRadius:9, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  تطبيق
+                </button>
+              </div>
+
+              {promoMsg && (
+                <p style={{ fontSize:12, color:promoApplied?C.success:C.error, marginBottom:12 }}>{promoMsg}</p>
+              )}
+
+              {promoApplied && (
+                <div style={{ display:'flex', justifyContent:'center', gap:16, marginBottom:14 }}>
+                  <span style={{ fontSize:13, color:C.muted }}>السعر الأصلي: <s>19 ريال</s></span>
+                  <span style={{ fontSize:14, fontWeight:800, color:C.success }}>
+                    {finalPrice === 0 ? 'مجاني 🎉' : `${finalPrice} ريال`}
+                  </span>
+                </div>
+              )}
+
+              <button
+                onClick={() => alert(promoApplied?.discount===100 ? 'مجاني! Moyasar قريباً' : 'Moyasar قريباً!')}
+                style={{ padding:'13px 32px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                {promoApplied?.discount===100 ? 'فعّل التحليل مجاناً ←' : `احصل على التحليل الكامل — ${finalPrice} ريال`}
               </button>
               <p style={{ fontSize:11, color:C.muted, marginTop:10 }}>✓ دفع آمن · نتيجة فورية</p>
             </div>
 
             {/* تحليل جديد */}
-            <button onClick={() => { setResult(null); setFile(null) }} style={{ width:'100%', padding:'11px', borderRadius:10, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+            <button onClick={() => { setResult(null); setFile(null); setPromoCode(''); setPromoApplied(null); setPromoMsg('') }} style={{ width:'100%', padding:'11px', borderRadius:10, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
               ← تحليل سيرة ذاتية أخرى
             </button>
           </div>
