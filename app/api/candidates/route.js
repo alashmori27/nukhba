@@ -39,7 +39,7 @@ export async function POST(req) {
         job_id:           jobId || null,
         company_id:       resolvedCompanyId,
         user_id:          userId || null,
-        is_visible:       true,
+        is_visible: jobId ? false : true,
         created_at:       new Date().toISOString()
       }])
       .select()
@@ -73,7 +73,7 @@ export async function GET(req) {
         query = query.eq('company_id', companyId)
       } else {
         // تصفح عام — الملفات الظاهرة فقط
-        query = query.eq('is_visible', true)
+        query = query.eq('is_visible', true).is('job_id', null)
       }
     }
 
