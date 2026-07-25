@@ -39,7 +39,7 @@ function CVContent({ p, lang='ar' }) {
         </div>
       </div>
       <div style={{ padding:'24px 32px' }}>
-        {p.summary_ar && (
+        {(isAr ? p.summary_ar : p.summary_en) && (
           <div style={{ marginBottom:20 }}>
             <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الملخص المهني':'Professional Summary'}</div>
             <p style={{ fontSize:13, color:'#ede8df', lineHeight:1.85 }}>{isAr ? p.summary_ar : p.summary_en}</p>
@@ -107,22 +107,29 @@ function CVContent({ p, lang='ar' }) {
 }
 
 export default function ProfilePage() {
-  const [profile, setProfile]       = useState(null)
-  const [isPaid, setIsPaid]         = useState(false)
+  const [profile, setProfile]         = useState(null)
+  const [editedProfile, setEditedProfile] = useState(null)
+  const [isPaid, setIsPaid]           = useState(false)
   const [candidateId, setCandidateId] = useState(null)
-  const [loading, setLoading]       = useState({word:false, imgAr:false, imgEn:false})
-  const [copied, setCopied]         = useState(false)
+  const [loading, setLoading]         = useState({word:false, imgAr:false, imgEn:false})
+  const [copied, setCopied]           = useState(false)
+  const [editMode, setEditMode]       = useState(false)
+  const [editSaved, setEditSaved]     = useState(false)
   const arRef = useRef(null)
   const enRef = useRef(null)
 
   useEffect(() => {
     const stored = sessionStorage.getItem('nukhba_profile')
+    const edited = localStorage.getItem('nukhba_profile_edited')
     const cid    = sessionStorage.getItem('nukhba_candidate_id')
     const paid   = sessionStorage.getItem('nukhba_paid') === 'true'
-    if (stored) setProfile(JSON.parse(stored))
-    if (cid)    setCandidateId(cid)
-    if (paid)   setIsPaid(true)
-    // تحقق من DB إذا عنده candidateId
+    if (stored) {
+      const p = JSON.parse(stored)
+      setProfile(p)
+      setEditedProfile(edited ? JSON.parse(edited) : p)
+    }
+    if (cid) setCandidateId(cid)
+    if (paid) setIsPaid(true)
     if (cid && !paid) {
       fetch(`/api/candidates/${cid}/paid`).then(r => r.json()).then(d => {
         if (d.is_paid) { setIsPaid(true); sessionStorage.setItem('nukhba_paid','true') }
@@ -132,8 +139,43 @@ export default function ProfilePage() {
 
   function setLoad(key, val) { setLoading(p => ({...p, [key]:val})) }
 
-  function lockAlert() {
-    alert('ادفع 39 ريال للحصول على CV + نشر ملفك للشركات + محتوى LinkedIn')
+  function lockAlert() { alert('ادفع 39 ريال للحصول على CV + نشر ملفك للشركات + محتوى LinkedIn') }
+
+  function saveEdits() {
+    localStorage.setItem('nukhba_profile_edited', JSON.stringify(editedProfile))
+    setEditMode(false)
+    setEditSaved(true)
+    setTimeout(() => setEditSaved(false), 2500)
+  }
+
+  function resetEdits() {
+    setEditedProfile(profile)
+    localStorage.removeItem('nukhba_profile_edited')
+    setEditMode(false)
+  }
+
+  function updateField(field, value) {
+    setEditedProfile(p => ({ ...p, [field]: value }))
+  }
+
+  function updateArrayField(field, index, value) {
+    setEditedProfile(p => {
+      const arr = [...(p[field] || [])]
+      arr[index] = value
+      return { ...p, [field]: arr }
+    })
+  }
+
+  function addArrayItem(field) {
+    setEditedProfile(p => ({ ...p, [field]: [...(p[field] || []), ''] }))
+  }
+
+  function removeArrayItem(field, index) {
+    setEditedProfile(p => {
+      const arr = [...(p[field] || [])]
+      arr.splice(index, 1)
+      return { ...p, [field]: arr }
+    })
   }
 
   async function downloadImage(ref, filename, key) {
@@ -155,10 +197,9 @@ export default function ProfilePage() {
     setLoad('word', true)
     try {
       const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = await import('docx')
-      const p = profile
+      const p = editedProfile
       const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
       const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF]||[]).map(tr)
-
       const arPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, ...opts, children:[new TextRun({ text, rightToLeft:true, font:{name:'Arial'}, size:opts.size||22 })] })
       const enPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.LEFT, ...opts, children:[new TextRun({ text, font:{name:'Calibri'}, size:opts.size||22 })] })
       const arSec  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[new TextRun({text:t,bold:true,rightToLeft:true,size:26,color:'C8A04A',font:{name:'Arial'}})] })
@@ -168,7 +209,6 @@ export default function ProfilePage() {
       const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, bullet:{level:0}, spacing:{after:80}, children:[new TextRun({text:t||'',rightToLeft:true,size:20,font:{name:'Arial'}})] })
       const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, bullet:{level:0}, spacing:{after:80}, children:[new TextRun({text:t||'',size:20,font:{name:'Calibri'}})] })
       const sp = () => new Paragraph({text:'',spacing:{after:160}})
-
       const doc = new Document({ sections:[{ properties:{page:{margin:{top:900,right:900,bottom:900,left:900}}}, children:[
         new Paragraph({alignment:AlignmentType.CENTER,bidirectional:true,spacing:{after:100},children:[new TextRun({text:p.name||'',bold:true,rightToLeft:true,size:56,color:'C8A04A',font:{name:'Arial'}})]}),
         new Paragraph({alignment:AlignmentType.CENTER,bidirectional:true,spacing:{after:80},children:[new TextRun({text:p.specialization||'',rightToLeft:true,size:28,color:'666666',font:{name:'Arial'}})]}),
@@ -195,7 +235,6 @@ export default function ProfilePage() {
         ...(p.soft_skills?.length>0?[enSec('SKILLS'),enPara(enArr('soft_skills_en','soft_skills').join('  •  '),{spacing:{after:200}})]:[]),
         new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:400},children:[new TextRun({text:'Generated by Nukhba · nukhbahr.com',size:16,color:'aaaaaa',italics:true,font:{name:'Calibri'}})]})
       ]}]})
-
       const blob = await Packer.toBlob(doc)
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
@@ -207,7 +246,7 @@ export default function ProfilePage() {
 
   function copyLinkedIn() {
     if (!isPaid) return lockAlert()
-    const p = profile
+    const p = editedProfile
     const text = `🔷 العنوان الوظيفي:\n${p.specialization || ''} | ${p.experience_years || ''} | ${p.location || ''}\n\n🔷 النبذة الشخصية:\n${p.summary_ar || ''}\n\n🔷 أبرز الإنجازات:\n${(p.achievements || []).map(a => `• ${a}`).join('\n')}\n\n🔷 المهارات:\n${(p.soft_skills || []).join(' | ')}\n\n─────────────\nتم بناء هذا الملف بواسطة نخبة · nukhbahr.com`
     navigator.clipboard.writeText(text)
     setCopied(true)
@@ -222,7 +261,7 @@ export default function ProfilePage() {
     </div>
   )
 
-  const p = profile
+  const p = editedProfile || profile
 
   return (
     <>
@@ -233,15 +272,17 @@ export default function ProfilePage() {
           body { background:#080810!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; margin:0; }
           @page { margin:12mm; size:A4; }
         }
+        .edit-input { width:100%; background:#13131f; border:1px solid #252538; border-radius:8px; padding:8px 12px; color:#ede8df; font-family:'Tajawal',sans-serif; font-size:13px; outline:none; resize:vertical; }
+        .edit-input:focus { border-color:#c8a04a; }
       `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
       {/* Topbar */}
-      <div className="no-print" style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:'rgba(8,8,16,.95)', backdropFilter:'blur(16px)', borderBottom:'1px solid #252538' }}>
+      <div className="no-print" style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', height:60, background:'rgba(8,8,16,.95)', backdropFilter:'blur(16px)', borderBottom:'1px solid #252538' }}>
         <Link href="/" style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${GD},${G})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', textDecoration:'none' }}>نخبة</Link>
         <div style={{ display:'flex', gap:8 }}>
-          <Link href="/candidate/dashboard" style={{ padding:'6px 14px', borderRadius:8, fontSize:12, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>← لوحة التحكم</Link>
-          <Link href="/candidate/interview" style={{ padding:'6px 14px', borderRadius:8, fontSize:12, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>مقابلة جديدة</Link>
+          <Link href="/candidate/profiles" style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>← ملفاتي</Link>
+          <Link href="/candidate/dashboard" style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>لوحة التحكم</Link>
         </div>
       </div>
 
@@ -254,12 +295,11 @@ export default function ProfilePage() {
             <div style={{ fontSize:13, color:'#7a7690', marginBottom:16 }}>صفحة عربية + صفحة إنجليزية</div>
 
             {!isPaid ? (
-              /* قفل — لم يدفع بعد */
               <div style={{ background:'rgba(200,160,74,.05)', border:'2px solid rgba(200,160,74,.3)', borderRadius:14, padding:'24px', textAlign:'center', marginBottom:16 }}>
                 <div style={{ fontSize:32, marginBottom:10 }}>🔒</div>
                 <div style={{ fontSize:15, fontWeight:700, color:'#ede8df', marginBottom:8 }}>ادفع 39 ريال لتحميل ملفك</div>
                 <p style={{ fontSize:13, color:'#7a7690', lineHeight:1.75, marginBottom:18 }}>
-                  CV احترافي (PDF + Word) + نشر ملفك للشركات + محتوى LinkedIn جاهز
+                  CV احترافي + تعديل شخصي + نشر للشركات + محتوى LinkedIn
                 </p>
                 <button onClick={() => alert('Moyasar — قريباً!')} style={{ padding:'12px 28px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                   ادفع 39 ريال وانطلق ←
@@ -267,9 +307,9 @@ export default function ProfilePage() {
                 <p style={{ fontSize:11, color:'#7a7690', marginTop:10 }}>يمكنك التصفح أدناه — التحميل بعد الدفع</p>
               </div>
             ) : (
-              /* مدفوع — أزرار مفعّلة */
               <div>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10, marginBottom:12 }}>
+                {/* أزرار التحميل */}
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10, marginBottom:10 }}>
                   {[
                     { label:'📄 PDF', onClick:() => window.print(), bg:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', border:'none' },
                     { label:loading.word?'⏳...':'📝 Word', onClick:downloadWord, bg:'transparent', color:G, border:`1px solid ${G}` },
@@ -282,13 +322,87 @@ export default function ProfilePage() {
                   ))}
                 </div>
 
-                {/* زر LinkedIn */}
-                <button onClick={copyLinkedIn} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background: copied?'rgba(0,119,181,.15)':'transparent', border:'1px solid #0077b5', color:'#0077b5', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
+                {/* LinkedIn */}
+                <button onClick={copyLinkedIn} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:copied?'rgba(0,119,181,.15)':'transparent', border:'1px solid #0077b5', color:'#0077b5', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:10 }}>
                   {copied ? '✓ تم النسخ! افتح LinkedIn والصق' : '💼 انسخ بياناتك لـ LinkedIn'}
                 </button>
+
+                {/* زر التعديل */}
+                <button onClick={() => setEditMode(!editMode)} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:editMode?'rgba(200,160,74,.1)':'transparent', border:`1px solid ${editMode?G:'#252538'}`, color:editMode?G:'#7a7690', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  {editMode ? '← إغلاق التعديل' : '✏️ عدّل ملفك الشخصي'}
+                </button>
+
+                {editSaved && (
+                  <div style={{ marginTop:8, padding:'8px 14px', background:'rgba(74,156,110,.1)', border:'1px solid rgba(74,156,110,.3)', borderRadius:8, fontSize:12, color:'#4a9c6e', textAlign:'center' }}>
+                    ✓ تم حفظ التعديلات — ستظهر في CV المحمّل
+                  </div>
+                )}
               </div>
             )}
           </div>
+
+          {/* ── وضع التعديل ── */}
+          {editMode && isPaid && (
+            <div className="no-print" style={{ background:'#0e0e1a', border:`1px solid ${G}33`, borderRadius:16, padding:24, marginBottom:24 }}>
+              <div style={{ fontSize:15, fontWeight:800, color:'#ede8df', marginBottom:4 }}>✏️ تعديل ملفك الشخصي</div>
+              <div style={{ fontSize:12, color:'#7a7690', marginBottom:20 }}>التعديلات تظهر في CV المحمّل فقط — الشركات ترى الملف الأصلي الموثّق</div>
+
+              <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+                {/* الملخص العربي */}
+                <div>
+                  <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>الملخص المهني (عربي)</label>
+                  <textarea className="edit-input" rows={4} value={editedProfile?.summary_ar || ''} onChange={e => updateField('summary_ar', e.target.value)}/>
+                </div>
+
+                {/* الملخص الإنجليزي */}
+                <div>
+                  <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>Professional Summary (English)</label>
+                  <textarea className="edit-input" rows={4} value={editedProfile?.summary_en || ''} onChange={e => updateField('summary_en', e.target.value)} dir="ltr"/>
+                </div>
+
+                {/* الإنجازات */}
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                    <label style={{ fontSize:11, color:G, fontWeight:700 }}>الإنجازات</label>
+                    <button onClick={() => addArrayItem('achievements')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
+                  </div>
+                  {(editedProfile?.achievements || []).map((a,i) => (
+                    <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                      <textarea className="edit-input" rows={2} value={a} onChange={e => updateArrayField('achievements', i, e.target.value)} style={{ flex:1 }}/>
+                      <button onClick={() => removeArrayItem('achievements', i)} style={{ padding:'0 10px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', cursor:'pointer', fontSize:14, flexShrink:0 }}>✕</button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* المهارات */}
+                <div>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                    <label style={{ fontSize:11, color:G, fontWeight:700 }}>المهارات</label>
+                    <button onClick={() => addArrayItem('soft_skills')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
+                  </div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:8' }}>
+                    {(editedProfile?.soft_skills || []).map((s,i) => (
+                      <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
+                        <input value={s} onChange={e => updateArrayField('soft_skills', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max(s.length,4)}ch`, fontFamily:"'Tajawal',sans-serif" }}/>
+                        <button onClick={() => removeArrayItem('soft_skills', i)} style={{ background:'transparent', border:'none', color:'#7a7690', cursor:'pointer', fontSize:12, padding:'0 2px' }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+
+              <div style={{ display:'flex', gap:10, marginTop:20 }}>
+                <button onClick={saveEdits} style={{ flex:1, padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  حفظ التعديلات ✓
+                </button>
+                <button onClick={resetEdits} style={{ padding:'11px 16px', borderRadius:10, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  إعادة تعيين
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Arabic CV */}
           <div className="cv-ar" ref={arRef} style={{ marginBottom:32, borderRadius:16, overflow:'hidden', border:'1px solid #252538', direction:'rtl' }}>
