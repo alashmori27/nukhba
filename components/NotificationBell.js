@@ -1,6 +1,3 @@
-// مكوّن جرس الإشعارات — أضفه في nav الشركة
-// استخدامه: <NotificationBell userId={user.id} />
-
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -33,6 +30,17 @@ export default function NotificationBell({ userId }) {
     setLoading(false)
   }
 
+  async function markRead(id) {
+    try {
+      await fetch(`/api/notifications/${id}`, {
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ is_read: true })
+      })
+      setNotifs(p => p.map(n => n.id===id ? {...n, is_read:true} : n))
+    } catch(e) { console.error(e) }
+  }
+
   async function markAllRead() {
     try {
       await fetch('/api/notifications', {
@@ -49,6 +57,14 @@ export default function NotificationBell({ userId }) {
     if (!open && unread > 0) markAllRead()
   }
 
+  function handleNotifClick(n) {
+    markRead(n.id)
+    setOpen(false)
+    if (n.meta?.candidate_id) {
+      router.push('/company/applicants')
+    }
+  }
+
   const timeAgo = (date) => {
     const diff = Date.now() - new Date(date)
     const mins = Math.floor(diff / 60000)
@@ -61,7 +77,6 @@ export default function NotificationBell({ userId }) {
 
   return (
     <div style={{ position:'relative' }}>
-      {/* زر الجرس */}
       <button onClick={handleOpen} style={{ position:'relative', width:36, height:36, borderRadius:9, border:`1px solid ${C.border}`, background:'transparent', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16 }}>
         🔔
         {unread > 0 && (
@@ -71,7 +86,6 @@ export default function NotificationBell({ userId }) {
         )}
       </button>
 
-      {/* القائمة المنسدلة */}
       {open && (
         <div style={{ position:'absolute', top:44, left:0, width:320, background:C.card, border:`1px solid ${C.border}`, borderRadius:14, boxShadow:'0 20px 60px rgba(0,0,0,.5)', zIndex:200, overflow:'hidden', fontFamily:"'Tajawal',sans-serif" }}>
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'14px 16px', borderBottom:`1px solid ${C.border}` }}>
@@ -90,11 +104,17 @@ export default function NotificationBell({ userId }) {
             )}
 
             {notifs.map(n => (
-              <div key={n.id} style={{ padding:'12px 16px', borderBottom:`1px solid ${C.border}`, background:n.is_read?'transparent':'rgba(200,160,74,.04)', transition:'background .2s' }}>
+              <div key={n.id}
+                onClick={() => handleNotifClick(n)}
+                style={{ padding:'12px 16px', borderBottom:`1px solid ${C.border}`, background:n.is_read?'transparent':'rgba(200,160,74,.04)', cursor: n.meta?.candidate_id ? 'pointer' : 'default', transition:'background .2s' }}
+                onMouseEnter={e => { if(n.meta?.candidate_id) e.currentTarget.style.background='rgba(200,160,74,.06)' }}
+                onMouseLeave={e => e.currentTarget.style.background=n.is_read?'transparent':'rgba(200,160,74,.04)'}
+              >
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:8 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:13, fontWeight:n.is_read?400:700, color:C.text, marginBottom:3 }}>{n.title}</div>
                     {n.body && <div style={{ fontSize:12, color:C.muted, lineHeight:1.6 }}>{n.body}</div>}
+                    {n.meta?.candidate_id && <div style={{ fontSize:11, color:C.gold, marginTop:4 }}>← اضغط لعرض المتقدم</div>}
                   </div>
                   <div style={{ fontSize:10, color:C.muted, flexShrink:0, marginTop:2 }}>{timeAgo(n.created_at)}</div>
                 </div>
@@ -105,7 +125,6 @@ export default function NotificationBell({ userId }) {
         </div>
       )}
 
-      {/* إغلاق عند الضغط خارج */}
       {open && <div onClick={() => setOpen(false)} style={{ position:'fixed', inset:0, zIndex:199 }}/>}
     </div>
   )
