@@ -217,7 +217,8 @@ export default function InterviewClient() {
         })
       }
 
-      sessionStorage.setItem('nukhba_candidate_id', saveData.id) sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
+      sessionStorage.setItem('nukhba_candidate_id', saveData.id)
+sessionStorage.setItem('nukhba_profile', JSON.stringify(profile)) , JSON.stringify(profile))
       router.push('/candidate/interview-complete')
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ تعذّر إنشاء الملف: ${e.message}` }])
