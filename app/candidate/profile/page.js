@@ -107,14 +107,15 @@ function CVContent({ p, lang='ar' }) {
 }
 
 export default function ProfilePage() {
-  const [profile, setProfile]         = useState(null)
+  const [profile, setProfile]             = useState(null)
   const [editedProfile, setEditedProfile] = useState(null)
-  const [isPaid, setIsPaid]           = useState(false)
-  const [candidateId, setCandidateId] = useState(null)
-  const [loading, setLoading]         = useState({word:false, imgAr:false, imgEn:false})
-  const [copied, setCopied]           = useState(false)
-  const [editMode, setEditMode]       = useState(false)
-  const [editSaved, setEditSaved]     = useState(false)
+  const [isPaid, setIsPaid]               = useState(false)
+  const [candidateId, setCandidateId]     = useState(null)
+  const [loading, setLoading]             = useState({word:false, imgAr:false, imgEn:false})
+  const [copied, setCopied]               = useState(false)
+  const [editMode, setEditMode]           = useState(false)
+  const [editLang, setEditLang]           = useState('ar')
+  const [editSaved, setEditSaved]         = useState(false)
   const arRef = useRef(null)
   const enRef = useRef(null)
 
@@ -126,7 +127,8 @@ export default function ProfilePage() {
     if (stored) {
       const p = JSON.parse(stored)
       setProfile(p)
-      setEditedProfile(edited ? JSON.parse(edited) : p)
+      // نمزج التعديلات مع الملف الأصلي للحفاظ على الحقول الإنجليزية
+      setEditedProfile(edited ? { ...p, ...JSON.parse(edited) } : p)
     }
     if (cid) setCandidateId(cid)
     if (paid) setIsPaid(true)
@@ -138,11 +140,13 @@ export default function ProfilePage() {
   }, [])
 
   function setLoad(key, val) { setLoading(p => ({...p, [key]:val})) }
-
   function lockAlert() { alert('ادفع 39 ريال للحصول على CV + نشر ملفك للشركات + محتوى LinkedIn') }
 
   function saveEdits() {
-    localStorage.setItem('nukhba_profile_edited', JSON.stringify(editedProfile))
+    // نحفظ التعديلات مع الحفاظ على الحقول الأصلية غير المعدّلة
+    const merged = { ...profile, ...editedProfile }
+    localStorage.setItem('nukhba_profile_edited', JSON.stringify(merged))
+    setEditedProfile(merged)
     setEditMode(false)
     setEditSaved(true)
     setTimeout(() => setEditSaved(false), 2500)
@@ -272,7 +276,7 @@ export default function ProfilePage() {
           body { background:#080810!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; margin:0; }
           @page { margin:12mm; size:A4; }
         }
-        .edit-input { width:100%; background:#13131f; border:1px solid #252538; border-radius:8px; padding:8px 12px; color:#ede8df; font-family:'Tajawal',sans-serif; font-size:13px; outline:none; resize:vertical; }
+        .edit-input { width:100%; background:#13131f; border:1px solid #252538; border-radius:8px; padding:8px 12px; color:#ede8df; font-family:'Tajawal',sans-serif; font-size:13px; outline:none; resize:vertical; transition:border-color .2s; }
         .edit-input:focus { border-color:#c8a04a; }
       `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
@@ -308,7 +312,6 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div>
-                {/* أزرار التحميل */}
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10, marginBottom:10 }}>
                   {[
                     { label:'📄 PDF', onClick:() => window.print(), bg:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', border:'none' },
@@ -322,13 +325,11 @@ export default function ProfilePage() {
                   ))}
                 </div>
 
-                {/* LinkedIn */}
-                <button onClick={copyLinkedIn} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:copied?'rgba(0,119,181,.15)':'transparent', border:'1px solid #0077b5', color:'#0077b5', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:10 }}>
+                <button onClick={copyLinkedIn} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:copied?'rgba(0,119,181,.15)':'transparent', border:'1px solid #0077b5', color:'#0077b5', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:10, transition:'all .2s' }}>
                   {copied ? '✓ تم النسخ! افتح LinkedIn والصق' : '💼 انسخ بياناتك لـ LinkedIn'}
                 </button>
 
-                {/* زر التعديل */}
-                <button onClick={() => setEditMode(!editMode)} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:editMode?'rgba(200,160,74,.1)':'transparent', border:`1px solid ${editMode?G:'#252538'}`, color:editMode?G:'#7a7690', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                <button onClick={() => setEditMode(!editMode)} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:editMode?'rgba(200,160,74,.1)':'transparent', border:`1px solid ${editMode?G:'#252538'}`, color:editMode?G:'#7a7690', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
                   {editMode ? '← إغلاق التعديل' : '✏️ عدّل ملفك الشخصي'}
                 </button>
 
@@ -345,52 +346,96 @@ export default function ProfilePage() {
           {editMode && isPaid && (
             <div className="no-print" style={{ background:'#0e0e1a', border:`1px solid ${G}33`, borderRadius:16, padding:24, marginBottom:24 }}>
               <div style={{ fontSize:15, fontWeight:800, color:'#ede8df', marginBottom:4 }}>✏️ تعديل ملفك الشخصي</div>
-              <div style={{ fontSize:12, color:'#7a7690', marginBottom:20 }}>التعديلات تظهر في CV المحمّل فقط — الشركات ترى الملف الأصلي الموثّق</div>
+              <div style={{ fontSize:12, color:'#7a7690', marginBottom:16 }}>التعديلات تظهر في CV المحمّل فقط — الشركات ترى الملف الأصلي الموثّق</div>
+
+              {/* تبويب اللغة */}
+              <div style={{ display:'flex', gap:8, marginBottom:20, background:'#13131f', borderRadius:10, padding:4 }}>
+                {[['ar','🇸🇦 العربي'],['en','🇬🇧 English']].map(([lang,label]) => (
+                  <button key={lang} onClick={() => setEditLang(lang)} style={{ flex:1, padding:'9px', borderRadius:8, border:'none', background:editLang===lang?`linear-gradient(135deg,${GD},${G})`:'transparent', color:editLang===lang?'#06060e':'#7a7690', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
 
               <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
 
-                {/* الملخص العربي */}
-                <div>
-                  <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>الملخص المهني (عربي)</label>
-                  <textarea className="edit-input" rows={4} value={editedProfile?.summary_ar || ''} onChange={e => updateField('summary_ar', e.target.value)}/>
-                </div>
-
-                {/* الملخص الإنجليزي */}
-                <div>
-                  <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>Professional Summary (English)</label>
-                  <textarea className="edit-input" rows={4} value={editedProfile?.summary_en || ''} onChange={e => updateField('summary_en', e.target.value)} dir="ltr"/>
-                </div>
-
-                {/* الإنجازات */}
-                <div>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                    <label style={{ fontSize:11, color:G, fontWeight:700 }}>الإنجازات</label>
-                    <button onClick={() => addArrayItem('achievements')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
-                  </div>
-                  {(editedProfile?.achievements || []).map((a,i) => (
-                    <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
-                      <textarea className="edit-input" rows={2} value={a} onChange={e => updateArrayField('achievements', i, e.target.value)} style={{ flex:1 }}/>
-                      <button onClick={() => removeArrayItem('achievements', i)} style={{ padding:'0 10px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', cursor:'pointer', fontSize:14, flexShrink:0 }}>✕</button>
+                {editLang === 'ar' ? (
+                  <>
+                    {/* الملخص العربي */}
+                    <div>
+                      <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>الملخص المهني</label>
+                      <textarea className="edit-input" rows={4} value={editedProfile?.summary_ar || ''} onChange={e => updateField('summary_ar', e.target.value)}/>
                     </div>
-                  ))}
-                </div>
 
-                {/* المهارات */}
-                <div>
-                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                    <label style={{ fontSize:11, color:G, fontWeight:700 }}>المهارات</label>
-                    <button onClick={() => addArrayItem('soft_skills')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
-                  </div>
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                    {(editedProfile?.soft_skills || []).map((s,i) => (
-                      <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
-                        <input value={s} onChange={e => updateArrayField('soft_skills', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max(s.length,4)}ch`, fontFamily:"'Tajawal',sans-serif" }}/>
-                        <button onClick={() => removeArrayItem('soft_skills', i)} style={{ background:'transparent', border:'none', color:'#7a7690', cursor:'pointer', fontSize:12, padding:'0 2px' }}>✕</button>
+                    {/* الإنجازات */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>الإنجازات</label>
+                        <button onClick={() => addArrayItem('achievements')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      {(editedProfile?.achievements || []).map((a,i) => (
+                        <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                          <textarea className="edit-input" rows={2} value={a} onChange={e => updateArrayField('achievements', i, e.target.value)} style={{ flex:1 }}/>
+                          <button onClick={() => removeArrayItem('achievements', i)} style={{ padding:'0 10px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', cursor:'pointer', fontSize:14, flexShrink:0 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
 
+                    {/* المهارات */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>المهارات</label>
+                        <button onClick={() => addArrayItem('soft_skills')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
+                      </div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        {(editedProfile?.soft_skills || []).map((s,i) => (
+                          <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
+                            <input value={s} onChange={e => updateArrayField('soft_skills', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max((s||'').length, 4)}ch`, fontFamily:"'Tajawal',sans-serif" }}/>
+                            <button onClick={() => removeArrayItem('soft_skills', i)} style={{ background:'transparent', border:'none', color:'#7a7690', cursor:'pointer', fontSize:12, padding:'0 2px' }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Professional Summary */}
+                    <div>
+                      <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>Professional Summary</label>
+                      <textarea className="edit-input" rows={4} value={editedProfile?.summary_en || ''} onChange={e => updateField('summary_en', e.target.value)} dir="ltr"/>
+                    </div>
+
+                    {/* Achievements EN */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>Achievements</label>
+                        <button onClick={() => addArrayItem('achievements_en')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ Add</button>
+                      </div>
+                      {(editedProfile?.achievements_en || []).map((a,i) => (
+                        <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                          <textarea className="edit-input" rows={2} value={a} onChange={e => updateArrayField('achievements_en', i, e.target.value)} style={{ flex:1 }} dir="ltr"/>
+                          <button onClick={() => removeArrayItem('achievements_en', i)} style={{ padding:'0 10px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', cursor:'pointer', fontSize:14, flexShrink:0 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Skills EN */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>Skills</label>
+                        <button onClick={() => addArrayItem('soft_skills_en')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ Add</button>
+                      </div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        {(editedProfile?.soft_skills_en || []).map((s,i) => (
+                          <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
+                            <input value={s} onChange={e => updateArrayField('soft_skills_en', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max((s||'').length, 4)}ch`, fontFamily:'Calibri, sans-serif' }} dir="ltr"/>
+                            <button onClick={() => removeArrayItem('soft_skills_en', i)} style={{ background:'transparent', border:'none', color:'#7a7690', cursor:'pointer', fontSize:12, padding:'0 2px' }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div style={{ display:'flex', gap:10, marginTop:20 }}>
