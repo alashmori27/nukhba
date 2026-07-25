@@ -46,6 +46,8 @@ function LoginForm() {
         setSuccess('تم إنشاء الحساب! سجّل دخولك الآن.')
         setMode('login'); setLoading(false); return
       }
+sessionStorage.clear()
+localStorage.removeItem('nukhba_profile_edited')
       localStorage.setItem('nukhba_user', JSON.stringify(data.user))
       router.push(data.user.role === 'company' ? '/company/dashboard' : '/candidate/dashboard')
     } catch(e) {
