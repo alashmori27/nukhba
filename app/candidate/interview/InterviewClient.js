@@ -45,18 +45,17 @@ CRITICAL RULES:
 PHASE 1 - COLLECT CANDIDATE INFO (do this FIRST):
 Start by welcoming the candidate warmly in Arabic and introducing the job briefly.
 Then collect in order (ONE at a time):
-1. Full name (الاسم الكامل)
+1. Full name
 2. Mobile number - tell them: "رقم جوالك سيظهر للشركة للتواصل معك"
 3. Email address
 
 After collecting all 3, say "شكراً، سنبدأ الآن بأسئلة المقابلة" then move to Phase 2.
 
 PHASE 2 - JOB INTERVIEW QUESTIONS:
-Use ONLY these questions provided by the company — do not invent new questions:
+Use ONLY these questions provided by the company:
 ${questionsText}
 
-After ALL job questions are answered completely, say a warm closing and end with exactly: [STAGE_COMPLETE]
-Do NOT end the interview before completing Phase 1 AND all Phase 2 questions.`
+After ALL questions are answered, say a warm closing and end with exactly: [STAGE_COMPLETE]`
 }
 
 export default function InterviewClient() {
@@ -160,8 +159,10 @@ export default function InterviewClient() {
 
     if (done) {
       if (jobRef.current) {
-        await buildProfile([...nextMsgs, aMsg])
+        // مقابلة وظيفة — إرسال الطلب بدون بناء ملف كامل
+        await submitJobApplication([...nextMsgs, aMsg])
       } else {
+        // مقابلة عامة — انتقل للمرحلة التالية
         const ni = stageRef.current + 1
         if (ni < STAGES.length) {
           setStageIdx(ni); stageRef.current = ni
@@ -190,36 +191,70 @@ export default function InterviewClient() {
     }
   }
 
-  async function buildProfile(allMsgs) {
+  // مقابلة وظيفة — إرسال بسيط بدون CV كامل
+  async function submitJobApplication(allMsgs) {
     setGen(true)
-    const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
     const currentJob = jobRef.current
-    const profileSys = currentJob
-      ? `Extract candidate profile from job interview for: ${currentJob.title} at ${currentJob.company_name}.\n\n${PROFILE_SYSTEM}`
-      : PROFILE_SYSTEM
+    const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
+    const u = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
+
     try {
-      const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], profileSys)
-      const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
-      const u       = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
+      // استخراج بيانات بسيطة من المحادثة
+      const nameMatch  = transcript.match(/Candidate: ([^\n]+)/)
+      const name       = nameMatch?.[1] || u.name || 'مرشح'
 
       const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ profile, userId:u.id, jobId: currentJob?.id || null, transcript }),
+        body: JSON.stringify({
+          profile: {
+            name,
+            overall_score: 0,
+            specialization: currentJob?.title || '',
+            summary_ar: `تقدّم على وظيفة ${currentJob?.title} في ${currentJob?.company_name}`,
+          },
+          userId:    u.id,
+          jobId:     currentJob?.id || null,
+          companyId: currentJob?.company_id || null,
+          transcript,
+        })
       })
       const saveData = await saveRes.json()
 
+      // إشعار للشركة
       if (currentJob?.company_id) {
         await fetch('/api/notifications', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
             user_id: currentJob.company_id,
-            type: 'new_applicant',
-            title: `مرشح جديد تقدم على وظيفة "${currentJob.title}"`,
-            body: `${profile.name || 'مرشح'} — ${profile.specialization || ''} — تقييم: ${profile.overall_score || 0}/100`,
-            meta: { candidate_id: saveData.id, job_id: currentJob.id }
+            type:    'new_applicant',
+            title:   `متقدم جديد على وظيفة "${currentJob.title}"`,
+            body:    `${name} — أكمل مقابلة الوظيفة`,
+            meta:    { candidate_id: saveData.id, job_id: currentJob.id }
           })
         })
       }
+
+      router.push('/candidate/job-applied')
+    } catch(e) {
+      setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
+    }
+    setGen(false)
+  }
+
+  // مقابلة عامة — بناء ملف كامل
+  async function buildProfile(allMsgs) {
+    setGen(true)
+    const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
+    try {
+      const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], PROFILE_SYSTEM)
+      const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
+      const u       = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
+
+      const saveRes = await fetch('/api/candidates', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ profile, userId:u.id, jobId:null, transcript })
+      })
+      const saveData = await saveRes.json()
 
       sessionStorage.setItem('nukhba_candidate_id', saveData.id)
       sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
@@ -305,8 +340,8 @@ export default function InterviewClient() {
 
           {genProfile && (
             <div style={{ textAlign:'center', padding:28, color:'#c8a04a', fontSize:15 }}>
-              <div style={{ fontSize:40, marginBottom:12 }}>✨</div>
-              جاري إنشاء ملفك الاحترافي...
+              <div style={{ fontSize:40, marginBottom:12 }}>📨</div>
+              جاري إرسال طلبك للشركة...
             </div>
           )}
           <div ref={bottomRef}/>
