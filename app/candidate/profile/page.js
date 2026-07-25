@@ -381,7 +381,7 @@ export default function ProfilePage() {
                     <label style={{ fontSize:11, color:G, fontWeight:700 }}>المهارات</label>
                     <button onClick={() => addArrayItem('soft_skills')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
                   </div>
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:8' }}>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                     {(editedProfile?.soft_skills || []).map((s,i) => (
                       <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
                         <input value={s} onChange={e => updateArrayField('soft_skills', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max(s.length,4)}ch`, fontFamily:"'Tajawal',sans-serif" }}/>
