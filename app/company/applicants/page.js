@@ -23,12 +23,17 @@ export default function CompanyApplicants() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
-    fetchApplicants(parsed.id)
+    fetchApplicants(parsed)
   }, [])
 
-  async function fetchApplicants(companyId) {
+  async function fetchApplicants(u) {
     try {
-      const res  = await fetch(`/api/candidates?company_id=${companyId}`)
+      const res = await fetch(`/api/candidates?company_id=${u.id}`, {
+        headers: {
+          'x-user-id': u.id,
+          'x-user-role': u.role,
+        }
+      })
       const data = await res.json()
       setCands(data.candidates || [])
     } catch(e) { console.error(e) }
