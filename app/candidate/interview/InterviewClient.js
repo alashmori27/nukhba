@@ -45,9 +45,9 @@ CRITICAL RULES:
 PHASE 1 - COLLECT CANDIDATE INFO (do this FIRST):
 Start by welcoming the candidate warmly in Arabic and introducing the job briefly.
 Then collect in order (ONE at a time):
-1. Full name
+1. Full name (الاسم الكامل)
 2. Mobile number - tell them: "رقم جوالك سيظهر للشركة للتواصل معك"
-3. Email address
+3. Email address (البريد الإلكتروني)
 
 After collecting all 3, say "شكراً، سنبدأ الآن بأسئلة المقابلة" then move to Phase 2.
 
@@ -159,10 +159,8 @@ export default function InterviewClient() {
 
     if (done) {
       if (jobRef.current) {
-        // مقابلة وظيفة — إرسال الطلب بدون بناء ملف كامل
         await submitJobApplication([...nextMsgs, aMsg])
       } else {
-        // مقابلة عامة — انتقل للمرحلة التالية
         const ni = stageRef.current + 1
         if (ni < STAGES.length) {
           setStageIdx(ni); stageRef.current = ni
@@ -191,7 +189,6 @@ export default function InterviewClient() {
     }
   }
 
-  // مقابلة وظيفة — إرسال بسيط بدون CV كامل
   async function submitJobApplication(allMsgs) {
     setGen(true)
     const currentJob = jobRef.current
@@ -199,15 +196,27 @@ export default function InterviewClient() {
     const u = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
 
     try {
-      // استخراج بيانات بسيطة من المحادثة
-      const nameMatch  = transcript.match(/Candidate: ([^\n]+)/)
-      const name       = nameMatch?.[1] || u.name || 'مرشح'
+      // استخراج البيانات من نص المحادثة
+      const candidateLines = allMsgs.filter(m => m.role === 'user').map(m => m.content)
+
+      // الاسم — أول رد من المتقدم
+      const name = candidateLines[0]?.trim() || u.name || 'مرشح'
+
+      // الجوال — أي رقم يبدأ بـ 05 أو 966
+      const phoneMatch = transcript.match(/(?:05\d{8}|966\d{9})/)
+      const phone = phoneMatch?.[0] || ''
+
+      // الإيميل
+      const emailMatch = transcript.match(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/)
+      const email = emailMatch?.[0] || ''
 
       const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
           profile: {
             name,
+            phone,
+            email,
             overall_score: 0,
             specialization: currentJob?.title || '',
             summary_ar: `تقدّم على وظيفة ${currentJob?.title} في ${currentJob?.company_name}`,
@@ -228,7 +237,7 @@ export default function InterviewClient() {
             user_id: currentJob.company_id,
             type:    'new_applicant',
             title:   `متقدم جديد على وظيفة "${currentJob.title}"`,
-            body:    `${name} — أكمل مقابلة الوظيفة`,
+            body:    `${name}${phone ? ' · ' + phone : ''} — أكمل مقابلة الوظيفة`,
             meta:    { candidate_id: saveData.id, job_id: currentJob.id }
           })
         })
@@ -241,7 +250,6 @@ export default function InterviewClient() {
     setGen(false)
   }
 
-  // مقابلة عامة — بناء ملف كامل
   async function buildProfile(allMsgs) {
     setGen(true)
     const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
@@ -279,7 +287,6 @@ export default function InterviewClient() {
     <div style={{ height:'100vh', display:'flex', flexDirection:'column', background:'#080810', fontFamily:"'Tajawal',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
-      {/* Top bar */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:60, background:'#0e0e1a', borderBottom:'1px solid #252538', flexShrink:0 }}>
         <div style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
         <div style={{ display:'flex', alignItems:'center', gap:7, background:'#13131f', border:'1px solid #252538', padding:'5px 14px', borderRadius:24, fontSize:13, maxWidth:'50%' }}>
@@ -300,7 +307,6 @@ export default function InterviewClient() {
         <button onClick={() => router.push('/candidate/dashboard')} style={{ fontSize:13, color:'#7a7690', padding:'6px 14px', borderRadius:8, border:'1px solid #252538', background:'transparent', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>← لوحة التحكم</button>
       </div>
 
-      {/* Progress bar — فقط للمقابلة العامة */}
       {!currentJob && (
         <div style={{ padding:'10px 24px 0', background:'#0e0e1a', flexShrink:0 }}>
           <div style={{ display:'flex', gap:5, marginBottom:6 }}>
@@ -312,7 +318,6 @@ export default function InterviewClient() {
         </div>
       )}
 
-      {/* Chat */}
       <div style={{ flex:1, overflowY:'auto', padding:'20px 0' }}>
         <div style={{ maxWidth:700, margin:'0 auto', padding:'0 20px', display:'flex', flexDirection:'column', gap:16 }}>
           {messages.map((m,i) => {
@@ -341,14 +346,13 @@ export default function InterviewClient() {
           {genProfile && (
             <div style={{ textAlign:'center', padding:28, color:'#c8a04a', fontSize:15 }}>
               <div style={{ fontSize:40, marginBottom:12 }}>📨</div>
-              جاري إرسال طلبك للشركة...
+              {jobRef.current ? 'جاري إرسال طلبك للشركة...' : 'جاري إنشاء ملفك الاحترافي...'}
             </div>
           )}
           <div ref={bottomRef}/>
         </div>
       </div>
 
-      {/* Input */}
       <div style={{ flexShrink:0, padding:'12px 20px 20px', background:'#0e0e1a', borderTop:'1px solid #252538' }}>
         <div style={{ maxWidth:700, margin:'0 auto', display:'flex', gap:10, alignItems:'flex-end', background:'#181828', border:`1px solid ${canSend?'rgba(200,160,74,.35)':'#252538'}`, borderRadius:14, padding:'9px 9px 9px 18px', transition:'border-color .2s' }}>
           <textarea ref={inputRef} value={input} onChange={onInput} onKeyDown={onKey} rows={1}
