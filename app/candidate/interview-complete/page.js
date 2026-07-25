@@ -9,13 +9,22 @@ const C = {
   success:'#4a9c6e', error:'#c94a4a'
 }
 
+const PROMO_CODES = {
+  'HA2030': { discount: 100, label: 'خصم 100% — مجاني تماماً!' },
+  'HA2026': { discount: 50,  label: 'خصم 50% — فقط 19.5 ريال' },
+}
+
 export default function InterviewComplete() {
   const router = useRouter()
-  const [profile, setProfile]   = useState(null)
+  const [profile, setProfile]       = useState(null)
   const [candidateId, setCandidateId] = useState(null)
-  const [consent1, setConsent1] = useState(false)
-  const [consent2, setConsent2] = useState(false)
-  const [step, setStep]         = useState('consent')
+  const [consent1, setConsent1]     = useState(false)
+  const [consent2, setConsent2]     = useState(false)
+  const [step, setStep]             = useState('consent')
+  const [promoCode, setPromoCode]   = useState('')
+  const [promoApplied, setPromoApplied] = useState(null)
+  const [promoMsg, setPromoMsg]     = useState('')
+  const [paying, setPaying]         = useState(false)
 
   useEffect(() => {
     const stored = sessionStorage.getItem('nukhba_profile')
@@ -30,8 +39,33 @@ export default function InterviewComplete() {
     setStep('complete')
   }
 
+  function applyPromo() {
+    const code = promoCode.trim().toUpperCase()
+    if (PROMO_CODES[code]) {
+      setPromoApplied(PROMO_CODES[code])
+      setPromoMsg(`✓ ${PROMO_CODES[code].label}`)
+    } else {
+      setPromoApplied(null)
+      setPromoMsg('❌ كود غير صحيح')
+    }
+  }
+
   async function handlePay() {
-    // مؤقتاً — بعد Moyasar نحدّث هنا
+    setPaying(true)
+    try {
+      if (promoApplied?.discount === 100) {
+        // مجاني تماماً
+        await activatePaid()
+      } else {
+        // دفع عادي أو خصم جزئي
+        alert(promoApplied ? `الدفع: ${39 - (39 * promoApplied.discount / 100)} ريال — Moyasar قريباً!` : 'Moyasar — قريباً!')
+        await activatePaid()
+      }
+    } catch(e) { alert('خطأ: ' + e.message) }
+    setPaying(false)
+  }
+
+  async function activatePaid() {
     if (candidateId) {
       await fetch(`/api/candidates/${candidateId}`, {
         method: 'PATCH',
@@ -39,13 +73,15 @@ export default function InterviewComplete() {
         body: JSON.stringify({ is_paid: true, is_visible: true })
       })
     }
-    alert('Moyasar — قريباً! تم تفعيل الدفع تجريبياً')
+    sessionStorage.setItem('nukhba_paid', 'true')
     router.push('/candidate/profile')
   }
 
   function handleBrowse() {
     router.push('/candidate/profile')
   }
+
+  const finalPrice = promoApplied ? 39 - (39 * promoApplied.discount / 100) : 39
 
   if (!profile) return null
 
@@ -97,14 +133,17 @@ export default function InterviewComplete() {
               <p style={{ fontSize:14, color:C.muted, lineHeight:1.7 }}>مقابلتك مكتملة — خطوة واحدة للانطلاق</p>
             </div>
             <div style={{ padding:'28px' }}>
-              <div style={{ background:C.surface, borderRadius:12, padding:20, marginBottom:24 }}>
-                <div style={{ fontSize:13, color:C.gold, fontWeight:700, marginBottom:14, textAlign:'center' }}>مقابل 39 ريال فقط تحصل على:</div>
+
+              {/* ما ستحصل عليه */}
+              <div style={{ background:C.surface, borderRadius:12, padding:20, marginBottom:20 }}>
+                <div style={{ fontSize:13, color:C.gold, fontWeight:700, marginBottom:14, textAlign:'center' }}>مقابل {finalPrice} ريال فقط تحصل على:</div>
                 {[
                   ['📄', 'CV احترافي', 'PDF + Word + صورة عربي وإنجليزي'],
                   ['🏢', 'نشر ملفك للشركات', 'تصلك فرص عمل مناسبة تلقائياً'],
                   ['💼', 'محتوى LinkedIn جاهز', 'انسخ بياناتك لـ LinkedIn بنقرة'],
+                  ['✏️', 'تعديل ملفك الشخصي', 'عدّل الملخص والإنجازات كما تريد'],
                 ].map(([icon, title, desc]) => (
-                  <div key={title} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:12 }}>
+                  <div key={title} style={{ display:'flex', gap:12, alignItems:'flex-start', marginBottom:10 }}>
                     <span style={{ fontSize:18, flexShrink:0, marginTop:1 }}>{icon}</span>
                     <div>
                       <div style={{ fontSize:13, fontWeight:700, color:C.text, marginBottom:2 }}>{title}</div>
@@ -114,10 +153,42 @@ export default function InterviewComplete() {
                 ))}
               </div>
 
-              <button onClick={handlePay} style={{ width:'100%', padding:'15px', borderRadius:12, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:16, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:12 }}>
-                ادفع 39 ريال وانطلق ←
+              {/* كود الخصم */}
+              <div style={{ marginBottom:16 }}>
+                <div style={{ fontSize:12, color:C.muted, marginBottom:8 }}>كود الخصم (اختياري)</div>
+                <div style={{ display:'flex', gap:8 }}>
+                  <input
+                    value={promoCode}
+                    onChange={e => { setPromoCode(e.target.value.toUpperCase()); setPromoMsg('') }}
+                    onKeyDown={e => e.key === 'Enter' && applyPromo()}
+                    placeholder="أدخل الكود هنا"
+                    style={{ flex:1, background:C.surface, border:`1px solid ${promoApplied?C.success:C.border}`, borderRadius:9, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13, outline:'none', letterSpacing:2 }}
+                  />
+                  <button onClick={applyPromo} style={{ padding:'10px 18px', borderRadius:9, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", whiteSpace:'nowrap' }}>
+                    تطبيق
+                  </button>
+                </div>
+                {promoMsg && (
+                  <p style={{ fontSize:12, color: promoApplied ? C.success : C.error, marginTop:6 }}>{promoMsg}</p>
+                )}
+              </div>
+
+              {/* السعر النهائي */}
+              {promoApplied && (
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', background:`rgba(74,156,110,.08)`, border:`1px solid rgba(74,156,110,.25)`, borderRadius:10, padding:'10px 16px', marginBottom:16 }}>
+                  <span style={{ fontSize:13, color:C.muted }}>السعر الأصلي: <s>39 ريال</s></span>
+                  <span style={{ fontSize:15, fontWeight:800, color:C.success }}>
+                    {finalPrice === 0 ? 'مجاني 🎉' : `${finalPrice} ريال`}
+                  </span>
+                </div>
+              )}
+
+              {/* زر الدفع */}
+              <button onClick={handlePay} disabled={paying} style={{ width:'100%', padding:'15px', borderRadius:12, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:16, fontWeight:800, cursor:paying?'default':'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:12, opacity:paying?.8:1 }}>
+                {paying ? '⏳ جاري المعالجة...' : finalPrice === 0 ? 'فعّل ملفي مجاناً ←' : `ادفع ${finalPrice} ريال وانطلق ←`}
               </button>
 
+              {/* تصفح بدون دفع */}
               <button onClick={handleBrowse} style={{ width:'100%', padding:'12px', borderRadius:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                 تصفح ملفي بدون تحميل
               </button>
