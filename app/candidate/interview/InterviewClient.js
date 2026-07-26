@@ -81,7 +81,6 @@ export default function InterviewClient() {
     const u = localStorage.getItem('nukhba_user')
     if (!u) { router.push('/auth/login'); return }
     setUser(JSON.parse(u))
-
     if (jobId) {
       const savedJob = sessionStorage.getItem('nukhba_job')
       if (savedJob) {
@@ -144,7 +143,6 @@ export default function InterviewClient() {
       const sys = currentJob
         ? buildJobSystem(currentJob)
         : GENERAL_SYSTEM.replace('{STAGE}', STAGES[stageRef.current]?.id || 'basics')
-
       reply = await callChat(nextMsgs.map(m => ({ role:m.role, content:m.content })), sys)
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
@@ -159,8 +157,10 @@ export default function InterviewClient() {
 
     if (done) {
       if (jobRef.current) {
+        // مقابلة وظيفة — بناء ملف كامل ثم التوجيه لصفحة التأكيد
         await submitJobApplication([...nextMsgs, aMsg])
       } else {
+        // مقابلة عامة — انتقل للمرحلة التالية
         const ni = stageRef.current + 1
         if (ni < STAGES.length) {
           setStageIdx(ni); stageRef.current = ni
@@ -189,6 +189,7 @@ export default function InterviewClient() {
     }
   }
 
+  // مقابلة وظيفة — ملف كامل + إشعار للشركة + توجيه لصفحة التأكيد
   async function submitJobApplication(allMsgs) {
     setGen(true)
     const currentJob = jobRef.current
@@ -196,31 +197,26 @@ export default function InterviewClient() {
     const u = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
 
     try {
-      // استخراج البيانات من نص المحادثة
-      const candidateLines = allMsgs.filter(m => m.role === 'user').map(m => m.content)
+      // بناء ملف كامل من المحادثة
+      const profileSys = `Extract candidate profile from job interview for: ${currentJob.title} at ${currentJob.company_name}.\n\n${PROFILE_SYSTEM}`
+      const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], profileSys)
+      const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
 
-      // الاسم — أول رد من المتقدم
-      const name = candidateLines[0]?.trim() || u.name || 'مرشح'
+      // استخراج phone و email من المحادثة إذا لم يحفظهم Claude
+      if (!profile.phone) {
+        const phoneMatch = transcript.match(/(?:05\d{8}|966\d{9})/)
+        if (phoneMatch) profile.phone = phoneMatch[0]
+      }
+      if (!profile.email) {
+        const emailMatch = transcript.match(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/)
+        if (emailMatch) profile.email = emailMatch[0]
+      }
 
-      // الجوال — أي رقم يبدأ بـ 05 أو 966
-      const phoneMatch = transcript.match(/(?:05\d{8}|966\d{9})/)
-      const phone = phoneMatch?.[0] || ''
-
-      // الإيميل
-      const emailMatch = transcript.match(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/)
-      const email = emailMatch?.[0] || ''
-
+      // حفظ في candidates
       const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          profile: {
-            name,
-            phone,
-            email,
-            overall_score: 0,
-            specialization: currentJob?.title || '',
-            summary_ar: `تقدّم على وظيفة ${currentJob?.title} في ${currentJob?.company_name}`,
-          },
+          profile,
           userId:    u.id,
           jobId:     currentJob?.id || null,
           companyId: currentJob?.company_id || null,
@@ -237,32 +233,32 @@ export default function InterviewClient() {
             user_id: currentJob.company_id,
             type:    'new_applicant',
             title:   `متقدم جديد على وظيفة "${currentJob.title}"`,
-            body:    `${name}${phone ? ' · ' + phone : ''} — أكمل مقابلة الوظيفة`,
+            body:    `${profile.name || 'مرشح'} — تقييم: ${profile.overall_score || 0}/100`,
             meta:    { candidate_id: saveData.id, job_id: currentJob.id }
           })
         })
       }
 
-     // حفظ في جدول applications
-await fetch('/api/applications', {
-  method:'POST', headers:{'Content-Type':'application/json'},
-  body: JSON.stringify({
-    jobId:       currentJob.id,
-    candidateId: saveData.id,
-    companyId:   currentJob.company_id,
-    userId:      u.id,
-    score:       0,
-    profile:     { name, phone, email, specialization: currentJob?.title || '' },
-    transcript,
-  })
-})
- router.push('/candidate/job-applied')
+      // إشعار للمتقدم
+      await fetch('/api/notifications', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user_id: u.id,
+          type:    'application_sent',
+          title:   `تم إرسال طلبك على وظيفة "${currentJob.title}"`,
+          body:    `طلبك في ${currentJob.company_name} قيد المراجعة — ستتواصل معك الشركة قريباً`,
+          meta:    { job_id: currentJob.id }
+        })
+      })
+
+      router.push('/candidate/job-applied')
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
     }
     setGen(false)
   }
 
+  // مقابلة عامة — ملف كامل + توجيه لشاشة الموافقة والدفع
   async function buildProfile(allMsgs) {
     setGen(true)
     const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
@@ -292,6 +288,7 @@ await fetch('/api/applications', {
     e.target.style.height='auto'
     e.target.style.height=Math.min(e.target.scrollHeight,130)+'px'
   }
+
   const stage      = STAGES[stageIdx]
   const canSend    = input.trim() && !typing
   const currentJob = job
@@ -300,6 +297,7 @@ await fetch('/api/applications', {
     <div style={{ height:'100vh', display:'flex', flexDirection:'column', background:'#080810', fontFamily:"'Tajawal',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
+      {/* Top bar */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:60, background:'#0e0e1a', borderBottom:'1px solid #252538', flexShrink:0 }}>
         <div style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
         <div style={{ display:'flex', alignItems:'center', gap:7, background:'#13131f', border:'1px solid #252538', padding:'5px 14px', borderRadius:24, fontSize:13, maxWidth:'50%' }}>
@@ -320,6 +318,7 @@ await fetch('/api/applications', {
         <button onClick={() => router.push('/candidate/dashboard')} style={{ fontSize:13, color:'#7a7690', padding:'6px 14px', borderRadius:8, border:'1px solid #252538', background:'transparent', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>← لوحة التحكم</button>
       </div>
 
+      {/* Progress bar — فقط للمقابلة العامة */}
       {!currentJob && (
         <div style={{ padding:'10px 24px 0', background:'#0e0e1a', flexShrink:0 }}>
           <div style={{ display:'flex', gap:5, marginBottom:6 }}>
@@ -331,6 +330,7 @@ await fetch('/api/applications', {
         </div>
       )}
 
+      {/* Chat */}
       <div style={{ flex:1, overflowY:'auto', padding:'20px 0' }}>
         <div style={{ maxWidth:700, margin:'0 auto', padding:'0 20px', display:'flex', flexDirection:'column', gap:16 }}>
           {messages.map((m,i) => {
@@ -358,7 +358,7 @@ await fetch('/api/applications', {
 
           {genProfile && (
             <div style={{ textAlign:'center', padding:28, color:'#c8a04a', fontSize:15 }}>
-              <div style={{ fontSize:40, marginBottom:12 }}>📨</div>
+              <div style={{ fontSize:40, marginBottom:12 }}>✨</div>
               {jobRef.current ? 'جاري إرسال طلبك للشركة...' : 'جاري إنشاء ملفك الاحترافي...'}
             </div>
           )}
@@ -366,6 +366,7 @@ await fetch('/api/applications', {
         </div>
       </div>
 
+      {/* Input */}
       <div style={{ flexShrink:0, padding:'12px 20px 20px', background:'#0e0e1a', borderTop:'1px solid #252538' }}>
         <div style={{ maxWidth:700, margin:'0 auto', display:'flex', gap:10, alignItems:'flex-end', background:'#181828', border:`1px solid ${canSend?'rgba(200,160,74,.35)':'#252538'}`, borderRadius:14, padding:'9px 9px 9px 18px', transition:'border-color .2s' }}>
           <textarea ref={inputRef} value={input} onChange={onInput} onKeyDown={onKey} rows={1}
