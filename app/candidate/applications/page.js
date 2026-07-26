@@ -9,20 +9,20 @@ const C = {
   success:'#4a9c6e', error:'#c94a4a'
 }
 
-const STATUS = {
-  pending:   { label:'قيد المراجعة', icon:'⏳', color:'#7a7690' },
-  viewed:    { label:'اطلعت الشركة على ملفك', icon:'👁️', color:'#4a6fa5' },
-  contacted: { label:'الشركة تواصلت معك', icon:'📞', color:'#4a9c6e' },
-  accepted:  { label:'تم القبول 🎉', icon:'✅', color:'#4a9c6e' },
-  rejected:  { label:'لم يتم القبول', icon:'❌', color:'#c94a4a' },
+const STATUS_MAP = {
+  pending:   { label:'قيد المراجعة',          icon:'⏳', color:'#7a7690' },
+  viewed:    { label:'اطلعت الشركة على طلبك', icon:'👁️', color:'#4a6fa5' },
+  contacted: { label:'الشركة تواصلت معك',     icon:'📞', color:'#4a9c6e' },
+  accepted:  { label:'تم القبول 🎉',           icon:'✅', color:'#4a9c6e' },
+  rejected:  { label:'لم يتم القبول',          icon:'❌', color:'#c94a4a' },
 }
 
 export default function CandidateApplications() {
   const router = useRouter()
-  const [user, setUser]           = useState(null)
-  const [applications, setApps]   = useState([])
-  const [jobs, setJobs]           = useState({})
-  const [loading, setLoading]     = useState(true)
+  const [user, setUser]       = useState(null)
+  const [apps, setApps]       = useState([])
+  const [jobs, setJobs]       = useState({})
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -30,24 +30,25 @@ export default function CandidateApplications() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'candidate') { router.push('/company/dashboard'); return }
     setUser(parsed)
-    fetchApplications(parsed.id)
+    fetchApps(parsed)
   }, [])
 
-  async function fetchApplications(userId) {
+  async function fetchApps(u) {
     try {
-      const res  = await fetch(`/api/applications?user_id=${userId}`)
+      const res  = await fetch(`/api/candidates?user_id=${u.id}`, {
+        headers: { 'x-user-id': u.id, 'x-user-role': u.role }
+      })
       const data = await res.json()
-      const apps = data.applications || []
-      setApps(apps)
+      const all  = (data.candidates || []).filter(c => c.job_id)
+      setApps(all)
 
       // جلب بيانات الوظائف
-      const jobIds = [...new Set(apps.map(a => a.job_id).filter(Boolean))]
-      if (jobIds.length > 0) {
+      if (all.length > 0) {
         const jobsRes  = await fetch('/api/jobs')
         const jobsData = await jobsRes.json()
-        const jobsMap  = {}
-        ;(jobsData.jobs || []).forEach(j => { jobsMap[j.id] = j })
-        setJobs(jobsMap)
+        const map = {}
+        ;(jobsData.jobs || []).forEach(j => { map[j.id] = j })
+        setJobs(map)
       }
     } catch(e) { console.error(e) }
     setLoading(false)
@@ -67,7 +68,7 @@ export default function CandidateApplications() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 
       <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 28px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
         <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
@@ -77,12 +78,12 @@ export default function CandidateApplications() {
       <div style={{ maxWidth:700, margin:'0 auto', padding:'40px 20px' }}>
         <h1 style={{ fontSize:22, fontWeight:800, color:C.text, marginBottom:4 }}>تتبع طلباتي</h1>
         <p style={{ fontSize:13, color:C.muted, marginBottom:32 }}>
-          الوظائف التي تقدمت عليها — <span style={{ color:C.gold }}>{applications.length} طلب</span>
+          الوظائف التي تقدمت عليها — <span style={{ color:C.gold }}>{apps.length} طلب</span>
         </p>
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}
 
-        {!loading && applications.length === 0 && (
+        {!loading && apps.length === 0 && (
           <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:'60px 32px', textAlign:'center' }}>
             <div style={{ fontSize:48, marginBottom:14 }}>📭</div>
             <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:8 }}>لم تتقدم على أي وظيفة بعد</div>
@@ -94,16 +95,12 @@ export default function CandidateApplications() {
         )}
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {applications.map(app => {
+          {apps.map(app => {
             const job    = jobs[app.job_id]
-            const status = STATUS[app.status] || STATUS.pending
+            const status = STATUS_MAP[app.status || 'pending'] || STATUS_MAP.pending
 
             return (
-              <div key={app.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', transition:'border-color .2s' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.3)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
-              >
-                {/* Header */}
+              <div key={app.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden' }}>
                 <div style={{ padding:'18px 20px', borderBottom:`1px solid ${C.border}` }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
                     <div>
@@ -111,7 +108,7 @@ export default function CandidateApplications() {
                         {job?.title || 'وظيفة'}
                       </div>
                       <div style={{ fontSize:13, color:C.gold }}>
-                        {job?.company_name || ''} {job?.location ? `· ${job.location}` : ''}
+                        {job?.company_name || ''}{job?.location ? ` · ${job.location}` : ''}
                       </div>
                     </div>
                     <div style={{ fontSize:11, color:C.muted, flexShrink:0 }}>
@@ -120,11 +117,9 @@ export default function CandidateApplications() {
                   </div>
                 </div>
 
-                {/* Timeline */}
                 <div style={{ padding:'16px 20px' }}>
                   <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-
-                    {/* تم التقديم — دائماً */}
+                    {/* تم التقديم */}
                     <div style={{ display:'flex', gap:12, alignItems:'center' }}>
                       <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(74,156,110,.15)', border:'1px solid rgba(74,156,110,.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>✅</div>
                       <div>
@@ -140,7 +135,7 @@ export default function CandidateApplications() {
                       </div>
                       <div>
                         <div style={{ fontSize:13, fontWeight:600, color:status.color }}>{status.label}</div>
-                        {app.status === 'pending' && (
+                        {(app.status === 'pending' || !app.status) && (
                           <div style={{ fontSize:11, color:C.muted }}>ستتواصل الشركة معك إذا كنت مناسباً</div>
                         )}
                         {app.status === 'contacted' && (
@@ -148,18 +143,14 @@ export default function CandidateApplications() {
                         )}
                       </div>
                     </div>
-
                   </div>
                 </div>
 
-                {/* Footer */}
-                {job && (
-                  <div style={{ padding:'12px 20px', background:C.surface, borderTop:`1px solid ${C.border}`, display:'flex', gap:8 }}>
-                    <Link href="/candidate/jobs" style={{ fontSize:12, color:C.muted, textDecoration:'none' }}>
-                      تصفح وظائف مشابهة ←
-                    </Link>
-                  </div>
-                )}
+                <div style={{ padding:'12px 20px', background:C.surface, borderTop:`1px solid ${C.border}` }}>
+                  <Link href="/candidate/jobs" style={{ fontSize:12, color:C.muted, textDecoration:'none' }}>
+                    تصفح وظائف أخرى ←
+                  </Link>
+                </div>
               </div>
             )
           })}

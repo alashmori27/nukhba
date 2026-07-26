@@ -12,6 +12,7 @@ export async function PATCH(req, { params }) {
     if (body.is_visible !== undefined) updates.is_visible = body.is_visible === true || body.is_visible === 'true'
     if (body.is_paid    !== undefined) updates.is_paid    = body.is_paid === true || body.is_paid === 'true'
     if (body.notes      !== undefined) updates.notes      = body.notes
+    if (body.status !== undefined) updates.status = body.status
 
     const { error } = await supabase
       .from('candidates')

@@ -20,7 +20,7 @@ const STATUSES = [
 export default function CompanyApplicants() {
   const router = useRouter()
   const [user, setUser]         = useState(null)
-  const [applications, setApps] = useState([])
+  const [candidates, setCands]  = useState([])
   const [loading, setLoading]   = useState(true)
   const [selected, setSelected] = useState(null)
   const [filter, setFilter]     = useState('all')
@@ -32,60 +32,46 @@ export default function CompanyApplicants() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
-    fetchApplications(parsed.id)
+    fetchCandidates(parsed)
   }, [])
 
-  async function fetchApplications(companyId) {
+  async function fetchCandidates(u) {
     try {
-      const res  = await fetch(`/api/applications?company_id=${companyId}`)
+      const res  = await fetch(`/api/candidates?company_id=${u.id}`, {
+        headers: { 'x-user-id': u.id, 'x-user-role': u.role }
+      })
       const data = await res.json()
-      const apps = data.applications || []
-
-      // جلب التفاصيل الكاملة من candidates
-      const enriched = await Promise.all(apps.map(async app => {
-        if (!app.candidate_id) return app
-        try {
-          const cRes  = await fetch(`/api/candidates/${app.candidate_id}`)
-          const cData = await cRes.json()
-          return {
-            ...app,
-            profile_json: cData.profile_json || app.profile_json,
-            transcript:   cData.transcript   || app.transcript,
-            score:        cData.score         || app.score,
-          }
-        } catch { return app }
-      }))
-
-      setApps(enriched)
+      setCands(data.candidates || [])
     } catch(e) { console.error(e) }
     setLoading(false)
   }
 
-  async function updateStatus(appId, status, candidateUserId, jobTitle) {
-    setUpdating(appId)
+  async function updateStatus(id, status, userId, jobTitle) {
+    setUpdating(id)
     try {
-      await fetch(`/api/applications/${appId}`, {
+      await fetch(`/api/candidates/${id}`, {
         method:'PATCH', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ status })
       })
-      setApps(p => p.map(a => a.id===appId ? {...a, status} : a))
+      setCands(p => p.map(c => c.id===id ? {...c, status} : c))
 
-      if (candidateUserId) {
-        const statusLabels = {
+      // إشعار للمتقدم
+      if (userId) {
+        const labels = {
           viewed:    'اطلعت الشركة على طلبك',
           contacted: 'الشركة تواصلت معك — تحقق من جوالك وإيميلك',
           accepted:  'مبروك! تم قبول طلبك 🎉',
           rejected:  'نأسف — لم يتم قبول طلبك هذه المرة',
         }
-        if (statusLabels[status]) {
+        if (labels[status]) {
           await fetch('/api/notifications', {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({
-              user_id: candidateUserId,
+              user_id: userId,
               type:    status,
-              title:   statusLabels[status],
+              title:   labels[status],
               body:    `بخصوص وظيفة: ${jobTitle || ''}`,
-              meta:    { application_id: appId }
+              meta:    { candidate_id: id }
             })
           })
         }
@@ -109,8 +95,8 @@ export default function CompanyApplicants() {
   const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : C.error
   const scoreLabel = s => s >= 80 ? 'ممتاز' : s >= 60 ? 'جيد' : 'يحتاج تطوير'
 
-  const filtered = applications
-    .filter(a => filter === 'all' || a.status === filter)
+  const filtered = candidates
+    .filter(c => filter === 'all' || (c.status || 'pending') === filter)
     .sort((a,b) => (b.score||0) - (a.score||0))
 
   if (!user) return null
@@ -128,7 +114,7 @@ export default function CompanyApplicants() {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28, flexWrap:'wrap', gap:16 }}>
           <div>
             <h1 style={{ fontSize:24, fontWeight:800, marginBottom:4 }}>المتقدمون على وظائفي</h1>
-            <p style={{ fontSize:13, color:C.muted }}>إجمالي <span style={{ color:C.gold }}>{applications.length} طلب</span></p>
+            <p style={{ fontSize:13, color:C.muted }}>إجمالي <span style={{ color:C.gold }}>{candidates.length} متقدم</span></p>
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             {[['all','الكل'], ...STATUSES.map(s => [s.value, s.label])].map(([val, label]) => (
@@ -141,7 +127,7 @@ export default function CompanyApplicants() {
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}
 
-        {!loading && applications.length === 0 && (
+        {!loading && candidates.length === 0 && (
           <div style={{ textAlign:'center', padding:60, background:C.card, borderRadius:14, border:`1px solid ${C.border}` }}>
             <div style={{ fontSize:48, marginBottom:16 }}>🎯</div>
             <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:8 }}>لا يوجد متقدمون بعد</div>
@@ -151,25 +137,24 @@ export default function CompanyApplicants() {
         )}
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {filtered.map(app => {
-            const p     = app.profile_json || {}
-            const name  = p.name  || 'مرشح'
-            const phone = p.phone || ''
-            const email = p.email || ''
-            const score = app.score || 0
+          {filtered.map(c => {
+            const p     = c.profile_json || {}
+            const name  = p.name  || c.name  || 'مرشح'
+            const phone = p.phone || c.phone  || ''
+            const email = p.email || c.email  || ''
+            const score = c.score || 0
             const sc    = scoreColor(score)
             const circ  = 2 * Math.PI * 22
             const dash  = circ - (score / 100) * circ
-            const currentStatus = STATUSES.find(s => s.value === app.status) || STATUSES[0]
+            const currentStatus = STATUSES.find(s => s.value === (c.status||'pending')) || STATUSES[0]
 
             return (
-              <div key={app.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', transition:'border-color .2s' }}
+              <div key={c.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', transition:'border-color .2s' }}
                 onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.3)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
               >
                 <div style={{ padding:20 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16 }}>
-
                     <div style={{ display:'flex', gap:14, alignItems:'flex-start', flex:1 }}>
                       {score > 0 && (
                         <div style={{ textAlign:'center', flexShrink:0 }}>
@@ -185,6 +170,7 @@ export default function CompanyApplicants() {
                       )}
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:3 }}>{name}</div>
+                        <div style={{ fontSize:13, color:C.gold, marginBottom:4 }}>{p.specialization || c.specialization || ''}</div>
                         <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>
                           {phone && <span style={{ marginLeft:12 }}>📱 {phone}</span>}
                           {email && <span>📧 {email}</span>}
@@ -196,15 +182,15 @@ export default function CompanyApplicants() {
                     </div>
 
                     <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
-                      <button onClick={() => setSelected(selected===app.id?null:app.id)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                        {selected===app.id?'إخفاء ▲':'تفاصيل ▼'}
+                      <button onClick={() => setSelected(selected===c.id?null:c.id)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                        {selected===c.id?'إخفاء ▲':'تفاصيل ▼'}
                       </button>
                       {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 واتساب</button>}
                       {email && <button onClick={() => contactEmail(email, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 إيميل</button>}
                     </div>
                   </div>
 
-                  {selected===app.id && (
+                  {selected===c.id && (
                     <div style={{ marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}` }}>
 
                       {/* تغيير الحالة */}
@@ -213,14 +199,22 @@ export default function CompanyApplicants() {
                         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                           {STATUSES.map(s => (
                             <button key={s.value}
-                              onClick={() => updateStatus(app.id, s.value, app.user_id, p.specialization)}
-                              disabled={app.status===s.value || updating===app.id}
-                              style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:app.status===s.value?'default':'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${s.color}44`, background:app.status===s.value?`${s.color}22`:'transparent', color:s.color, opacity:updating===app.id?.6:1 }}>
-                              {app.status===s.value?'✓ ':''}{s.label}
+                              onClick={() => updateStatus(c.id, s.value, c.user_id, p.specialization)}
+                              disabled={(c.status||'pending')===s.value || updating===c.id}
+                              style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:(c.status||'pending')===s.value?'default':'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${s.color}44`, background:(c.status||'pending')===s.value?`${s.color}22`:'transparent', color:s.color, opacity:updating===c.id?.6:1 }}>
+                              {(c.status||'pending')===s.value?'✓ ':''}{s.label}
                             </button>
                           ))}
                         </div>
                       </div>
+
+                      {/* ملخص */}
+                      {p.summary_ar && (
+                        <div style={{ marginBottom:14, background:C.surface, borderRadius:10, padding:14 }}>
+                          <div style={{ fontSize:10, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:8 }}>الملخص</div>
+                          <p style={{ fontSize:13, color:C.text, lineHeight:1.8 }}>{p.summary_ar}</p>
+                        </div>
+                      )}
 
                       {/* الإنجازات */}
                       {p.achievements?.length > 0 && (
@@ -247,11 +241,11 @@ export default function CompanyApplicants() {
                       )}
 
                       {/* نص المقابلة */}
-                      {app.transcript && (
+                      {c.transcript && (
                         <div>
                           <div style={{ fontSize:10, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:10 }}>🎙️ نص المقابلة</div>
                           <div style={{ background:C.surface, borderRadius:10, padding:16, maxHeight:300, overflowY:'auto' }}>
-                            {app.transcript.split('\n\n').map((line, i) => {
+                            {c.transcript.split('\n\n').map((line, i) => {
                               const isCandidate   = line.startsWith('Candidate:')
                               const isInterviewer = line.startsWith('Interviewer:')
                               if (!isCandidate && !isInterviewer) return null
