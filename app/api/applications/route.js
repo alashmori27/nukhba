@@ -40,6 +40,7 @@ export async function POST(req) {
         user_id:      body.userId,
         profile_json: body.profile || null,
         score:        body.score || 0,
+        transcript:   body.transcript || null,
         status:       'pending',
         created_at:   new Date().toISOString(),
         updated_at:   new Date().toISOString(),
