@@ -252,6 +252,8 @@ await fetch('/api/applications', {
     companyId:   currentJob.company_id,
     userId:      u.id,
     score:       0,
+    profile:     { name, phone, email, specialization: currentJob?.title || '' },
+    transcript,
   })
 })
  router.push('/candidate/job-applied')
