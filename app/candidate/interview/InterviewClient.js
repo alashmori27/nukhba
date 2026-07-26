@@ -243,7 +243,18 @@ export default function InterviewClient() {
         })
       }
 
-      router.push('/candidate/job-applied')
+     // حفظ في جدول applications
+await fetch('/api/applications', {
+  method:'POST', headers:{'Content-Type':'application/json'},
+  body: JSON.stringify({
+    jobId:       currentJob.id,
+    candidateId: saveData.id,
+    companyId:   currentJob.company_id,
+    userId:      u.id,
+    score:       0,
+  })
+})
+ router.push('/candidate/job-applied')
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
     }
