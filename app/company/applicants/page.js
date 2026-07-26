@@ -39,7 +39,24 @@ export default function CompanyApplicants() {
     try {
       const res  = await fetch(`/api/applications?company_id=${companyId}`)
       const data = await res.json()
-      setApps(data.applications || [])
+      const apps = data.applications || []
+
+      // جلب التفاصيل الكاملة من candidates
+      const enriched = await Promise.all(apps.map(async app => {
+        if (!app.candidate_id) return app
+        try {
+          const cRes  = await fetch(`/api/candidates/${app.candidate_id}`)
+          const cData = await cRes.json()
+          return {
+            ...app,
+            profile_json: cData.profile_json || app.profile_json,
+            transcript:   cData.transcript   || app.transcript,
+            score:        cData.score         || app.score,
+          }
+        } catch { return app }
+      }))
+
+      setApps(enriched)
     } catch(e) { console.error(e) }
     setLoading(false)
   }
@@ -53,7 +70,6 @@ export default function CompanyApplicants() {
       })
       setApps(p => p.map(a => a.id===appId ? {...a, status} : a))
 
-      // إشعار للمتقدم
       if (candidateUserId) {
         const statusLabels = {
           viewed:    'اطلعت الشركة على طلبك',
@@ -68,7 +84,7 @@ export default function CompanyApplicants() {
               user_id: candidateUserId,
               type:    status,
               title:   statusLabels[status],
-              body:    `بخصوص وظيفة: ${jobTitle}`,
+              body:    `بخصوص وظيفة: ${jobTitle || ''}`,
               meta:    { application_id: appId }
             })
           })
@@ -154,7 +170,6 @@ export default function CompanyApplicants() {
                 <div style={{ padding:20 }}>
                   <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16 }}>
 
-                    {/* معلومات المتقدم */}
                     <div style={{ display:'flex', gap:14, alignItems:'flex-start', flex:1 }}>
                       {score > 0 && (
                         <div style={{ textAlign:'center', flexShrink:0 }}>
@@ -171,17 +186,15 @@ export default function CompanyApplicants() {
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:3 }}>{name}</div>
                         <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>
-                          {email && <span style={{ marginLeft:12 }}>📧 {email}</span>}
-                          {phone && <span>📱 {phone}</span>}
+                          {phone && <span style={{ marginLeft:12 }}>📱 {phone}</span>}
+                          {email && <span>📧 {email}</span>}
                         </div>
-                        {/* الحالة */}
                         <div style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600, background:`${currentStatus.color}15`, border:`1px solid ${currentStatus.color}33`, color:currentStatus.color }}>
                           {currentStatus.label}
                         </div>
                       </div>
                     </div>
 
-                    {/* الأزرار */}
                     <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
                       <button onClick={() => setSelected(selected===app.id?null:app.id)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                         {selected===app.id?'إخفاء ▲':'تفاصيل ▼'}
@@ -191,7 +204,6 @@ export default function CompanyApplicants() {
                     </div>
                   </div>
 
-                  {/* تفاصيل موسّعة */}
                   {selected===app.id && (
                     <div style={{ marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}` }}>
 
@@ -201,7 +213,7 @@ export default function CompanyApplicants() {
                         <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
                           {STATUSES.map(s => (
                             <button key={s.value}
-                              onClick={() => updateStatus(app.id, s.value, app.user_id, app.profile_json?.specialization)}
+                              onClick={() => updateStatus(app.id, s.value, app.user_id, p.specialization)}
                               disabled={app.status===s.value || updating===app.id}
                               style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:app.status===s.value?'default':'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${s.color}44`, background:app.status===s.value?`${s.color}22`:'transparent', color:s.color, opacity:updating===app.id?.6:1 }}>
                               {app.status===s.value?'✓ ':''}{s.label}
@@ -210,10 +222,34 @@ export default function CompanyApplicants() {
                         </div>
                       </div>
 
+                      {/* الإنجازات */}
+                      {p.achievements?.length > 0 && (
+                        <div style={{ marginBottom:14 }}>
+                          <div style={{ fontSize:10, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:8 }}>🏆 الإنجازات</div>
+                          {p.achievements.map((a,i) => <div key={i} style={{ fontSize:13, color:C.text, marginBottom:5 }}>◆ {a}</div>)}
+                        </div>
+                      )}
+
+                      {/* نقاط القوة */}
+                      {p.strengths?.length > 0 && (
+                        <div style={{ marginBottom:14 }}>
+                          <div style={{ fontSize:10, letterSpacing:3, color:C.success, textTransform:'uppercase', marginBottom:8 }}>✅ نقاط القوة</div>
+                          {p.strengths.map((s,i) => <div key={i} style={{ fontSize:13, color:C.text, marginBottom:5 }}>✓ {s}</div>)}
+                        </div>
+                      )}
+
+                      {/* الملاحظات */}
+                      {p.flags?.length > 0 && (
+                        <div style={{ marginBottom:14 }}>
+                          <div style={{ fontSize:10, letterSpacing:3, color:C.error, textTransform:'uppercase', marginBottom:8 }}>⚠️ ملاحظات</div>
+                          {p.flags.map((f,i) => <div key={i} style={{ fontSize:13, color:C.text, marginBottom:5 }}>· {f}</div>)}
+                        </div>
+                      )}
+
                       {/* نص المقابلة */}
                       {app.transcript && (
                         <div>
-                          <div style={{ fontSize:11, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:10 }}>🎙️ نص المقابلة</div>
+                          <div style={{ fontSize:10, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:10 }}>🎙️ نص المقابلة</div>
                           <div style={{ background:C.surface, borderRadius:10, padding:16, maxHeight:300, overflowY:'auto' }}>
                             {app.transcript.split('\n\n').map((line, i) => {
                               const isCandidate   = line.startsWith('Candidate:')
@@ -229,6 +265,12 @@ export default function CompanyApplicants() {
                           </div>
                         </div>
                       )}
+
+                      {/* أزرار تواصل */}
+                      <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
+                        {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 تواصل عبر واتساب</button>}
+                        {email && <button onClick={() => contactEmail(email, name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 تواصل عبر إيميل</button>}
+                      </div>
                     </div>
                   )}
                 </div>
