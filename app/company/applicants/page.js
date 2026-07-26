@@ -9,13 +9,22 @@ const C = {
   success:'#4a9c6e', error:'#c94a4a'
 }
 
+const STATUSES = [
+  { value:'pending',   label:'قيد المراجعة', color:'#7a7690' },
+  { value:'viewed',    label:'تم الاطلاع',   color:'#4a6fa5' },
+  { value:'contacted', label:'تم التواصل',   color:'#4a9c6e' },
+  { value:'accepted',  label:'مقبول',        color:'#4a9c6e' },
+  { value:'rejected',  label:'مرفوض',        color:'#c94a4a' },
+]
+
 export default function CompanyApplicants() {
   const router = useRouter()
-  const [user, setUser]        = useState(null)
-  const [candidates, setCands] = useState([])
-  const [loading, setLoading]  = useState(true)
+  const [user, setUser]         = useState(null)
+  const [applications, setApps] = useState([])
+  const [loading, setLoading]   = useState(true)
   const [selected, setSelected] = useState(null)
-  const [filter, setFilter]    = useState('all')
+  const [filter, setFilter]     = useState('all')
+  const [updating, setUpdating] = useState(null)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -23,25 +32,51 @@ export default function CompanyApplicants() {
     const parsed = JSON.parse(u)
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
-    fetchApplicants(parsed)
+    fetchApplications(parsed.id)
   }, [])
 
-  async function fetchApplicants(u) {
+  async function fetchApplications(companyId) {
     try {
-      const res = await fetch(`/api/candidates?company_id=${u.id}`, {
-        headers: {
-          'x-user-id': u.id,
-          'x-user-role': u.role,
-        }
-      })
+      const res  = await fetch(`/api/applications?company_id=${companyId}`)
       const data = await res.json()
-      setCands(data.candidates || [])
+      setApps(data.applications || [])
     } catch(e) { console.error(e) }
     setLoading(false)
   }
 
-  const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : C.error
-  const scoreLabel = s => s >= 80 ? 'ممتاز' : s >= 60 ? 'جيد' : 'يحتاج تطوير'
+  async function updateStatus(appId, status, candidateUserId, jobTitle) {
+    setUpdating(appId)
+    try {
+      await fetch(`/api/applications/${appId}`, {
+        method:'PATCH', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ status })
+      })
+      setApps(p => p.map(a => a.id===appId ? {...a, status} : a))
+
+      // إشعار للمتقدم
+      if (candidateUserId) {
+        const statusLabels = {
+          viewed:    'اطلعت الشركة على طلبك',
+          contacted: 'الشركة تواصلت معك — تحقق من جوالك وإيميلك',
+          accepted:  'مبروك! تم قبول طلبك 🎉',
+          rejected:  'نأسف — لم يتم قبول طلبك هذه المرة',
+        }
+        if (statusLabels[status]) {
+          await fetch('/api/notifications', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({
+              user_id: candidateUserId,
+              type:    status,
+              title:   statusLabels[status],
+              body:    `بخصوص وظيفة: ${jobTitle}`,
+              meta:    { application_id: appId }
+            })
+          })
+        }
+      }
+    } catch(e) { console.error(e) }
+    setUpdating(null)
+  }
 
   function contactWhatsapp(phone, name) {
     const msg = encodeURIComponent(`مرحباً ${name}، تواصلت معك من منصة نخبة للتوظيف بخصوص وظيفتنا المعلنة.`)
@@ -55,13 +90,12 @@ export default function CompanyApplicants() {
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank')
   }
 
-  const filtered = candidates
-    .filter(c => {
-      if (filter === 'high') return c.score >= 80
-      if (filter === 'mid')  return c.score >= 60 && c.score < 80
-      return true
-    })
-    .sort((a,b) => b.score - a.score)
+  const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : C.error
+  const scoreLabel = s => s >= 80 ? 'ممتاز' : s >= 60 ? 'جيد' : 'يحتاج تطوير'
+
+  const filtered = applications
+    .filter(a => filter === 'all' || a.status === filter)
+    .sort((a,b) => (b.score||0) - (a.score||0))
 
   if (!user) return null
 
@@ -78,10 +112,10 @@ export default function CompanyApplicants() {
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28, flexWrap:'wrap', gap:16 }}>
           <div>
             <h1 style={{ fontSize:24, fontWeight:800, marginBottom:4 }}>المتقدمون على وظائفي</h1>
-            <p style={{ fontSize:13, color:C.muted }}>من أجرى مقابلة على إحدى وظائفك — <span style={{ color:C.gold }}>{candidates.length} متقدم</span></p>
+            <p style={{ fontSize:13, color:C.muted }}>إجمالي <span style={{ color:C.gold }}>{applications.length} طلب</span></p>
           </div>
-          <div style={{ display:'flex', gap:8 }}>
-            {[['all','الكل'],['high','ممتاز +٨٠'],['mid','جيد ٦٠-٨٠']].map(([val,label]) => (
+          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+            {[['all','الكل'], ...STATUSES.map(s => [s.value, s.label])].map(([val, label]) => (
               <button key={val} onClick={() => setFilter(val)} style={{ padding:'7px 14px', borderRadius:20, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${filter===val?C.gold:C.border}`, background:filter===val?'rgba(200,160,74,.1)':'transparent', color:filter===val?C.gold:C.muted }}>
                 {label}
               </button>
@@ -91,7 +125,7 @@ export default function CompanyApplicants() {
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}
 
-        {!loading && candidates.length === 0 && (
+        {!loading && applications.length === 0 && (
           <div style={{ textAlign:'center', padding:60, background:C.card, borderRadius:14, border:`1px solid ${C.border}` }}>
             <div style={{ fontSize:48, marginBottom:16 }}>🎯</div>
             <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:8 }}>لا يوجد متقدمون بعد</div>
@@ -101,90 +135,103 @@ export default function CompanyApplicants() {
         )}
 
         <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-          {filtered.map(c => {
-            const p    = c.profile_json || {}
-            const sc   = scoreColor(c.score)
-            const circ = 2 * Math.PI * 22
-            const dash = circ - (c.score / 100) * circ
-            const email = p.email || c.email
-            const phone = p.phone || c.phone
+          {filtered.map(app => {
+            const p     = app.profile_json || {}
+            const name  = p.name  || 'مرشح'
+            const phone = p.phone || ''
+            const email = p.email || ''
+            const score = app.score || 0
+            const sc    = scoreColor(score)
+            const circ  = 2 * Math.PI * 22
+            const dash  = circ - (score / 100) * circ
+            const currentStatus = STATUSES.find(s => s.value === app.status) || STATUSES[0]
 
             return (
-              <div key={c.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:22, transition:'border-color .2s' }}
-                onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.4)'}
+              <div key={app.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, overflow:'hidden', transition:'border-color .2s' }}
+                onMouseEnter={e => e.currentTarget.style.borderColor='rgba(200,160,74,.3)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor=C.border}
               >
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16 }}>
-                  <div style={{ display:'flex', gap:14, alignItems:'flex-start', flex:1 }}>
-                    <div style={{ textAlign:'center', flexShrink:0 }}>
-                      <div style={{ width:52, height:52, position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                        <svg width="52" height="52" viewBox="0 0 48 48" style={{ position:'absolute', transform:'rotate(-90deg)' }}>
-                          <circle cx="24" cy="24" r="22" fill="none" stroke="#252538" strokeWidth="3"/>
-                          <circle cx="24" cy="24" r="22" fill="none" stroke={sc} strokeWidth="3" strokeDasharray={circ} strokeDashoffset={dash} strokeLinecap="round"/>
-                        </svg>
-                        <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:15, fontWeight:600, color:sc }}>{c.score}</span>
-                      </div>
-                      <div style={{ fontSize:9, color:sc, marginTop:2, fontWeight:700 }}>{scoreLabel(c.score)}</div>
-                    </div>
-                    <div style={{ flex:1 }}>
-                      <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:3 }}>{p.name || c.name}</div>
-                      <div style={{ fontSize:13, color:C.gold, marginBottom:4 }}>{p.specialization || c.specialization}</div>
-                      <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>📍 {p.location || c.location}{p.experience_years && ` · ${p.experience_years}`}</div>
-                      <div style={{ display:'flex', gap:12, flexWrap:'wrap' }}>
-                        {email && <span style={{ fontSize:11, color:C.muted }}>📧 {email}</span>}
-                        {phone && <span style={{ fontSize:11, color:C.muted }}>📱 {phone}</span>}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
-                    <button onClick={() => setSelected(selected?.id===c.id?null:c)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                      {selected?.id===c.id?'إخفاء ▲':'الملف ▼'}
-                    </button>
-                    {phone && <button onClick={() => contactWhatsapp(phone, p.name||c.name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 واتساب</button>}
-                    {email && <button onClick={() => contactEmail(email, p.name||c.name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 إيميل</button>}
-                  </div>
-                </div>
+                <div style={{ padding:20 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16 }}>
 
-                {p.summary_ar && (
-                  <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, margin:'12px 0 0', paddingTop:12, borderTop:`1px solid ${C.border}`, display:'-webkit-box', WebkitLineClamp:4, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{p.summary_ar}</div>
-                )}
-
-                {selected?.id===c.id && (
-                  <div style={{ marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}` }}>
-                    <div style={{ background:C.surface, borderRadius:10, padding:'12px 16px', marginBottom:16, display:'flex', gap:20, flexWrap:'wrap', alignItems:'center' }}>
-                      <span style={{ fontSize:11, color:C.muted }}>التواصل:</span>
-                      {email && <span style={{ fontSize:13, color:C.text }}>📧 {email}</span>}
-                      {phone && <span style={{ fontSize:13, color:C.text }}>📱 {phone}</span>}
-                      {p.salary_expectation && <span style={{ fontSize:13, color:C.text }}>💰 {p.salary_expectation}</span>}
-                      {p.availability && <span style={{ fontSize:13, color:C.text }}>📅 {p.availability}</span>}
-                    </div>
-                    {p.achievements?.length > 0 && <div style={{ marginBottom:14 }}><div style={{ fontSize:10, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:8 }}>🏆 الإنجازات</div>{p.achievements.map((a,i) => <div key={i} style={{ fontSize:13, color:C.text, marginBottom:5 }}>◆ {a}</div>)}</div>}
-                    {p.strengths?.length > 0 && <div style={{ marginBottom:14 }}><div style={{ fontSize:10, letterSpacing:3, color:C.success, textTransform:'uppercase', marginBottom:8 }}>✅ نقاط القوة</div>{p.strengths.map((s,i) => <div key={i} style={{ fontSize:13, color:C.text, marginBottom:5 }}>✓ {s}</div>)}</div>}
-                    {p.flags?.length > 0 && <div style={{ marginBottom:14 }}><div style={{ fontSize:10, letterSpacing:3, color:C.error, textTransform:'uppercase', marginBottom:8 }}>⚠️ ملاحظات</div>{p.flags.map((f,i) => <div key={i} style={{ fontSize:13, color:C.text, marginBottom:5 }}>· {f}</div>)}</div>}
-                    {c.transcript && (
-                      <div style={{ marginBottom:14 }}>
-                        <div style={{ fontSize:10, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:12 }}>🎙️ نص المقابلة</div>
-                        <div style={{ background:C.surface, borderRadius:10, padding:16, maxHeight:400, overflowY:'auto' }}>
-                          {c.transcript.split('\n\n').map((line, i) => {
-                            const isCandidate = line.startsWith('Candidate:')
-                            const isInterviewer = line.startsWith('Interviewer:')
-                            if (!isCandidate && !isInterviewer) return null
-                            return (
-                              <div key={i} style={{ marginBottom:12, display:'flex', gap:10, alignItems:'flex-start' }}>
-                                <span style={{ fontSize:11, fontWeight:700, color:isCandidate?C.gold:C.muted, flexShrink:0, minWidth:52 }}>{isCandidate?'المتقدم':'نخبة'}:</span>
-                                <span style={{ fontSize:13, color:C.text, lineHeight:1.75 }}>{line.replace(/^(Candidate|Interviewer): /, '')}</span>
-                              </div>
-                            )
-                          })}
+                    {/* معلومات المتقدم */}
+                    <div style={{ display:'flex', gap:14, alignItems:'flex-start', flex:1 }}>
+                      {score > 0 && (
+                        <div style={{ textAlign:'center', flexShrink:0 }}>
+                          <div style={{ width:52, height:52, position:'relative', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            <svg width="52" height="52" viewBox="0 0 48 48" style={{ position:'absolute', transform:'rotate(-90deg)' }}>
+                              <circle cx="24" cy="24" r="22" fill="none" stroke="#252538" strokeWidth="3"/>
+                              <circle cx="24" cy="24" r="22" fill="none" stroke={sc} strokeWidth="3" strokeDasharray={circ} strokeDashoffset={dash} strokeLinecap="round"/>
+                            </svg>
+                            <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:15, fontWeight:600, color:sc }}>{score}</span>
+                          </div>
+                          <div style={{ fontSize:9, color:sc, marginTop:2, fontWeight:700 }}>{scoreLabel(score)}</div>
+                        </div>
+                      )}
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:16, fontWeight:700, color:C.text, marginBottom:3 }}>{name}</div>
+                        <div style={{ fontSize:12, color:C.muted, marginBottom:6 }}>
+                          {email && <span style={{ marginLeft:12 }}>📧 {email}</span>}
+                          {phone && <span>📱 {phone}</span>}
+                        </div>
+                        {/* الحالة */}
+                        <div style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 10px', borderRadius:20, fontSize:11, fontWeight:600, background:`${currentStatus.color}15`, border:`1px solid ${currentStatus.color}33`, color:currentStatus.color }}>
+                          {currentStatus.label}
                         </div>
                       </div>
-                    )}
-                    <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
-                      {phone && <button onClick={() => contactWhatsapp(phone, p.name||c.name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 تواصل عبر واتساب</button>}
-                      {email && <button onClick={() => contactEmail(email, p.name||c.name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 تواصل عبر إيميل</button>}
+                    </div>
+
+                    {/* الأزرار */}
+                    <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
+                      <button onClick={() => setSelected(selected===app.id?null:app.id)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                        {selected===app.id?'إخفاء ▲':'تفاصيل ▼'}
+                      </button>
+                      {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 واتساب</button>}
+                      {email && <button onClick={() => contactEmail(email, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 إيميل</button>}
                     </div>
                   </div>
-                )}
+
+                  {/* تفاصيل موسّعة */}
+                  {selected===app.id && (
+                    <div style={{ marginTop:16, paddingTop:16, borderTop:`1px solid ${C.border}` }}>
+
+                      {/* تغيير الحالة */}
+                      <div style={{ marginBottom:16 }}>
+                        <div style={{ fontSize:11, color:C.muted, marginBottom:8, letterSpacing:2, textTransform:'uppercase' }}>تغيير حالة الطلب</div>
+                        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                          {STATUSES.map(s => (
+                            <button key={s.value}
+                              onClick={() => updateStatus(app.id, s.value, app.user_id, app.profile_json?.specialization)}
+                              disabled={app.status===s.value || updating===app.id}
+                              style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:app.status===s.value?'default':'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${s.color}44`, background:app.status===s.value?`${s.color}22`:'transparent', color:s.color, opacity:updating===app.id?.6:1 }}>
+                              {app.status===s.value?'✓ ':''}{s.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* نص المقابلة */}
+                      {app.transcript && (
+                        <div>
+                          <div style={{ fontSize:11, letterSpacing:3, color:C.gold, textTransform:'uppercase', marginBottom:10 }}>🎙️ نص المقابلة</div>
+                          <div style={{ background:C.surface, borderRadius:10, padding:16, maxHeight:300, overflowY:'auto' }}>
+                            {app.transcript.split('\n\n').map((line, i) => {
+                              const isCandidate   = line.startsWith('Candidate:')
+                              const isInterviewer = line.startsWith('Interviewer:')
+                              if (!isCandidate && !isInterviewer) return null
+                              return (
+                                <div key={i} style={{ marginBottom:10, display:'flex', gap:10, alignItems:'flex-start' }}>
+                                  <span style={{ fontSize:11, fontWeight:700, color:isCandidate?C.gold:C.muted, flexShrink:0, minWidth:52 }}>{isCandidate?'المتقدم':'نخبة'}:</span>
+                                  <span style={{ fontSize:13, color:C.text, lineHeight:1.7 }}>{line.replace(/^(Candidate|Interviewer): /, '')}</span>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}
