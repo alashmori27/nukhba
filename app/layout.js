@@ -15,6 +15,10 @@ export const metadata = {
   description: 'منصة توظيف ذكية مدعومة بالذكاء الاصطناعي — مقابلات AI، ملفات مهنية احترافية، وتواصل مباشر مع الشركات في السعودية',
   keywords: ['توظيف', 'وظائف', 'مقابلة ذكية', 'ذكاء اصطناعي', 'السعودية', 'CV', 'نخبة'],
   authors: [{ name: 'نخبة · Nukhba' }],
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+  },
   verification: {
     google: 'PZghiEyYiWM7FgvzVjF_OZ51gK4umXbChgzJ4qzbomI',
   },
