@@ -13,7 +13,7 @@ export const metadata = {
     template: '%s · نخبة',
   },
   description: 'منصة توظيف ذكية مدعومة بالذكاء الاصطناعي — مقابلات AI، ملفات مهنية احترافية، وتواصل مباشر مع الشركات في السعودية',
-  keywords: ['توظيف', 'وظائف', 'مقابلة ذكية', 'ذكاء اصطناعي', 'السعودية', 'CV', 'نخبة'],
+  keywords: ['توظيف', 'وظائف', 'مقابلة ذكية', 'ذكاء اصطناعي', 'السعودية', 'CV', 'نخبة', 'سيرة ذاتية', 'وظائف السعودية'],
   authors: [{ name: 'نخبة · Nukhba' }],
   icons: {
     icon: '/favicon.svg',
@@ -41,6 +41,25 @@ export const metadata = {
   },
 }
 
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "نخبة",
+  "alternateName": "Nukhba",
+  "url": "https://www.nukhbahr.com",
+  "description": "منصة التوظيف الذكي في السعودية — مقابلات AI، سيرة ذاتية احترافية، توظيف مباشر",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "SAR",
+    "description": "مقابلة ذكية مجانية"
+  },
+  "inLanguage": "ar",
+  "areaServed": "SA"
+}
+
 export default function RootLayout({ children }) {
   return (
     <html lang="ar" dir="rtl">
@@ -48,6 +67,10 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
         <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet"/>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
       </head>
       <body>
         {children}
