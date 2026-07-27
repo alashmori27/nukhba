@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   }
 
   async function deleteUser(id) {
-    if (!confirm('هل أنت متأكد من الحذف النهائي؟')) return
+    if (!window.confirm('هل أنت متأكد من الحذف النهائي؟')) return
     setDeleting(id)
     try {
       const res = await fetch(`/api/admin/users/${id}`, { method:'DELETE' })
