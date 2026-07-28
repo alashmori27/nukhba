@@ -54,7 +54,18 @@ export default function AdminDashboard() {
   }
 
   async function toggleBan(id, currentBanned) {
-    setBanning(id)
+    try {
+      const res = await fetch(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_banned: !currentBanned })
+      })
+      const data = await res.json()
+      if (data.success) {
+        setUsers(p => p.map(u => u.id===id ? {...u, is_banned:!currentBanned} : u))
+      }
+    } catch(e) { console.error(e) }
+  }
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: 'PATCH',
