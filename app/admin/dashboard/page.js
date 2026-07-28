@@ -40,9 +40,9 @@ export default function AdminDashboard() {
     setLoading(true)
     try {
       const [ur, jr, cr] = await Promise.all([
-        fetch('/api/admin/users'),
-        fetch('/api/jobs'),
-        fetch('/api/candidates', { headers: { 'x-user-id':'admin', 'x-user-role':'admin' } }),
+        fetch('/api/admin/users', { cache:'no-store' }),
+        fetch('/api/jobs', { cache:'no-store' }),
+        fetch('/api/candidates', { cache:'no-store', headers: { 'x-user-id':'admin', 'x-user-role':'admin' } }),
       ])
       setUsers((await ur.json()).users || [])
       setJobs((await jr.json()).jobs || [])
