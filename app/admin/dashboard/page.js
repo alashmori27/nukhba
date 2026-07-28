@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   }
 
   async function deleteUser(id) {
-    if (!confirm('هل أنت متأكد من الحذف النهائي؟')) return
+    if (!window.confirm('هل أنت متأكد من الحذف النهائي؟')) return
     setDeleting(id)
     try {
       const res = await fetch(`/api/admin/users/${id}`, { method:'DELETE' })
@@ -62,13 +62,15 @@ export default function AdminDashboard() {
         body: JSON.stringify({ is_banned: !currentBanned })
       })
       const data = await res.json()
-      if (data.success) setUsers(p => p.map(u => u.id===id ? {...u, is_banned:!currentBanned} : u))
-    } catch(e) { alert('خطأ') }
+      if (data.success) {
+        setUsers(p => p.map(u => u.id === id ? { ...u, is_banned: !currentBanned } : u))
+      }
+    } catch(e) { console.error(e) }
     setBanning(null)
   }
 
   async function deleteJob(id) {
-    if (!confirm('هل أنت متأكد من حذف هذه الوظيفة؟')) return
+    if (!window.confirm('هل أنت متأكد من حذف هذه الوظيفة؟')) return
     setDeleting(id)
     try {
       await fetch(`/api/jobs/${id}`, { method:'DELETE' })
@@ -78,7 +80,7 @@ export default function AdminDashboard() {
   }
 
   async function deleteCandidate(id) {
-    if (!confirm('هل أنت متأكد من حذف هذا الملف؟')) return
+    if (!window.confirm('هل أنت متأكد من حذف هذا الملف؟')) return
     setDeleting(id)
     try {
       await fetch(`/api/candidates/${id}`, { method:'DELETE' })
@@ -87,8 +89,8 @@ export default function AdminDashboard() {
     setDeleting(null)
   }
 
-  const candidates_count = users.filter(u => u.role==='candidate').length
-  const companies_count  = users.filter(u => u.role==='company').length
+  const candidates_count = users.filter(u => u.role === 'candidate').length
+  const companies_count  = users.filter(u => u.role === 'company').length
   const banned_count     = users.filter(u => u.is_banned).length
   const paid_count       = candidates.filter(c => c.is_paid).length
 
@@ -103,7 +105,7 @@ export default function AdminDashboard() {
     if (days === 0) return 'اليوم'
     if (days === 1) return 'أمس'
     if (days < 30) return `${days} يوم`
-    return `${Math.floor(days/30)} شهر`
+    return `${Math.floor(days / 30)} شهر`
   }
 
   const scoreColor = s => s >= 80 ? C.success : s >= 60 ? C.gold : s > 0 ? C.error : C.muted
@@ -121,10 +123,10 @@ export default function AdminDashboard() {
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text, display:'flex', flexDirection:'column' }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
-      {/* modal نص المقابلة */}
+      {/* Modal نص المقابلة */}
       {viewTranscript && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.8)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }} onClick={() => setViewTranscript(null)}>
-          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, width:'100%', maxWidth:700, maxHeight:'80vh', overflow:'hidden', display:'flex', flexDirection:'column' }} onClick={e=>e.stopPropagation()}>
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.85)', zIndex:999, display:'flex', alignItems:'center', justifyContent:'center', padding:24 }} onClick={() => setViewTranscript(null)}>
+          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, width:'100%', maxWidth:700, maxHeight:'80vh', overflow:'hidden', display:'flex', flexDirection:'column' }} onClick={e => e.stopPropagation()}>
             <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'16px 20px', borderBottom:`1px solid ${C.border}` }}>
               <div style={{ fontSize:14, fontWeight:700, color:C.text }}>🎙️ نص المقابلة</div>
               <button onClick={() => setViewTranscript(null)} style={{ background:'transparent', border:'none', color:C.muted, fontSize:18, cursor:'pointer' }}>✕</button>
@@ -136,7 +138,9 @@ export default function AdminDashboard() {
                 if (!isCandidate && !isInterviewer) return null
                 return (
                   <div key={i} style={{ marginBottom:12, display:'flex', gap:10, alignItems:'flex-start' }}>
-                    <span style={{ fontSize:11, fontWeight:700, color:isCandidate?C.gold:C.muted, flexShrink:0, minWidth:60 }}>{isCandidate?'المتقدم':'نخبة'}:</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:isCandidate ? C.gold : C.muted, flexShrink:0, minWidth:60 }}>
+                      {isCandidate ? 'المتقدم' : 'نخبة'}:
+                    </span>
                     <span style={{ fontSize:13, color:C.text, lineHeight:1.7 }}>{line.replace(/^(Candidate|Interviewer): /, '')}</span>
                   </div>
                 )
@@ -172,12 +176,12 @@ export default function AdminDashboard() {
           {tabs.map(t => (
             <button key={t.id} onClick={() => { setTab(t.id); setSearch('') }} style={{
               width:'100%', padding:'13px 20px', border:'none',
-              background: tab===t.id ? `rgba(200,160,74,.08)` : 'transparent',
-              color: tab===t.id ? C.gold : t.id==='banned'?C.warning:C.muted,
-              fontSize:14, fontWeight: tab===t.id ? 700 : 400,
+              background: tab === t.id ? 'rgba(200,160,74,.08)' : 'transparent',
+              color: tab === t.id ? C.gold : t.id === 'banned' ? C.warning : C.muted,
+              fontSize:14, fontWeight: tab === t.id ? 700 : 400,
               cursor:'pointer', fontFamily:"'Tajawal',sans-serif",
               textAlign:'right', display:'flex', alignItems:'center', justifyContent:'space-between',
-              borderRight: tab===t.id ? `3px solid ${C.gold}` : '3px solid transparent',
+              borderRight: tab === t.id ? `3px solid ${C.gold}` : '3px solid transparent',
               transition:'all .15s', marginBottom:2
             }}>
               <span style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -185,7 +189,7 @@ export default function AdminDashboard() {
                 {t.label}
               </span>
               {t.count !== undefined && t.count > 0 && (
-                <span style={{ fontSize:11, background:tab===t.id?C.gold:t.id==='banned'?`${C.warning}22`:C.surface, color:tab===t.id?C.bg:t.id==='banned'?C.warning:C.muted, padding:'2px 8px', borderRadius:20, fontWeight:700 }}>
+                <span style={{ fontSize:11, background: tab === t.id ? C.gold : t.id === 'banned' ? `${C.warning}22` : C.surface, color: tab === t.id ? C.bg : t.id === 'banned' ? C.warning : C.muted, padding:'2px 8px', borderRadius:20, fontWeight:700 }}>
                   {t.count}
                 </span>
               )}
@@ -200,8 +204,8 @@ export default function AdminDashboard() {
         {/* Main Content */}
         <div style={{ flex:1, overflowY:'auto', padding:'28px 32px' }}>
 
-          {/* ══ STATS ══ */}
-          {tab==='stats' && (
+          {/* STATS */}
+          {tab === 'stats' && (
             <div>
               <div style={{ marginBottom:28 }}>
                 <h1 style={{ fontSize:24, fontWeight:800, color:C.text, marginBottom:4 }}>لوحة التحكم</h1>
@@ -227,20 +231,22 @@ export default function AdminDashboard() {
               </div>
               <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:14, padding:24 }}>
                 <div style={{ fontSize:15, fontWeight:700, color:C.text, marginBottom:16 }}>آخر المسجلين</div>
-                {users.slice(0,8).map(u => (
+                {users.slice(0, 8).map(u => (
                   <div key={u.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 0', borderBottom:`1px solid ${C.border}` }}>
                     <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                      <div style={{ width:32, height:32, borderRadius:'50%', background:u.role==='company'?'linear-gradient(135deg,#4a6fa5,#6a9fce)':`linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color:'#06060e' }}>
-                        {(u.name||'؟')[0]}
+                      <div style={{ width:32, height:32, borderRadius:'50%', background: u.role === 'company' ? 'linear-gradient(135deg,#4a6fa5,#6a9fce)' : `linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color:'#06060e' }}>
+                        {(u.name || '؟')[0]}
                       </div>
                       <div>
-                        <div style={{ fontSize:13, fontWeight:600, color:u.is_banned?C.error:C.text }}>{u.name} {u.is_banned&&'🚫'}</div>
+                        <div style={{ fontSize:13, fontWeight:600, color: u.is_banned ? C.error : C.text }}>
+                          {u.name} {u.is_banned && '🚫'}
+                        </div>
                         <div style={{ fontSize:11, color:C.muted }}>{u.email}</div>
                       </div>
                     </div>
                     <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background:u.role==='company'?'rgba(74,111,165,.15)':'rgba(200,160,74,.1)', color:u.role==='company'?C.blue:C.gold }}>
-                        {u.role==='company'?'شركة':'باحث'}
+                      <span style={{ fontSize:11, padding:'2px 10px', borderRadius:20, background: u.role === 'company' ? 'rgba(74,111,165,.15)' : 'rgba(200,160,74,.1)', color: u.role === 'company' ? C.blue : C.gold }}>
+                        {u.role === 'company' ? 'شركة' : 'باحث'}
                       </span>
                       <span style={{ fontSize:11, color:C.muted }}>{timeAgo(u.created_at)}</span>
                     </div>
@@ -250,26 +256,30 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ══ CANDIDATES + COMPANIES shared UI ══ */}
-          {(tab==='candidates' || tab==='companies') && (
+          {/* CANDIDATES + COMPANIES */}
+          {(tab === 'candidates' || tab === 'companies') && (
             <div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
                 <div>
-                  <h1 style={{ fontSize:22, fontWeight:800, marginBottom:4 }}>{tab==='candidates'?'الباحثون عن عمل':'الشركات المسجلة'}</h1>
-                  <p style={{ fontSize:13, color:C.muted }}>{tab==='candidates'?candidates_count:companies_count} {tab==='candidates'?'مستخدم':'شركة'}</p>
+                  <h1 style={{ fontSize:22, fontWeight:800, marginBottom:4 }}>
+                    {tab === 'candidates' ? 'الباحثون عن عمل' : 'الشركات المسجلة'}
+                  </h1>
+                  <p style={{ fontSize:13, color:C.muted }}>
+                    {tab === 'candidates' ? candidates_count : companies_count} {tab === 'candidates' ? 'مستخدم' : 'شركة'}
+                  </p>
                 </div>
-                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="بحث بالاسم أو الإيميل..."
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="بحث بالاسم أو الإيميل..."
                   style={{ padding:'9px 16px', borderRadius:10, border:`1px solid ${C.border}`, background:C.surface, color:C.text, fontSize:13, fontFamily:"'Tajawal',sans-serif", outline:'none', width:220 }}/>
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                {filteredUsers.filter(u=>u.role===(tab==='candidates'?'candidate':'company')).map(u => (
-                  <div key={u.id} style={{ background:u.is_banned?'rgba(201,74,74,.05)':C.card, border:`1px solid ${u.is_banned?C.error+'44':C.border}`, borderRadius:12, padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                {filteredUsers.filter(u => u.role === (tab === 'candidates' ? 'candidate' : 'company')).map(u => (
+                  <div key={u.id} style={{ background: u.is_banned ? 'rgba(201,74,74,.05)' : C.card, border:`1px solid ${u.is_banned ? C.error + '44' : C.border}`, borderRadius:12, padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                     <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                      <div style={{ width:40, height:40, borderRadius: tab==='companies'?10:'50%', background:tab==='companies'?'linear-gradient(135deg,#4a6fa5,#6a9fce)':`linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:800, color:'#fff', flexShrink:0 }}>
-                        {tab==='companies'?'🏢':(u.name||'؟')[0]}
+                      <div style={{ width:40, height:40, borderRadius: tab === 'companies' ? 10 : '50%', background: tab === 'companies' ? 'linear-gradient(135deg,#4a6fa5,#6a9fce)' : `linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, fontWeight:800, color:'#fff', flexShrink:0 }}>
+                        {tab === 'companies' ? '🏢' : (u.name || '؟')[0]}
                       </div>
                       <div>
-                        <div style={{ fontSize:14, fontWeight:700, color:u.is_banned?C.error:C.text, marginBottom:2 }}>
+                        <div style={{ fontSize:14, fontWeight:700, color: u.is_banned ? C.error : C.text, marginBottom:2 }}>
                           {u.name} {u.is_banned && <span style={{ fontSize:11 }}>🚫 موقوف</span>}
                         </div>
                         <div style={{ fontSize:12, color:C.muted }}>{u.email}</div>
@@ -279,11 +289,11 @@ export default function AdminDashboard() {
                     </div>
                     <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap', justifyContent:'flex-end' }}>
                       <span style={{ fontSize:11, color:C.muted }}>{timeAgo(u.created_at)}</span>
-                      <button onClick={() => toggleBan(u.id, u.is_banned)} disabled={banning===u.id} style={{ padding:'6px 12px', borderRadius:8, border:`1px solid ${u.is_banned?C.success:C.warning}`, background:'transparent', color:u.is_banned?C.success:C.warning, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity:banning===u.id?.5:1 }}>
-                        {banning===u.id?'⏳':u.is_banned?'رفع الإيقاف':'إيقاف'}
+                      <button onClick={() => toggleBan(u.id, u.is_banned)} style={{ padding:'6px 12px', borderRadius:8, border:`1px solid ${u.is_banned ? C.success : C.warning}`, background:'transparent', color: u.is_banned ? C.success : C.warning, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                        {banning === u.id ? '⏳' : u.is_banned ? 'رفع الإيقاف' : 'إيقاف'}
                       </button>
-                      <button onClick={() => deleteUser(u.id)} disabled={deleting===u.id} style={{ padding:'6px 12px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity:deleting===u.id?.5:1 }}>
-                        {deleting===u.id?'⏳':'حذف'}
+                      <button onClick={() => deleteUser(u.id)} style={{ padding:'6px 12px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                        {deleting === u.id ? '⏳' : 'حذف'}
                       </button>
                     </div>
                   </div>
@@ -292,8 +302,8 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* ══ JOBS ══ */}
-          {tab==='jobs' && (
+          {/* JOBS */}
+          {tab === 'jobs' && (
             <div>
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontSize:22, fontWeight:800, marginBottom:4 }}>الوظائف المنشورة</h1>
@@ -307,26 +317,32 @@ export default function AdminDashboard() {
                       <div style={{ fontSize:12, color:C.gold, marginBottom:3 }}>{j.company_name}</div>
                       <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
                         {j.location && <span style={{ fontSize:11, color:C.muted }}>📍 {j.location}</span>}
-                        <span style={{ fontSize:11, color:C.muted }}>🎙️ {j.questions?.length||0} أسئلة</span>
-                        <span style={{ fontSize:11, padding:'1px 8px', borderRadius:20, background:j.status==='active'?'rgba(74,156,110,.15)':'rgba(122,118,144,.1)', color:j.status==='active'?C.success:C.muted }}>
-                          {j.status==='active'?'نشطة':'مغلقة'}
+                        <span style={{ fontSize:11, color:C.muted }}>🎙️ {j.questions?.length || 0} أسئلة</span>
+                        <span style={{ fontSize:11, padding:'1px 8px', borderRadius:20, background: j.status === 'active' ? 'rgba(74,156,110,.15)' : 'rgba(122,118,144,.1)', color: j.status === 'active' ? C.success : C.muted }}>
+                          {j.status === 'active' ? 'نشطة' : 'مغلقة'}
                         </span>
                       </div>
                     </div>
                     <div style={{ display:'flex', gap:8, alignItems:'center' }}>
                       <span style={{ fontSize:11, color:C.muted }}>{timeAgo(j.created_at)}</span>
-                      <button onClick={() => deleteJob(j.id)} disabled={deleting===j.id} style={{ padding:'6px 14px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity:deleting===j.id?.5:1 }}>
-                        {deleting===j.id?'⏳':'حذف'}
+                      <button onClick={() => deleteJob(j.id)} style={{ padding:'6px 14px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                        {deleting === j.id ? '⏳' : 'حذف'}
                       </button>
                     </div>
                   </div>
                 ))}
+                {jobs.length === 0 && !loading && (
+                  <div style={{ textAlign:'center', padding:60, color:C.muted }}>
+                    <div style={{ fontSize:40, marginBottom:12 }}>📋</div>
+                    لا توجد وظائف منشورة
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* ══ PROFILES ══ */}
-          {tab==='profiles' && (
+          {/* PROFILES */}
+          {tab === 'profiles' && (
             <div>
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontSize:22, fontWeight:800, marginBottom:4 }}>ملفات المرشحين</h1>
@@ -334,10 +350,10 @@ export default function AdminDashboard() {
               </div>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
                 {candidates.map(c => {
-                  const p  = c.profile_json || {}
-                  const sc = scoreColor(c.score)
+                  const p    = c.profile_json || {}
+                  const sc   = scoreColor(c.score)
                   const circ = 2 * Math.PI * 18
-                  const dash = circ - (c.score/100)*circ
+                  const dash = circ - (c.score / 100) * circ
                   return (
                     <div key={c.id} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:12, padding:'16px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
                       <div style={{ display:'flex', alignItems:'center', gap:14 }}>
@@ -346,16 +362,16 @@ export default function AdminDashboard() {
                             <circle cx="20" cy="20" r="18" fill="none" stroke={C.border} strokeWidth="3"/>
                             <circle cx="20" cy="20" r="18" fill="none" stroke={sc} strokeWidth="3" strokeDasharray={circ} strokeDashoffset={dash} strokeLinecap="round"/>
                           </svg>
-                          <span style={{ fontSize:11, fontWeight:700, color:sc }}>{c.score||0}</span>
+                          <span style={{ fontSize:11, fontWeight:700, color:sc }}>{c.score || 0}</span>
                         </div>
                         <div>
                           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
-                            <span style={{ fontSize:14, fontWeight:700, color:C.text }}>{p.name||c.name||'—'}</span>
+                            <span style={{ fontSize:14, fontWeight:700, color:C.text }}>{p.name || c.name || '—'}</span>
                             {c.is_paid && <span style={{ fontSize:10, color:C.success, background:'rgba(74,156,110,.1)', padding:'1px 8px', borderRadius:20 }}>✓ مدفوع</span>}
                             {c.job_id && <span style={{ fontSize:10, color:C.blue, background:'rgba(74,111,165,.1)', padding:'1px 8px', borderRadius:20 }}>وظيفة</span>}
                           </div>
-                          <div style={{ fontSize:12, color:C.gold }}>{p.specialization||c.specialization||'—'}</div>
-                          <div style={{ fontSize:11, color:C.muted }}>📍 {p.location||c.location||'—'}</div>
+                          <div style={{ fontSize:12, color:C.gold }}>{p.specialization || c.specialization || '—'}</div>
+                          <div style={{ fontSize:11, color:C.muted }}>📍 {p.location || c.location || '—'}</div>
                         </div>
                       </div>
                       <div style={{ display:'flex', gap:8, alignItems:'center' }}>
@@ -365,19 +381,25 @@ export default function AdminDashboard() {
                             🎙️ المقابلة
                           </button>
                         )}
-                        <button onClick={() => deleteCandidate(c.id)} disabled={deleting===c.id} style={{ padding:'6px 12px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity:deleting===c.id?.5:1 }}>
-                          {deleting===c.id?'⏳':'حذف'}
+                        <button onClick={() => deleteCandidate(c.id)} style={{ padding:'6px 12px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                          {deleting === c.id ? '⏳' : 'حذف'}
                         </button>
                       </div>
                     </div>
                   )
                 })}
+                {candidates.length === 0 && !loading && (
+                  <div style={{ textAlign:'center', padding:60, color:C.muted }}>
+                    <div style={{ fontSize:40, marginBottom:12 }}>📁</div>
+                    لا توجد ملفات بعد
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* ══ BANNED ══ */}
-          {tab==='banned' && (
+          {/* BANNED */}
+          {tab === 'banned' && (
             <div>
               <div style={{ marginBottom:20 }}>
                 <h1 style={{ fontSize:22, fontWeight:800, marginBottom:4 }}>الحسابات الموقوفة</h1>
@@ -397,15 +419,15 @@ export default function AdminDashboard() {
                         <div>
                           <div style={{ fontSize:14, fontWeight:700, color:C.error, marginBottom:2 }}>{u.name}</div>
                           <div style={{ fontSize:12, color:C.muted }}>{u.email}</div>
-                          <div style={{ fontSize:11, color:C.muted }}>{u.role==='company'?'شركة':'باحث'} · {timeAgo(u.created_at)}</div>
+                          <div style={{ fontSize:11, color:C.muted }}>{u.role === 'company' ? 'شركة' : 'باحث'} · {timeAgo(u.created_at)}</div>
                         </div>
                       </div>
                       <div style={{ display:'flex', gap:8 }}>
-                        <button onClick={() => toggleBan(u.id, true)} disabled={banning===u.id} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.success}`, background:'transparent', color:C.success, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                          {banning===u.id?'⏳':'رفع الإيقاف'}
+                        <button onClick={() => toggleBan(u.id, u.is_banned)} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.success}`, background:'transparent', color:C.success, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                          {banning === u.id ? '⏳' : 'رفع الإيقاف'}
                         </button>
-                        <button onClick={() => deleteUser(u.id)} disabled={deleting===u.id} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-                          {deleting===u.id?'⏳':'حذف نهائي'}
+                        <button onClick={() => deleteUser(u.id)} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                          {deleting === u.id ? '⏳' : 'حذف نهائي'}
                         </button>
                       </div>
                     </div>
