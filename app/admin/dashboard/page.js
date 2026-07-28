@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   }
 
   async function deleteUser(id) {
-    if (!window.confirm('هل أنت متأكد من الحذف النهائي؟')) return
+    if (!confirm('هل أنت متأكد من الحذف النهائي؟')) return
     setDeleting(id)
     try {
       const res = await fetch(`/api/admin/users/${id}`, { method:'DELETE' })
@@ -54,18 +54,7 @@ export default function AdminDashboard() {
   }
 
   async function toggleBan(id, currentBanned) {
-    try {
-      const res = await fetch(`/api/admin/users/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ is_banned: !currentBanned })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setUsers(p => p.map(u => u.id===id ? {...u, is_banned:!currentBanned} : u))
-      }
-    } catch(e) { console.error(e) }
-  }
+    setBanning(id)
     try {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: 'PATCH',
@@ -412,7 +401,7 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div style={{ display:'flex', gap:8 }}>
-                        <button onClick={() => toggleBan(u.id, u.is_banned)} disabled={banning===u.id} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.success}`, background:'transparent', color:C.success, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                        <button onClick={() => toggleBan(u.id, true)} disabled={banning===u.id} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.success}`, background:'transparent', color:C.success, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
                           {banning===u.id?'⏳':'رفع الإيقاف'}
                         </button>
                         <button onClick={() => deleteUser(u.id)} disabled={deleting===u.id} style={{ padding:'7px 14px', borderRadius:8, border:`1px solid ${C.error}`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
