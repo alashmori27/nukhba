@@ -54,13 +54,15 @@ export default function AdminDashboard() {
   async function banUser(id, ban) {
     setBusy(id)
     try {
-      await fetch(`/api/admin/users/${id}`, {
+      const r = await fetch(`/api/admin/users/${id}`, {
         method:'PATCH',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({ is_banned: ban })
       })
-      setUsers(p => p.map(u => u.id===id ? {...u, is_banned:ban} : u))
-    } catch(e) { console.error(e) }
+      const d = await r.json()
+      if (r.ok && d.success) setUsers(p => p.map(u => u.id===id ? {...u, is_banned:ban} : u))
+      else alert(d.error || 'فشل تحديث الحالة')
+    } catch(e) { alert('خطأ') }
     setBusy(null)
   }
 

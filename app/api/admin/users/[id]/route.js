@@ -23,11 +23,13 @@ export async function PATCH(req, { params }) {
     const body = await req.json()
     const updates = {}
     if (body.is_banned !== undefined) updates.is_banned = body.is_banned
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('users')
       .update(updates)
       .eq('id', params.id)
+      .select()
     if (error) throw error
+    if (!data?.length) throw new Error('لم يتم تحديث أي مستخدم — تحقق من صلاحيات RLS أو SUPABASE_SERVICE_KEY')
     return Response.json({ success: true })
   } catch(e) {
     return Response.json({ error: e.message }, { status: 500 })
