@@ -1,12 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
+import { isAdminRequest } from '@/lib/adminAuth'
+import { getSession } from '@/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
-export async function GET() {
+function getAuthUser(req) {
+  if (isAdminRequest(req)) return { id: 'admin', role: 'admin' }
+  return getSession(req)
+}
+
+export async function GET(req) {
   try {
+    const user = getAuthUser(req)
+    if (!user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
+
     const { data, error } = await supabase
       .from('jobs')
       .select('*')
@@ -20,12 +30,17 @@ export async function GET() {
 
 export async function POST(req) {
   try {
+    const user = getAuthUser(req)
+    if (!user || user.role !== 'company') return Response.json({ error: 'غير مصرح' }, { status: 401 })
+
+    const { data: company } = await supabase.from('users').select('name').eq('id', user.id).single()
+
     const body = await req.json()
     const { data, error } = await supabase
       .from('jobs')
       .insert([{
-        company_id:   body.company_id,
-        company_name: body.company_name,
+        company_id:   user.id,
+        company_name: company?.name || body.company_name,
         title:        body.title,
         description:  body.description,
         requirements: body.requirements,
@@ -40,17 +55,6 @@ export async function POST(req) {
       .single()
     if (error) throw error
     return Response.json({ id: data.id })
-  } catch(e) {
-    return Response.json({ error: e.message }, { status: 500 })
-  }
-}
-
-export async function DELETE(req) {
-  try {
-    const { id } = await req.json()
-    const { error } = await supabase.from('jobs').delete().eq('id', id)
-    if (error) throw error
-    return Response.json({ success: true })
   } catch(e) {
     return Response.json({ error: e.message }, { status: 500 })
   }

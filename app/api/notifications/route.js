@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
+import { getSession } from '@/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 export async function GET(req) {
@@ -10,6 +11,9 @@ export async function GET(req) {
     const { searchParams } = new URL(req.url)
     const userId = searchParams.get('user_id')
     if (!userId) return Response.json({ error: 'user_id مطلوب' }, { status: 400 })
+
+    const session = getSession(req)
+    if (!session || session.id !== userId) return Response.json({ error: 'غير مصرح' }, { status: 403 })
 
     const { data, error } = await supabase
       .from('notifications')
@@ -27,6 +31,9 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    const session = getSession(req)
+    if (!session) return Response.json({ error: 'غير مصرح' }, { status: 401 })
+
     const { user_id, type, title, body, meta } = await req.json()
 
     const { data, error } = await supabase
@@ -45,6 +52,9 @@ export async function POST(req) {
 export async function PATCH(req) {
   try {
     const { user_id } = await req.json()
+
+    const session = getSession(req)
+    if (!session || session.id !== user_id) return Response.json({ error: 'غير مصرح' }, { status: 403 })
 
     // تحديد كل إشعارات المستخدم كمقروءة
     const { error } = await supabase

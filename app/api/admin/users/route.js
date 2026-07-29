@@ -3,7 +3,7 @@ import { requireAdmin } from '@/lib/adminAuth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   { global: { fetch: (url, opts={}) => fetch(url, { ...opts, cache: 'no-store' }) } }
 )
 
@@ -15,7 +15,7 @@ export async function GET(req) {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('*')
+      .select('id,email,name,role,phone,crn,is_banned,created_at')
       .order('created_at', { ascending: false })
     if (error) throw error
     return Response.json({ users: data })

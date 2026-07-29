@@ -1,28 +1,26 @@
 import { createClient } from '@supabase/supabase-js'
+import { isAdminRequest } from '@/lib/adminAuth'
+import { getSession } from '@/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
-async function getAuthUser(req) {
-  const userId   = req.headers.get('x-user-id')
-  const userRole = req.headers.get('x-user-role')
-  if (!userId || !userRole) return null
-  if (userRole === 'admin') return { id: userId, role: userRole }
-  // تحقق فقط أن المستخدم موجود في DB
-  const { data } = await supabase.from('users').select('id').eq('id', userId).single()
-  if (!data) return null
-  // نستخدم الدور من الـ header لأنه أسرع
-  return { id: userId, role: userRole }
+function getAuthUser(req) {
+  if (isAdminRequest(req)) return { id: 'admin', role: 'admin' }
+  return getSession(req)
 }
 
 export async function POST(req) {
   try {
-    const { profile, userId, jobId, companyId, transcript } = await req.json()
+    const user = getAuthUser(req)
+    if (!user || user.role !== 'candidate') return Response.json({ error: 'غير مصرح' }, { status: 401 })
 
-    let resolvedCompanyId = companyId || null
-    if (jobId && !resolvedCompanyId) {
+    const { profile, jobId, transcript } = await req.json()
+
+    let resolvedCompanyId = null
+    if (jobId) {
       const { data: job } = await supabase.from('jobs').select('company_id').eq('id', jobId).single()
       if (job) resolvedCompanyId = job.company_id
     }
@@ -39,7 +37,7 @@ export async function POST(req) {
         transcript:       transcript || null,
         job_id:           jobId || null,
         company_id:       resolvedCompanyId,
-        user_id:          userId || null,
+        user_id:          user.id,
         is_visible: jobId ? false : true,
         created_at:       new Date().toISOString()
       }])
@@ -55,7 +53,7 @@ export async function POST(req) {
 
 export async function GET(req) {
   try {
-    const user = await getAuthUser(req)
+    const user = getAuthUser(req)
     if (!user) return Response.json({ error: 'غير مصرح' }, { status: 401 })
 
     const { searchParams } = new URL(req.url)
@@ -71,6 +69,7 @@ export async function GET(req) {
 
     if (user.role === 'company') {
       if (companyId) {
+        if (companyId !== user.id) return Response.json({ error: 'غير مصرح' }, { status: 403 })
         query = query.eq('company_id', companyId)
       } else {
         // تصفح عام — الملفات الظاهرة فقط

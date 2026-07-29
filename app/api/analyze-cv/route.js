@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit, getIP } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
 
 export async function POST(req) {
   try {
+    const limit = checkRateLimit(`analyze-cv:${getIP(req)}`, { windowMs: 15 * 60 * 1000, maxAttempts: 10 })
+    if (limit.blocked) {
+      return NextResponse.json({ error: `تم تجاوز الحد المسموح. حاول مرة أخرى بعد ${limit.minutesLeft} دقيقة` }, { status: 429 })
+    }
+
     const formData = await req.formData()
     const file = formData.get('cv')
 

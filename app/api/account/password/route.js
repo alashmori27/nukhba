@@ -1,14 +1,21 @@
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
+import { safeEqual } from '@/lib/crypto'
+import { getSession } from '@/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 )
 
 export async function POST(req) {
   try {
     const { id, currentPassword, newPassword } = await req.json()
+
+    const session = getSession(req)
+    if (!session || session.id !== id) {
+      return Response.json({ error: 'غير مصرح' }, { status: 401 })
+    }
 
     // جلب كلمة المرور الحالية
     const { data: user, error } = await supabase
@@ -24,7 +31,7 @@ export async function POST(req) {
     if (user.password.startsWith('$2')) {
       isMatch = await bcrypt.compare(currentPassword, user.password)
     } else {
-      isMatch = user.password === currentPassword
+      isMatch = safeEqual(user.password, currentPassword)
     }
 
     if (!isMatch) throw new Error('كلمة المرور الحالية غير صحيحة')

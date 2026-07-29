@@ -1,9 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { checkRateLimit, getIP } from '@/lib/rateLimit'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 export async function POST(req) {
   try {
+    const limit = checkRateLimit(`chat:${getIP(req)}`, { windowMs: 15 * 60 * 1000, maxAttempts: 60 })
+    if (limit.blocked) {
+      return Response.json({ error: `تم تجاوز الحد المسموح. حاول مرة أخرى بعد ${limit.minutesLeft} دقيقة` }, { status: 429 })
+    }
+
     const { messages, systemPrompt } = await req.json()
 
     // Sonnet للملف الشخصي — Haiku للمقابلة
