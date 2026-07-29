@@ -4,12 +4,20 @@ import { getSession } from '@/lib/session'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  { global: { fetch: (url, opts={}) => fetch(url, { ...opts, cache: 'no-store' }) } }
 )
 
 function getAuthUser(req) {
   if (isAdminRequest(req)) return { id: 'admin', role: 'admin' }
-  return getSession(req)
+  // session cookie أولاً
+  const session = getSession(req)
+  if (session) return session
+  // fallback للـ headers القديمة
+  const userId   = req.headers.get('x-user-id')
+  const userRole = req.headers.get('x-user-role')
+  if (userId && userRole) return { id: userId, role: userRole }
+  return null
 }
 
 export async function POST(req) {
@@ -38,7 +46,7 @@ export async function POST(req) {
         job_id:           jobId || null,
         company_id:       resolvedCompanyId,
         user_id:          user.id,
-        is_visible: jobId ? false : true,
+        is_visible:       jobId ? false : true,
         created_at:       new Date().toISOString()
       }])
       .select()
@@ -63,11 +71,9 @@ export async function GET(req) {
     let query = supabase.from('candidates').select('*').order('score', { ascending: false })
 
     if (user.role === 'candidate') {
-      if (!userId || userId !== user.id) return Response.json({ error: 'غير مصرح' }, { status: 403 })
-      query = query.eq('user_id', userId)
-    }
-
-    if (user.role === 'company') {
+      // يجلب فقط ملفات المستخدم الحالي — يتجاهل user_id من الـ URL
+      query = query.eq('user_id', user.id)
+    } else if (user.role === 'company') {
       if (companyId) {
         if (companyId !== user.id) return Response.json({ error: 'غير مصرح' }, { status: 403 })
         query = query.eq('company_id', companyId)
@@ -75,6 +81,8 @@ export async function GET(req) {
         // تصفح عام — الملفات الظاهرة فقط
         query = query.eq('is_visible', true).is('job_id', null)
       }
+    } else if (user.role === 'admin') {
+      // الأدمن يرى الكل
     }
 
     const { data, error } = await query
