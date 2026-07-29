@@ -60,7 +60,6 @@ export default function AdminDashboard() {
         body:JSON.stringify({ is_banned: ban })
       })
       const d = await r.json()
-      console.log('banUser debug', d.debug)
       if (r.ok && d.success) setUsers(p => p.map(u => u.id===id ? {...u, is_banned:ban} : u))
       else alert(d.error || 'فشل تحديث الحالة')
     } catch(e) { alert('خطأ') }

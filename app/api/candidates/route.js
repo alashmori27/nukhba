@@ -9,6 +9,7 @@ async function getAuthUser(req) {
   const userId   = req.headers.get('x-user-id')
   const userRole = req.headers.get('x-user-role')
   if (!userId || !userRole) return null
+  if (userRole === 'admin') return { id: userId, role: userRole }
   // تحقق فقط أن المستخدم موجود في DB
   const { data } = await supabase.from('users').select('id').eq('id', userId).single()
   if (!data) return null
