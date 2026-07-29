@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/adminAuth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -8,7 +9,9 @@ const supabase = createClient(
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(req) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
   try {
     const { data, error } = await supabase
       .from('users')

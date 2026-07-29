@@ -2,20 +2,32 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const ADMIN_PASSWORD = 'hAssAn202026@'
-
 export default function AdminLogin() {
   const router = useRouter()
   const [password, setPass] = useState('')
   const [error, setError]   = useState('')
+  const [busy, setBusy]     = useState(false)
 
-  function login() {
-    if (password === ADMIN_PASSWORD) {
-      sessionStorage.setItem('nukhba_admin', 'true')
-      router.push('/admin/dashboard')
-    } else {
-      setError('كلمة المرور غير صحيحة')
+  async function login() {
+    setBusy(true)
+    setError('')
+    try {
+      const r = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      })
+      const d = await r.json()
+      if (r.ok && d.success) {
+        sessionStorage.setItem('nukhba_admin', 'true')
+        router.push('/admin/dashboard')
+      } else {
+        setError(d.error || 'كلمة المرور غير صحيحة')
+      }
+    } catch(e) {
+      setError('خطأ في الاتصال')
     }
+    setBusy(false)
   }
 
   const onKey = e => { if (e.key === 'Enter') login() }
@@ -33,8 +45,8 @@ export default function AdminLogin() {
 
         {error && <div style={{ fontSize:12, color:'#c94a4a', marginBottom:12 }}>{error}</div>}
 
-        <button onClick={login} style={{ width:'100%', padding:'13px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-          دخول
+        <button onClick={login} disabled={busy} style={{ width:'100%', padding:'13px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", opacity: busy ? .6 : 1 }}>
+          {busy ? '...' : 'دخول'}
         </button>
       </div>
     </div>

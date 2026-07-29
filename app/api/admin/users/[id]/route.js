@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { requireAdmin } from '@/lib/adminAuth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -7,6 +8,8 @@ const supabase = createClient(
 )
 
 export async function DELETE(req, { params }) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
   try {
     const { error } = await supabase
       .from('users')
@@ -20,6 +23,8 @@ export async function DELETE(req, { params }) {
 }
 
 export async function PATCH(req, { params }) {
+  const denied = requireAdmin(req)
+  if (denied) return denied
   try {
     const body = await req.json()
     const updates = {}

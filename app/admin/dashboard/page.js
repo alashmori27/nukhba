@@ -44,6 +44,7 @@ export default function AdminDashboard() {
         fetch('/api/jobs', { cache:'no-store' }),
         fetch('/api/candidates', { cache:'no-store', headers: { 'x-user-id':'admin', 'x-user-role':'admin' } }),
       ])
+      if (ur.status === 401) { sessionStorage.removeItem('nukhba_admin'); router.push('/admin'); return }
       setUsers((await ur.json()).users || [])
       setJobs((await jr.json()).jobs || [])
       setCands((await cr.json()).candidates || [])
@@ -206,7 +207,7 @@ export default function AdminDashboard() {
         </div>
         <div style={{ display:'flex', gap:8 }}>
           <button onClick={load} style={{ padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>🔄 تحديث</button>
-          <button onClick={() => { sessionStorage.removeItem('nukhba_admin'); router.push('/admin') }} style={{ padding:'6px 14px', borderRadius:8, border:`1px solid ${C.error}44`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>خروج</button>
+          <button onClick={() => { fetch('/api/admin/logout', { method:'POST' }); sessionStorage.removeItem('nukhba_admin'); router.push('/admin') }} style={{ padding:'6px 14px', borderRadius:8, border:`1px solid ${C.error}44`, background:'transparent', color:C.error, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>خروج</button>
         </div>
       </nav>
 
