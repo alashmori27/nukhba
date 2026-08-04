@@ -1,4 +1,5 @@
 'use client'
+import { LogoIcon, LogoText } from '@/components/brand'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 
@@ -200,7 +201,11 @@ export default function ForCompanies() {
 
       {/* FOOTER */}
       <footer style={{ padding:'32px 40px', borderTop:'1px solid #252538', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
-        <div style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · Nukhba</div>
+        <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
+  <LogoIcon size={34}/>
+  <div style={{ width:1, height:30, background:'rgba(200,160,74,0.3)' }}/>
+  <LogoText size="sm"/>
+</Link>
         <p style={{ fontSize:12, color:'#7a7690' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
         <div style={{ display:'flex', gap:20 }}>
           <Link href="/privacy" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>سياسة الخصوصية</Link>
