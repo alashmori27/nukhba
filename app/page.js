@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import { LogoIcon, LogoText } from '@/components/brand'
 import { useState } from 'react'
 
 export default function Home() {
@@ -18,7 +19,6 @@ export default function Home() {
         @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
         @keyframes glow   { 0%,100%{opacity:.06} 50%{opacity:.13} }
         @keyframes float  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes pulse  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.03)} }
 
         .hero-title  { font-size: clamp(32px, 5.5vw, 66px); }
         .steps-grid  { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; }
@@ -50,12 +50,10 @@ export default function Home() {
           <div style={{ position:'absolute', top:'42%', left:'50%', transform:'translate(-50%,-50%)', width:800, height:800, background:'radial-gradient(ellipse,rgba(200,160,74,.06) 0%,transparent 65%)', pointerEvents:'none', animation:'glow 5s ease-in-out infinite' }}/>
           <div style={{ position:'absolute', top:'42%', left:'50%', transform:'translate(-50%,-50%)', width:500, height:500, border:'1px solid rgba(200,160,74,.04)', borderRadius:'50%', animation:'float 9s ease-in-out infinite', pointerEvents:'none' }}/>
 
-          {/* Badge */}
           <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(200,160,74,.06)', border:'1px solid rgba(200,160,74,.18)', padding:'6px 18px', borderRadius:22, fontSize:10, color:'var(--gold)', marginBottom:28, fontFamily:"'Cormorant Garamond',serif", letterSpacing:5, textTransform:'uppercase', animation:'fadeUp .6s ease both' }}>
             ✦ منصة التوظيف الذكي · Saudi Arabia
           </div>
 
-          {/* Headline */}
           <h1 className="hero-title" style={{ fontWeight:800, lineHeight:1.15, color:'#f8f5ef', marginBottom:20, animation:'fadeUp .6s ease both .1s', maxWidth:800 }}>
             وظيفتك لا تبدأ بـ CV<br/>
             <span style={{ background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
@@ -63,12 +61,10 @@ export default function Home() {
             </span>
           </h1>
 
-          {/* Sub */}
           <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'clamp(15px,2vw,20px)', fontWeight:300, fontStyle:'italic', color:'var(--muted)', marginBottom:14, animation:'fadeUp .6s ease both .15s', maxWidth:560 }}>
             ابدأ بمقابلة مجانية مع الذكاء الاصطناعي
           </p>
 
-          {/* ما ستحصل عليه */}
           <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap', marginBottom:28, animation:'fadeUp .6s ease both .2s' }}>
             {[
               { icon:'✓', text:'CV احترافي عربي وإنجليزي', color:'var(--gold)' },
@@ -82,12 +78,9 @@ export default function Home() {
             ))}
           </div>
 
-          {/* CTA */}
           <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, animation:'fadeUp .6s ease both .25s' }}>
             <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-              <Link href="/auth/login" className="cta-btn">
-                ابدأ مقابلتك المجانية ←
-              </Link>
+              <Link href="/auth/login" className="cta-btn">ابدأ مقابلتك المجانية ←</Link>
               <Link href="/analyze-cv" style={{ padding:'15px 38px', borderRadius:10, fontSize:15, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none' }}>
                 حلّل سيرتي الذاتية
               </Link>
@@ -97,7 +90,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Stats */}
           <div className="stats-row" style={{ display:'flex', gap:44, justifyContent:'center', marginTop:56, flexWrap:'wrap', animation:'fadeUp .6s ease both .3s' }}>
             {[['6','محاور تقييم'],['39','ريال فقط'],['2','لغة للـ CV'],['100%','مقابلات مكتملة']].map((s,i) => (
               <div key={i} style={{ textAlign:'center' }}>
@@ -116,7 +108,6 @@ export default function Home() {
               <h2 style={{ fontSize:'clamp(20px,3.5vw,36px)', fontWeight:800, color:'#f8f5ef', marginBottom:10 }}>5 خطوات — من الصفر إلى وظيفة</h2>
               <p style={{ fontSize:14, color:'var(--muted)' }}>بدلاً من إرسال مئات الطلبات يدوياً</p>
             </div>
-
             <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:2, borderRadius:16, overflow:'hidden', background:'var(--border)' }}>
               {[
                 { num:'01', icon:'🎙️', title:'مقابلة مجانية', desc:'يتحدث معك الذكاء الاصطناعي ويكتشف خبراتك وشخصيتك.' },
@@ -137,7 +128,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ القيمة مقابل 39 ريال ══ */}
+        {/* ══ القيمة ══ */}
         <section className="section-pad">
           <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' }}>
             <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:10, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:10 }}>القيمة الكاملة</p>
@@ -146,7 +137,6 @@ export default function Home() {
             <p style={{ fontSize:13, color:'var(--muted)', marginBottom:36 }}>
               <strong style={{ color:'var(--gold)' }}>ابدأ مجاناً</strong> → شاهد النتيجة → إذا أعجبتك → احصل على الملف الكامل مقابل 39 ريال
             </p>
-
             <div className="value-grid" style={{ maxWidth:800, margin:'0 auto 36px' }}>
               {[
                 { icon:'📄', color:'var(--gold)', title:'CV احترافي', desc:'عربي وإنجليزي — PDF و Word جاهزان للتحميل والتقديم الفوري.' },
@@ -160,10 +150,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-
-            <Link href="/auth/login" className="cta-btn">
-              ابدأ مجاناً — ادفع بعد المقابلة ←
-            </Link>
+            <Link href="/auth/login" className="cta-btn">ابدأ مجاناً — ادفع بعد المقابلة ←</Link>
           </div>
         </section>
 
@@ -177,14 +164,7 @@ export default function Home() {
             <div className="comp-grid">
               <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, padding:'24px 20px' }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'var(--muted)', marginBottom:16, textAlign:'center' }}>الطريقة التقليدية 😓</div>
-                {[
-                  'CV جامد لا يكشف شخصيتك',
-                  'تقديم أعمى بدون تقييم',
-                  'لا تعرف سبب الرفض',
-                  'LinkedIn فارغ وبلا محتوى',
-                  'انتظار بدون رد',
-                  'لا يوجد تحليل للمهارات',
-                ].map(i => (
+                {['CV جامد لا يكشف شخصيتك','تقديم أعمى بدون تقييم','لا تعرف سبب الرفض','LinkedIn فارغ وبلا محتوى','انتظار بدون رد','لا يوجد تحليل للمهارات'].map(i => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10, fontSize:13, color:'var(--muted)' }}>
                     <span style={{ color:'var(--error)', flexShrink:0 }}>✗</span>{i}
                   </div>
@@ -192,14 +172,7 @@ export default function Home() {
               </div>
               <div style={{ background:'rgba(200,160,74,.04)', border:'1px solid rgba(200,160,74,.22)', borderRadius:14, padding:'24px 20px' }}>
                 <div style={{ fontSize:13, fontWeight:700, color:'var(--gold)', marginBottom:16, textAlign:'center' }}>مع نخبة ✨</div>
-                {[
-                  'مقابلة تكشف قيمتك الحقيقية',
-                  'تقييم موضوعي من 100',
-                  'تعرف نقاط قوتك وضعفك',
-                  'LinkedIn جاهز بنقرة واحدة',
-                  'الشركات تتواصل معك أنت',
-                  'CV + نشر + تحليل في خطوة واحدة',
-                ].map(i => (
+                {['مقابلة تكشف قيمتك الحقيقية','تقييم موضوعي من 100','تعرف نقاط قوتك وضعفك','LinkedIn جاهز بنقرة واحدة','الشركات تتواصل معك أنت','CV + نشر + تحليل في خطوة واحدة'].map(i => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10, fontSize:13, color:'var(--text)' }}>
                     <span style={{ color:'var(--success)', flexShrink:0 }}>✓</span>{i}
                   </div>
@@ -222,7 +195,7 @@ export default function Home() {
                   <span style={{ color:'#0077b5' }}>بنقرة واحدة</span>
                 </h2>
                 <p style={{ fontSize:14, color:'var(--muted)', lineHeight:1.85, marginBottom:20 }}>
-                  بعد المقابلة — نخبة تولّد لك نصاً جاهزاً للصقه مباشرة في LinkedIn. عنوان احترافي، نبذة مميزة، وإنجازات موثّقة.
+                  بعد المقابلة — نخبة تولّد لك نصاً جاهزاً للصقه مباشرة في LinkedIn.
                 </p>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                   {['عنوان وظيفي احترافي','نبذة شخصية مؤثرة','إنجازات بأرقام حقيقية','مهارات موثّقة'].map(f => (
@@ -232,7 +205,6 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-
               <div style={{ flex:1, minWidth:280, background:'var(--card)', border:'1px solid rgba(0,119,181,.25)', borderRadius:16, overflow:'hidden' }}>
                 <div style={{ background:'rgba(0,119,181,.1)', padding:'14px 18px', borderBottom:'1px solid rgba(0,119,181,.15)', display:'flex', alignItems:'center', gap:10 }}>
                   <div style={{ fontSize:20 }}>💼</div>
@@ -248,11 +220,11 @@ export default function Home() {
                   <div style={{ marginBottom:14 }}>
                     <div style={{ fontSize:10, color:'var(--muted)', marginBottom:5, letterSpacing:2, textTransform:'uppercase' }}>النبذة الشخصية</div>
                     <div style={{ fontSize:12, color:'var(--text)', background:'var(--surface)', padding:'8px 12px', borderRadius:8, lineHeight:1.7 }}>
-                      مشرف تعليمي سعودي بخبرة 7 سنوات، رفعت عدد الطالبات من 40 إلى 215 وأدرت 400 مشترك في برامج التطوير...
+                      مشرف تعليمي سعودي بخبرة 7 سنوات، رفعت عدد الطالبات من 40 إلى 215...
                     </div>
                   </div>
                   <button
-                    onClick={() => copyLinkedIn('العنوان: مشرف تعليمي | 7 سنوات خبرة\nالنبذة: مشرف تعليمي سعودي بخبرة 7 سنوات...')}
+                    onClick={() => copyLinkedIn('العنوان: مشرف تعليمي | 7 سنوات خبرة')}
                     style={{ width:'100%', padding:'9px', borderRadius:9, border:'1px solid rgba(0,119,181,.4)', background: copied?'rgba(0,119,181,.15)':'transparent', color:'#0077b5', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
                     {copied ? '✓ تم النسخ!' : '📋 انسخ للـ LinkedIn'}
                   </button>
@@ -278,9 +250,7 @@ export default function Home() {
             39 ريال فقط · لا اشتراك · لا تجديد تلقائي
           </p>
           <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-            <Link href="/auth/login" className="cta-btn">
-              ابدأ مقابلتك المجانية ←
-            </Link>
+            <Link href="/auth/login" className="cta-btn">ابدأ مقابلتك المجانية ←</Link>
             <Link href="/analyze-cv" style={{ padding:'15px 38px', borderRadius:10, fontSize:15, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none' }}>
               حلّل سيرتي الذاتية
             </Link>
@@ -294,10 +264,11 @@ export default function Home() {
 
       {/* FOOTER */}
       <footer style={{ padding:'26px 36px', borderTop:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:14 }}>
-        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
-          <span style={{ fontSize:16, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</span>
-          <span style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:9, letterSpacing:4, color:'var(--muted)', textTransform:'uppercase' }}>Nukhba</span>
-        </div>
+        <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
+          <LogoIcon size={34}/>
+          <div style={{ width:1, height:30, background:'rgba(200,160,74,0.3)' }}/>
+          <LogoText size="sm"/>
+        </Link>
         <p style={{ fontSize:11, color:'var(--muted)' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
         <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
           {[['للشركات','/for-companies'],['سياسة الخصوصية','/privacy'],['الشروط','/terms'],['تواصل معنا','/contact']].map(([l,h]) => (
