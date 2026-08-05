@@ -196,7 +196,7 @@ export default function ProfilePage() {
     setLoad(key, false)
   }
 
-  async function downloadWord() {
+ async function downloadWord() {
     if (!isPaid) return lockAlert()
     setLoad('word', true)
     try {
@@ -204,41 +204,71 @@ export default function ProfilePage() {
       const p = editedProfile
       const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
       const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF]||[]).map(tr)
-      const arPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, ...opts, children:[new TextRun({ text, rightToLeft:true, font:{name:'Arial'}, size:opts.size||22 })] })
-      const enPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.LEFT, ...opts, children:[new TextRun({ text, font:{name:'Calibri'}, size:opts.size||22 })] })
-      const arSec  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[new TextRun({text:t,bold:true,rightToLeft:true,size:26,color:'C8A04A',font:{name:'Arial'}})] })
-      const enSec  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[new TextRun({text:t,bold:true,size:26,color:'C8A04A',font:{name:'Calibri'}})] })
-      const arRow  = (l,v) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[new TextRun({text:`${v||'—'}  `,rightToLeft:true,size:20,font:{name:'Arial'}}),new TextRun({text:`${l}: `,bold:true,rightToLeft:true,size:20,color:'C8A04A',font:{name:'Arial'}})] })
-      const enRow  = (l,v) => new Paragraph({ alignment:AlignmentType.LEFT, spacing:{after:80}, children:[new TextRun({text:`${l}: `,bold:true,size:20,color:'C8A04A',font:{name:'Calibri'}}),new TextRun({text:v||'—',size:20,font:{name:'Calibri'}})] })
-      const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[new TextRun({text:`• ${t||''}`,rightToLeft:true,size:20,font:{name:'Arial'}})] })
-      const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, spacing:{after:80}, children:[new TextRun({text:`• ${t||''}`,size:20,font:{name:'Calibri'}})] })
+
+      // ── مساعدات عربية (RTL كامل) ──
+      const arRun  = (text, opts={}) => new TextRun({ text, rtl:true, rightToLeft:true, font:{name:'Arial'}, size:22, ...opts })
+      const arPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, ...opts, children:[arRun(text, {size:opts.size||22})] })
+      const arSec  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[arRun(t,{bold:true,size:26,color:'C8A04A'})] })
+      const arRow  = (l,v) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[
+        arRun(`${v||'—'}`, {size:20}),
+        arRun(`  :${l}`, {bold:true, size:20, color:'C8A04A'}),
+      ]})
+      const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[arRun(`• ${t||''}`,{size:20})] })
+
+      // ── مساعدات إنجليزية (LTR كامل) ──
+      const enRun  = (text, opts={}) => new TextRun({ text, rtl:false, font:{name:'Calibri'}, size:22, ...opts })
+      const enPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, ...opts, children:[enRun(text, {size:opts.size||22})] })
+      const enSec  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[enRun(t,{bold:true,size:26,color:'C8A04A'})] })
+      const enRow  = (l,v) => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, spacing:{after:80}, children:[
+        enRun(`${l}: `, {bold:true, size:20, color:'C8A04A'}),
+        enRun(v||'—', {size:20}),
+      ]})
+      const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, spacing:{after:80}, children:[enRun(`• ${t||''}`,{size:20})] })
       const sp = () => new Paragraph({text:'',spacing:{after:160}})
-      const doc = new Document({ sections:[{ properties:{ page:{margin:{top:900,right:900,bottom:900,left:900}}, bidi:true }, children:[
-        new Paragraph({alignment:AlignmentType.CENTER,bidirectional:true,spacing:{after:100},children:[new TextRun({text:p.name||'',bold:true,rightToLeft:true,size:56,color:'C8A04A',font:{name:'Arial'}})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,bidirectional:true,spacing:{after:80},children:[new TextRun({text:p.specialization||'',rightToLeft:true,size:28,color:'666666',font:{name:'Arial'}})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:240},children:[new TextRun({text:[p.location,p.phone].filter(Boolean).join('  |  '),size:22,color:'888888',font:{name:'Arial'}})]}),
+
+      const doc = new Document({ sections:[{ properties:{ page:{margin:{top:900,right:900,bottom:900,left:900}} }, children:[
+
+        // ══ النسخة العربية ══
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:100}, children:[arRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:80},  children:[arRun(p.specialization||'',{size:28,color:'666666'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:240}, children:[arRun([p.location,p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
+
         arSec('الملخص المهني'), arPara(p.summary_ar||'',{spacing:{after:200}}),
         arSec('المعلومات الأساسية'),
-        arRow('سنوات الخبرة',p.experience_years), arRow('آخر وظيفة',p.last_role),
-        arRow('المؤهل',p.qualification), arRow('الراتب المتوقع',p.salary_expectation),
-        arRow('الإتاحة',p.availability), arRow('التنقل',p.open_to_relocation), sp(),
-        ...(p.achievements?.length>0?[arSec('الإنجازات'),...p.achievements.map(a=>arBul(a)),sp()]:[]),
-        ...(p.strengths?.length>0?[arSec('نقاط القوة'),...p.strengths.map(s=>arBul(s)),sp()]:[]),
-        ...(p.soft_skills?.length>0?[arSec('المهارات'),arPara(p.soft_skills.join('  •  '),{spacing:{after:200}})]:[]),
-        new Paragraph({children:[new TextRun({text:''})],pageBreakBefore:true}),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:100},children:[new TextRun({text:p.name||'',bold:true,size:56,color:'C8A04A',font:{name:'Calibri'}})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:enVal('specialization_en','specialization'),size:28,color:'666666',font:{name:'Calibri'}})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:240},children:[new TextRun({text:[tr(p.location),p.phone].filter(Boolean).join('  |  '),size:22,color:'888888',font:{name:'Calibri'}})]}),
+        arRow('سنوات الخبرة', p.experience_years),
+        arRow('آخر وظيفة', p.last_role),
+        arRow('المؤهل', p.qualification),
+        arRow('الراتب المتوقع', p.salary_expectation),
+        arRow('الإتاحة', p.availability),
+        arRow('التنقل', p.open_to_relocation), sp(),
+        ...(p.achievements?.length>0 ? [arSec('الإنجازات'), ...p.achievements.map(a=>arBul(a)), sp()] : []),
+        ...(p.strengths?.length>0    ? [arSec('نقاط القوة'), ...p.strengths.map(s=>arBul(s)), sp()] : []),
+        ...(p.soft_skills?.length>0  ? [arSec('المهارات'), arPara(p.soft_skills.join('  •  '),{spacing:{after:200}})] : []),
+
+        // ══ فاصل صفحة ══
+        new Paragraph({children:[new TextRun({text:''})], pageBreakBefore:true}),
+
+        // ══ النسخة الإنجليزية ══
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:100}, children:[enRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:80},  children:[enRun(enVal('specialization_en','specialization'),{size:28,color:'666666'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:240}, children:[enRun([tr(p.location),p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
+
         enSec('PROFESSIONAL SUMMARY'), enPara(p.summary_en||'',{spacing:{after:200}}),
         enSec('KEY INFORMATION'),
-        enRow('Experience',enVal('experience_years_en','experience_years')), enRow('Last Role',enVal('last_role_en','last_role')),
-        enRow('Qualification',enVal('qualification_en','qualification')), enRow('Salary Expected',enVal('salary_expectation_en','salary_expectation')),
-        enRow('Availability',enVal('availability_en','availability')), enRow('Relocation',enVal('open_to_relocation_en','open_to_relocation')), sp(),
-        ...(p.achievements?.length>0?[enSec('ACHIEVEMENTS'),...enArr('achievements_en','achievements').map(a=>enBul(a)),sp()]:[]),
-        ...(p.strengths?.length>0?[enSec('STRENGTHS'),...enArr('strengths_en','strengths').map(s=>enBul(s)),sp()]:[]),
-        ...(p.soft_skills?.length>0?[enSec('SKILLS'),enPara(enArr('soft_skills_en','soft_skills').join('  •  '),{spacing:{after:200}})]:[]),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:400},children:[new TextRun({text:'Generated by Nukhba · nukhbahr.com',size:16,color:'aaaaaa',italics:true,font:{name:'Calibri'}})]})
+        enRow('Experience',     enVal('experience_years_en','experience_years')),
+        enRow('Last Role',      enVal('last_role_en','last_role')),
+        enRow('Qualification',  enVal('qualification_en','qualification')),
+        enRow('Salary Expected',enVal('salary_expectation_en','salary_expectation')),
+        enRow('Availability',   enVal('availability_en','availability')),
+        enRow('Relocation',     enVal('open_to_relocation_en','open_to_relocation')), sp(),
+        ...(p.achievements?.length>0 ? [enSec('ACHIEVEMENTS'), ...enArr('achievements_en','achievements').map(a=>enBul(a)), sp()] : []),
+        ...(p.strengths?.length>0    ? [enSec('STRENGTHS'),    ...enArr('strengths_en','strengths').map(s=>enBul(s)), sp()] : []),
+        ...(p.soft_skills?.length>0  ? [enSec('SKILLS'),       enPara(enArr('soft_skills_en','soft_skills').join('  •  '),{spacing:{after:200}})] : []),
+
+        new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:400}, children:[enRun('Generated by Nukhba · nukhbahr.com',{size:16,color:'aaaaaa',italics:true})]})
+
       ]}]})
+
       const blob = await Packer.toBlob(doc)
       const url  = URL.createObjectURL(blob)
       const a    = document.createElement('a')
