@@ -41,7 +41,7 @@ function CVContent({ p, lang='ar' }) {
       <div style={{ padding:'24px 32px' }}>
         {(isAr ? p.summary_ar : p.summary_en) && (
           <div style={{ marginBottom:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الملخص المهني':'Professional Summary'}</div>
+            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الملخص المهني':'Professional Summary'}</div>
             <p style={{ fontSize:13, color:'#ede8df', lineHeight:1.85 }}>{isAr ? p.summary_ar : p.summary_en}</p>
           </div>
         )}
