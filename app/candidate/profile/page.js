@@ -305,12 +305,31 @@ export default function ProfilePage() {
   return (
     <>
       <style>{`
-        @media print {
-          .no-print { display:none!important }
-          .cv-ar { page-break-after: always }
-          body { background:#080810!important; -webkit-print-color-adjust:exact; print-color-adjust:exact; margin:0; }
-          @page { margin:12mm; size:A4; }
-        }
+       @media print {
+  .no-print { display:none!important }
+  .cv-ar { page-break-after: always }
+  .cv-section { page-break-inside: avoid !important; }
+  
+  body { 
+    background:#ffffff!important; 
+    color:#000000!important;
+    -webkit-print-color-adjust:exact; 
+    print-color-adjust:exact; 
+    margin:0; 
+  }
+  
+  * { 
+    background:#ffffff!important; 
+    color:#000000!important;
+    border-color:#dddddd!important;
+  }
+  
+  [style*="color:#c8a04a"], [style*="color:var(--gold)"] {
+    color:#8a6322!important;
+  }
+  
+  @page { margin:15mm; size:A4; }
+}
         .edit-input { width:100%; background:#13131f; border:1px solid #252538; border-radius:8px; padding:8px 12px; color:#ede8df; font-family:'Tajawal',sans-serif; font-size:13px; outline:none; resize:vertical; transition:border-color .2s; }
         .edit-input:focus { border-color:#c8a04a; }
       `}</style>
