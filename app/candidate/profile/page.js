@@ -209,10 +209,15 @@ export default function ProfilePage() {
       const arRun  = (text, opts={}) => new TextRun({ text, rtl:true, rightToLeft:true, font:{name:'Arial'}, size:22, ...opts })
       const arPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, ...opts, children:[arRun(text, {size:opts.size||22})] })
       const arSec  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[arRun(t,{bold:true,size:26,color:'C8A04A'})] })
-      const arRow  = (l,v) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[
-        arRun(`${v||'—'}`, {size:20}),
-        arRun(`  :${l}`, {bold:true, size:20, color:'C8A04A'}),
-      ]})
+      const arRow = (l,v) => new Paragraph({ 
+  alignment:AlignmentType.RIGHT, 
+  bidirectional:true, 
+  spacing:{after:80}, 
+  children:[
+    arRun(`${l}: `, {bold:true, size:20, color:'C8A04A'}),
+    arRun(`${v||'—'}`, {size:20}),
+  ]
+})
       const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[arRun(`• ${t||''}`,{size:20})] })
 
       // ── مساعدات إنجليزية (LTR كامل) ──
