@@ -46,7 +46,7 @@ function CVContent({ p, lang='ar' }) {
           </div>
         )}
         <div style={{ marginBottom:20 }}>
-          <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'المعلومات الأساسية':'Key Information'}</div>
+          <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'المعلومات الأساسية':'Key Information'}</div>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
             {(isAr ? [
               ['سنوات الخبرة', p.experience_years],['آخر وظيفة', p.last_role],
@@ -66,7 +66,7 @@ function CVContent({ p, lang='ar' }) {
         </div>
         {p.achievements?.length > 0 && (
           <div style={{ marginBottom:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الإنجازات':'Achievements'}</div>
+            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الإنجازات':'Achievements'}</div>
             {(isAr ? p.achievements : enArr('achievements_en','achievements')).map((a,i) => (
               <div key={i} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'flex-start' }}>
                 <span style={{ color:G, fontSize:12, flexShrink:0, marginTop:2 }}>◆</span>
@@ -77,7 +77,7 @@ function CVContent({ p, lang='ar' }) {
         )}
         {p.strengths?.length > 0 && (
           <div style={{ marginBottom:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:'#4a9c6e', letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid #4a9c6e`, marginBottom:14 }}>{isAr?'نقاط القوة':'Strengths'}</div>
+            <div style={{ fontSize:11, fontWeight:800, color:'#4a9c6e', letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid #4a9c6e`, marginBottom:14 }}>{isAr?'نقاط القوة':'Strengths'}</div>
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
               {(isAr ? p.strengths : enArr('strengths_en','strengths')).map((s,i) => (
                 <div key={i} style={{ display:'flex', gap:6, alignItems:'center' }}>
@@ -90,7 +90,7 @@ function CVContent({ p, lang='ar' }) {
         )}
         {p.soft_skills?.length > 0 && (
           <div style={{ marginBottom:20 }}>
-            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing:3, textTransform:'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'المهارات':'Skills'}</div>
+            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'المهارات':'Skills'}</div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
               {(isAr ? p.soft_skills : enArr('soft_skills_en','soft_skills')).map((s,i) => (
                 <span key={i} style={{ padding:'4px 12px', borderRadius:20, fontSize:11, background:'#13131f', border:`1px solid ${G}`, color:G }}>{s}</span>
