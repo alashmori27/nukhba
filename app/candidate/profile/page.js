@@ -210,8 +210,8 @@ export default function ProfilePage() {
       const enSec  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[new TextRun({text:t,bold:true,size:26,color:'C8A04A',font:{name:'Calibri'}})] })
       const arRow  = (l,v) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[new TextRun({text:`${v||'—'}  `,rightToLeft:true,size:20,font:{name:'Arial'}}),new TextRun({text:`${l}: `,bold:true,rightToLeft:true,size:20,color:'C8A04A',font:{name:'Arial'}})] })
       const enRow  = (l,v) => new Paragraph({ alignment:AlignmentType.LEFT, spacing:{after:80}, children:[new TextRun({text:`${l}: `,bold:true,size:20,color:'C8A04A',font:{name:'Calibri'}}),new TextRun({text:v||'—',size:20,font:{name:'Calibri'}})] })
-      const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, bullet:{level:0}, spacing:{after:80}, children:[new TextRun({text:t||'',rightToLeft:true,size:20,font:{name:'Arial'}})] })
-      const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, bullet:{level:0}, spacing:{after:80}, children:[new TextRun({text:t||'',size:20,font:{name:'Calibri'}})] })
+      const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[new TextRun({text:`• ${t||''}`,rightToLeft:true,size:20,font:{name:'Arial'}})] })
+      const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, spacing:{after:80}, children:[new TextRun({text:`• ${t||''}`,size:20,font:{name:'Calibri'}})] })
       const sp = () => new Paragraph({text:'',spacing:{after:160}})
       const doc = new Document({ sections:[{ properties:{ page:{margin:{top:900,right:900,bottom:900,left:900}}, bidi:true }, children:[
         new Paragraph({alignment:AlignmentType.CENTER,bidirectional:true,spacing:{after:100},children:[new TextRun({text:p.name||'',bold:true,rightToLeft:true,size:56,color:'C8A04A',font:{name:'Arial'}})]}),
