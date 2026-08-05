@@ -108,7 +108,7 @@ export default function Home() {
               <h2 style={{ fontSize:'clamp(20px,3.5vw,36px)', fontWeight:800, color:'#f8f5ef', marginBottom:10 }}>5 خطوات — من الصفر إلى وظيفة</h2>
               <p style={{ fontSize:14, color:'var(--muted)' }}>بدلاً من إرسال مئات الطلبات يدوياً</p>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:2, borderRadius:16, overflow:'hidden', background:'var(--border)' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:2, borderRadius:16, overflow:'hidden', background:'var(--border)' }}>
               {[
                 { num:'01', icon:'🎙️', title:'مقابلة مجانية', desc:'يتحدث معك الذكاء الاصطناعي ويكتشف خبراتك وشخصيتك.' },
                 { num:'02', icon:'🧠', title:'تحليل مهاراتك', desc:'تحليل حقيقي لنقاط القوة والضعف وتقييم موضوعي من 100.' },
