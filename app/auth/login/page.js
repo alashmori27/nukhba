@@ -1,4 +1,5 @@
 'use client'
+import { LogoIcon, LogoText } from '@/components/brand'
 import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -74,10 +75,11 @@ localStorage.removeItem('nukhba_profile_edited')
       `}</style>
 
       {/* Logo */}
-      <Link href="/" style={{ textAlign:'center', marginBottom:32, display:'block', textDecoration:'none' }}>
-        <div style={{ fontSize:36, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', letterSpacing:'-1px' }}>نخبة</div>
-        <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:11, letterSpacing:5, color:'var(--muted)', textTransform:'uppercase', marginTop:4 }}>Nukhba · AI Talent Platform</div>
-      </Link>
+      <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none', marginBottom:32 }}>
+  <LogoIcon size={48}/>
+  <div style={{ width:1, height:44, background:'rgba(200,160,74,0.3)' }}/>
+  <LogoText size="md"/>
+</Link>
 
       <div style={{ width:'100%', maxWidth:400, background:'var(--card)', border:'1px solid var(--border)', borderRadius:20, overflow:'hidden', boxShadow:'0 24px 80px rgba(0,0,0,.4)' }}>
 
