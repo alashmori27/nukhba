@@ -231,7 +231,7 @@ export default function ProfilePage() {
       const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, spacing:{after:80}, children:[enRun(`• ${t||''}`,{size:20})] })
       const sp = () => new Paragraph({text:'',spacing:{after:160}})
 
-      const doc = new Document({ sections:[{ properties:{ page:{margin:{top:900,right:900,bottom:900,left:900}} }, children:[
+      const doc = new Document({ sections:[{ properties:{ page:{margin:{top:900,right:900,bottom:900,left:900}}, bidi:true }, children:[
 
         // ══ النسخة العربية ══
         new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:100}, children:[arRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
