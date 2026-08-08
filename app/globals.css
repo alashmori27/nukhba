@@ -3,6 +3,30 @@
    ═══════════════════════════════ */
 
 :root {
+  /* ── UI/UX Pro Max Design Tokens ── */
+  --color-background: #080810;
+  --color-surface: #0e0e1a;
+  --color-surface-elevated: #15151F;
+  --color-foreground: #EDE8DF;
+  --color-foreground-muted: #A8A296;
+  --color-primary: #C8A04A;
+  --color-primary-hover: #DDBD7C;
+  --color-border: #1D1D2A;
+  --color-border-strong: #3D2F14;
+  --color-ring: #C8A04A;
+  --color-success: #5FBF8C;
+  --color-destructive: #E5484D;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-gold: 0 0 24px rgba(200,160,74,0.15);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --easing-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --font-sans-ar: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
   --bg:        #080810;
   --bg2:       #0e0e1a;
   --surface:   #13131f;
