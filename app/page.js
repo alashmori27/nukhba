@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/home-page-v6.js << 'JSEOF'
 'use client'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
@@ -66,7 +65,7 @@ export default function Home() {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          opacity: 0.18;
+          opacity: 0.12;
           z-index: 0;
         }
 
@@ -75,11 +74,12 @@ export default function Home() {
           inset: 0;
           background: linear-gradient(
             to bottom,
-            rgba(8,8,16,0.4) 0%,
-            rgba(8,8,16,0.2) 50%,
-            rgba(8,8,16,0.8) 100%
+            rgba(8,8,16,0.3) 0%,
+            rgba(8,8,16,0.1) 40%,
+            rgba(8,8,16,0.6) 100%
           );
           z-index: 1;
+          pointer-events: none;
         }
 
         .hero-content {
@@ -110,15 +110,13 @@ export default function Home() {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 14px 32px; border-radius: var(--radius-md);
           border: 1px solid rgba(255,255,255,0.15);
-          color: rgba(255,255,255,0.7); font-size: 15px; font-weight: 500;
-          text-decoration: none; font-family: inherit; background: rgba(255,255,255,0.05);
+          color: var(--color-foreground-muted); font-size: 15px; font-weight: 500;
+          text-decoration: none; font-family: inherit; background: rgba(255,255,255,0.04);
           backdrop-filter: blur(8px);
-          transition: border-color var(--duration-fast),
-                      color var(--duration-fast),
-                      transform var(--duration-fast);
+          transition: border-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast);
           cursor: pointer;
         }
-        .btn-ghost:hover  { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-2px); }
+        .btn-ghost:hover { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-2px); }
         .btn-ghost:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; }
 
         .card-base {
@@ -143,7 +141,7 @@ export default function Home() {
         }
         .step-card:hover { background: var(--color-surface-elevated); transform: translateY(-2px); }
 
-        .section     { padding: 96px 40px; }
+        .section { padding: 96px 40px; }
         .section-alt { padding: 96px 40px; background: var(--color-surface); }
 
         .eyebrow {
@@ -209,19 +207,19 @@ export default function Home() {
       <div className="nukhba-page">
 
         {/* ══ HERO ══ */}
-        <section style={{ minHeight: '96vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden', padding: '100px 24px 80px' }}>
+        <section style={{ minHeight: '96vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '100px 24px 80px', position: 'relative', overflow: 'hidden' }}>
 
           {/* فيديو الخلفية */}
           <video className="hero-video" autoPlay loop muted playsInline>
             <source src="/hero-bg.mp4" type="video/mp4"/>
           </video>
 
-          {/* طبقة تعتيم */}
+          {/* Overlay لضمان قراءة النص */}
           <div className="hero-overlay"/>
 
           {/* Orbs فوق الفيديو */}
-          <div className="orb" style={{ width: 600, height: 600, background: 'rgba(200,160,74,.08)', top: '20%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'glow 6s ease-in-out infinite' }}/>
-          <div className="orb" style={{ width: 300, height: 300, background: 'rgba(200,160,74,.05)', top: '60%', right: '10%', animation: 'float 8s ease-in-out infinite' }}/>
+          <div className="orb" style={{ width: 600, height: 600, background: 'rgba(200,160,74,.06)', top: '20%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'glow 6s ease-in-out infinite' }}/>
+          <div className="orb" style={{ width: 280, height: 280, background: 'rgba(200,160,74,.04)', top: '65%', right: '8%', animation: 'float 9s ease-in-out infinite' }}/>
 
           {/* المحتوى */}
           <div className="hero-content">
@@ -239,13 +237,13 @@ export default function Home() {
             </div>
 
             {/* Headline */}
-            <h1 className="f2 hero-title" style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 700, lineHeight: 1.08, letterSpacing: '-1.5px', color: '#f8f5ef', marginBottom: 24, maxWidth: 800, textShadow: '0 2px 20px rgba(0,0,0,0.5)' }}>
+            <h1 className="f2 hero-title" style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 700, lineHeight: 1.08, letterSpacing: '-1.5px', color: 'var(--color-foreground)', marginBottom: 24, maxWidth: 800 }}>
               وظيفتك لا تبدأ بـ{' '}
               <span className="gold-text">CV</span>
             </h1>
 
             {/* Sub */}
-            <p className="f3" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(17px, 2.5vw, 22px)', fontWeight: 300, fontStyle: 'italic', color: 'rgba(237,232,223,0.8)', marginBottom: 40, maxWidth: 500, lineHeight: 1.7, textShadow: '0 1px 10px rgba(0,0,0,0.4)' }}>
+            <p className="f3" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(17px, 2.5vw, 22px)', fontWeight: 300, fontStyle: 'italic', color: 'var(--color-foreground-muted)', marginBottom: 40, maxWidth: 500, lineHeight: 1.7 }}>
               مقابلة ذكية واحدة تبني ملفك المهني وتفتح أبواب الشركات
             </p>
 
@@ -255,7 +253,7 @@ export default function Home() {
               <Link href="/analyze-cv" className="btn-ghost">حلّل سيرتي الذاتية</Link>
             </div>
 
-            <p className="f4" style={{ fontSize: 12, color: 'rgba(237,232,223,0.6)', marginBottom: 72 }}>
+            <p className="f4" style={{ fontSize: 12, color: 'var(--color-foreground-muted)', marginBottom: 72 }}>
               المقابلة مجانية · لن تدفع حتى ترى النتيجة
             </p>
 
@@ -264,7 +262,7 @@ export default function Home() {
               {[['٦', 'محاور تقييم'], ['٣٩', 'ريال فقط'], ['٢', 'لغة للـ CV']].map((s, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 44, fontWeight: 600, color: 'var(--color-primary)', lineHeight: 1, marginBottom: 6 }}>{s[0]}</div>
-                  <div style={{ fontSize: 11, color: 'rgba(237,232,223,0.6)', letterSpacing: '.5px' }}>{s[1]}</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', letterSpacing: '.5px' }}>{s[1]}</div>
                 </div>
               ))}
             </div>
@@ -283,7 +281,6 @@ export default function Home() {
                 من الصفر إلى وظيفة في خمس خطوات
               </h2>
             </div>
-
             <div className="grid-5" style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--color-border)' }}>
               {[
                 { num: '01', icon: '🎙️', title: 'مقابلة مجانية', desc: 'الذكاء الاصطناعي يكتشف خبراتك وشخصيتك.' },
@@ -296,7 +293,7 @@ export default function Home() {
                   {i < 4 && <div className="hide-sm" style={{ position: 'absolute', top: '50%', right: -1, transform: 'translateY(-50%)', color: 'var(--color-border)', fontSize: 16, zIndex: 1 }}>›</div>}
                   <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: 'var(--color-primary)', opacity: .2, lineHeight: 1, marginBottom: 14 }}>{c.num}</div>
                   <div style={{ fontSize: 24, marginBottom: 12 }}>{c.icon}</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)', marginBottom: 6, letterSpacing: '-.2px' }}>{c.title}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)', marginBottom: 6 }}>{c.title}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', lineHeight: 1.75 }}>{c.desc}</div>
                 </div>
               ))}
@@ -319,7 +316,6 @@ export default function Home() {
             <p style={{ fontSize: 13, color: 'var(--color-primary)', marginBottom: 56, fontWeight: 600 }}>
               ٣٩ ريال · دفعة واحدة · لا اشتراك
             </p>
-
             <div className="grid-3" style={{ maxWidth: 800, margin: '0 auto 48px' }}>
               {[
                 { icon: '📄', color: 'var(--color-primary)', title: 'CV احترافي', desc: 'عربي وإنجليزي — PDF و Word جاهزان للتحميل الفوري.' },
@@ -333,7 +329,6 @@ export default function Home() {
                 </div>
               ))}
             </div>
-
             <Link href="/auth/login" className="btn-gold">ابدأ مجاناً — ادفع بعد المقابلة ←</Link>
           </div>
         </section>
@@ -349,7 +344,6 @@ export default function Home() {
                 نخبة مقابل الطريقة التقليدية
               </h2>
             </div>
-
             <div className="grid-2">
               <div className="card-base" style={{ padding: '28px 24px' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground-muted)', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--color-border)' }}>
@@ -361,7 +355,6 @@ export default function Home() {
                   </div>
                 ))}
               </div>
-
               <div className="card-base" style={{ padding: '28px 24px', borderColor: 'var(--color-border-strong)', background: 'rgba(200,160,74,.03)' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-primary)', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--color-border-strong)' }}>
                   مع نخبة ✨
@@ -394,7 +387,7 @@ export default function Home() {
             </p>
             <div className="btn-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/auth/login" className="btn-gold">ابدأ مقابلتك المجانية ←</Link>
-              <Link href="/analyze-cv" className="btn-ghost" style={{ border: '1px solid var(--color-border)', color: 'var(--color-foreground-muted)', background: 'transparent', backdropFilter: 'none' }}>حلّل سيرتي الذاتية</Link>
+              <Link href="/analyze-cv" className="btn-ghost">حلّل سيرتي الذاتية</Link>
             </div>
             <p style={{ fontSize: 11, color: 'var(--color-foreground-muted)', marginTop: 16 }}>
               المقابلة مجانية تماماً · لا بطاقة ائتمان
