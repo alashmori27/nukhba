@@ -2,13 +2,16 @@
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { LogoIcon, LogoText } from '@/components/brand'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function Home() {
   const [copied, setCopied] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  function copyLinkedIn(text) {
-    navigator.clipboard.writeText(text)
+  useEffect(() => { setMounted(true) }, [])
+
+  function copyLinkedIn() {
+    navigator.clipboard.writeText('نخبة · nukhbahr.com')
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -16,165 +19,320 @@ export default function Home() {
   return (
     <>
       <style>{`
-        @keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes glow   { 0%,100%{opacity:.06} 50%{opacity:.13} }
-        @keyframes float  { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap');
 
-        .hero-title  { font-size: clamp(32px, 5.5vw, 66px); }
-        .steps-grid  { display: grid; grid-template-columns: repeat(5,1fr); gap: 0; }
-        .comp-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .value-grid  { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
-        .section-pad { padding: 88px 40px; }
-        .stat-num    { font-family:'Cormorant Garamond',serif; font-size:38px; font-weight:600; color:var(--gold); line-height:1; }
-        .cta-btn     { display:inline-flex; align-items:center; padding:15px 38px; border-radius:10px; font-size:15px; font-weight:800; background:linear-gradient(135deg,#7a5e28,#c8a04a); color:#06060e; text-decoration:none; transition:transform .2s; }
-        .cta-btn:hover { transform:translateY(-2px); }
+        .nukhba-page {
+          font-family: var(--font-sans-ar, 'IBM Plex Sans Arabic', system-ui, sans-serif);
+          background: var(--color-background);
+          color: var(--color-foreground);
+          -webkit-font-smoothing: antialiased;
+        }
 
-        @media(max-width:768px){
-          .steps-grid  { grid-template-columns: 1fr; }
-          .comp-grid   { grid-template-columns: 1fr; }
-          .value-grid  { grid-template-columns: 1fr; }
-          .section-pad { padding: 56px 18px !important; }
-          .stats-row   { gap: 24px !important; }
-          .hide-sm     { display: none !important; }
-          .hero-title  { font-size: 32px !important; }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glow {
+          0%, 100% { opacity: .05; }
+          50%       { opacity: .12; }
+        }
+        @keyframes pulse-dot {
+          0%, 100% { opacity: .3; transform: scale(.8); }
+          50%       { opacity: 1;  transform: scale(1); }
+        }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-10px); }
+        }
+
+        .f1 { animation: fadeUp var(--duration-slow) var(--easing-standard) both .05s; }
+        .f2 { animation: fadeUp var(--duration-slow) var(--easing-standard) both .15s; }
+        .f3 { animation: fadeUp var(--duration-slow) var(--easing-standard) both .25s; }
+        .f4 { animation: fadeUp var(--duration-slow) var(--easing-standard) both .38s; }
+        .f5 { animation: fadeUp var(--duration-slow) var(--easing-standard) both .5s; }
+
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
+          filter: blur(80px);
+        }
+
+        /* Buttons */
+        .btn-gold {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 14px 32px; border-radius: var(--radius-md);
+          background: linear-gradient(135deg, var(--gold-dk), var(--gold));
+          color: #06060e; font-size: 15px; font-weight: 700;
+          text-decoration: none; font-family: inherit;
+          box-shadow: var(--shadow-gold);
+          transition: filter var(--duration-fast) var(--easing-standard),
+                      transform var(--duration-fast) var(--easing-standard);
+          cursor: pointer; border: none;
+        }
+        .btn-gold:hover  { filter: brightness(1.1); transform: translateY(-2px); }
+        .btn-gold:active { transform: translateY(0); }
+        .btn-gold:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; }
+
+        .btn-ghost {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 14px 32px; border-radius: var(--radius-md);
+          border: 1px solid var(--color-border);
+          color: var(--color-foreground-muted); font-size: 15px; font-weight: 500;
+          text-decoration: none; font-family: inherit; background: transparent;
+          transition: border-color var(--duration-fast) var(--easing-standard),
+                      color var(--duration-fast) var(--easing-standard),
+                      transform var(--duration-fast) var(--easing-standard);
+          cursor: pointer;
+        }
+        .btn-ghost:hover  { border-color: var(--color-primary); color: var(--color-primary); transform: translateY(-2px); }
+        .btn-ghost:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 3px; }
+
+        /* Cards */
+        .card-base {
+          background: var(--color-surface-elevated);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-md);
+          transition: border-color var(--duration-base) var(--easing-standard),
+                      transform var(--duration-base) var(--easing-standard),
+                      box-shadow var(--duration-base) var(--easing-standard);
+        }
+        .card-base:hover {
+          border-color: var(--color-border-strong);
+          transform: translateY(-3px);
+          box-shadow: var(--shadow-gold);
+        }
+
+        /* Step cards */
+        .step-card {
+          background: var(--color-surface);
+          padding: 28px 20px;
+          position: relative;
+          transition: background var(--duration-base), transform var(--duration-base);
+        }
+        .step-card:hover { background: var(--color-surface-elevated); transform: translateY(-2px); }
+
+        /* Section */
+        .section { padding: 96px 40px; }
+        .section-alt { padding: 96px 40px; background: var(--color-surface); }
+
+        /* Eyebrow */
+        .eyebrow {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 11px; letter-spacing: 5px;
+          color: var(--color-primary); text-transform: uppercase;
+          margin-bottom: 14px; display: block;
+        }
+
+        /* Grid */
+        .grid-5 { display: grid; grid-template-columns: repeat(5,1fr); gap: 1px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        /* Gold text */
+        .gold-text {
+          background: linear-gradient(135deg, var(--gold-dk), var(--gold), var(--gold-lt));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+
+        /* Divider */
+        .divider {
+          height: 1px;
+          background: linear-gradient(90deg, transparent, var(--color-border) 30%, var(--color-border) 70%, transparent);
+        }
+
+        /* Pulse dots */
+        .pulse-dots { display: flex; gap: 4px; align-items: center; }
+        .pulse-dot {
+          width: 6px; height: 6px; border-radius: 50%;
+          background: var(--color-primary);
+          animation: pulse-dot 1.4s ease-in-out infinite;
+        }
+        .pulse-dot:nth-child(2) { animation-delay: .2s; }
+        .pulse-dot:nth-child(3) { animation-delay: .4s; }
+
+        /* Focus */
+        a:focus-visible, button:focus-visible {
+          outline: 2px solid var(--color-ring);
+          outline-offset: 3px;
+          border-radius: 4px;
+        }
+
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            transition-duration: 0.001ms !important;
+          }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+          .grid-5 { grid-template-columns: 1fr; }
+          .grid-3 { grid-template-columns: 1fr; }
+          .grid-2 { grid-template-columns: 1fr; }
+          .section, .section-alt { padding: 64px 20px; }
+          .hide-sm { display: none !important; }
+          .hero-title { font-size: clamp(34px, 8vw, 56px) !important; }
+          .btn-row { flex-direction: column; align-items: stretch; }
+          .btn-row a, .btn-row button { text-align: center; justify-content: center; }
         }
       `}</style>
 
       <Navbar />
 
-      <main>
+      <div className="nukhba-page">
 
         {/* ══ HERO ══ */}
-        <section style={{ minHeight:'96vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', textAlign:'center', padding:'80px 20px 56px', position:'relative', overflow:'hidden' }}>
+        <section className="section" style={{ minHeight: '96vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden', padding: '100px 24px 80px' }}>
 
-          <div style={{ position:'absolute', top:'42%', left:'50%', transform:'translate(-50%,-50%)', width:800, height:800, background:'radial-gradient(ellipse,rgba(200,160,74,.06) 0%,transparent 65%)', pointerEvents:'none', animation:'glow 5s ease-in-out infinite' }}/>
-          <div style={{ position:'absolute', top:'42%', left:'50%', transform:'translate(-50%,-50%)', width:500, height:500, border:'1px solid rgba(200,160,74,.04)', borderRadius:'50%', animation:'float 9s ease-in-out infinite', pointerEvents:'none' }}/>
+          {/* Orbs */}
+          <div className="orb" style={{ width: 600, height: 600, background: 'rgba(200,160,74,.07)', top: '20%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'glow 6s ease-in-out infinite' }}/>
+          <div className="orb" style={{ width: 300, height: 300, background: 'rgba(200,160,74,.04)', top: '60%', right: '10%', animation: 'float 8s ease-in-out infinite' }}/>
 
-          <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(200,160,74,.06)', border:'1px solid rgba(200,160,74,.18)', padding:'6px 18px', borderRadius:22, fontSize:10, color:'var(--gold)', marginBottom:28, fontFamily:"'Cormorant Garamond',serif", letterSpacing:5, textTransform:'uppercase', animation:'fadeUp .6s ease both' }}>
-            ✦ منصة التوظيف الذكي · Saudi Arabia
+          {/* Badge */}
+          <div className="f1" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(200,160,74,.06)', border: '1px solid rgba(200,160,74,.2)', padding: '6px 16px', borderRadius: 24, marginBottom: 32 }}>
+            <div className="pulse-dots">
+              <div className="pulse-dot"/>
+              <div className="pulse-dot"/>
+              <div className="pulse-dot"/>
+            </div>
+            <span style={{ fontSize: 11, color: 'var(--color-primary)', letterSpacing: 4, fontFamily: "'Cormorant Garamond', serif", textTransform: 'uppercase' }}>
+              منصة التوظيف الذكي · Saudi Arabia
+            </span>
           </div>
 
-          <h1 className="hero-title" style={{ fontWeight:800, lineHeight:1.15, color:'#f8f5ef', marginBottom:20, animation:'fadeUp .6s ease both .1s', maxWidth:800 }}>
-            وظيفتك لا تبدأ بـ CV<br/>
-            <span style={{ background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-              بل بملف مهني يرى فيه كل صاحب عمل قيمتك
-            </span>
+          {/* Headline */}
+          <h1 className="f2 hero-title" style={{ fontSize: 'clamp(40px, 7vw, 80px)', fontWeight: 700, lineHeight: 1.08, letterSpacing: '-1.5px', color: 'var(--color-foreground)', marginBottom: 24, maxWidth: 800 }}>
+            وظيفتك لا تبدأ بـ{' '}
+            <span className="gold-text">CV</span>
           </h1>
 
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:'clamp(15px,2vw,20px)', fontWeight:300, fontStyle:'italic', color:'var(--muted)', marginBottom:14, animation:'fadeUp .6s ease both .15s', maxWidth:560 }}>
-            ابدأ بمقابلة مجانية مع الذكاء الاصطناعي
+          {/* Sub */}
+          <p className="f3" style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(17px, 2.5vw, 22px)', fontWeight: 300, fontStyle: 'italic', color: 'var(--color-foreground-muted)', marginBottom: 40, maxWidth: 500, lineHeight: 1.7 }}>
+            مقابلة ذكية واحدة تبني ملفك المهني وتفتح أبواب الشركات
           </p>
 
-          <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap', marginBottom:28, animation:'fadeUp .6s ease both .2s' }}>
-            {[
-              { icon:'✓', text:'CV احترافي عربي وإنجليزي', color:'var(--gold)' },
-              { icon:'✓', text:'نشر ملفك للشركات تلقائياً', color:'var(--success)' },
-              { icon:'✓', text:'محتوى LinkedIn جاهز', color:'#0077b5' },
-              { icon:'✓', text:'تحليل نقاط القوة', color:'var(--gold)' },
-            ].map(v => (
-              <div key={v.text} style={{ display:'flex', alignItems:'center', gap:6, fontSize:13, color:v.color, fontWeight:600 }}>
-                <span style={{ fontWeight:800 }}>{v.icon}</span>{v.text}
-              </div>
-            ))}
+          {/* CTAs */}
+          <div className="f4 btn-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+            <Link href="/auth/login" className="btn-gold">ابدأ مقابلتك المجانية ←</Link>
+            <Link href="/analyze-cv" className="btn-ghost">حلّل سيرتي الذاتية</Link>
           </div>
 
-          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:10, animation:'fadeUp .6s ease both .25s' }}>
-            <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-              <Link href="/auth/login" className="cta-btn">ابدأ مقابلتك المجانية ←</Link>
-              <Link href="/analyze-cv" style={{ padding:'15px 38px', borderRadius:10, fontSize:15, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none' }}>
-                حلّل سيرتي الذاتية
-              </Link>
-            </div>
-            <p style={{ fontSize:12, color:'var(--muted)', marginTop:4 }}>
-              ✓ المقابلة مجانية تماماً · لن تدفع شيئاً حتى ترى النتيجة
-            </p>
-          </div>
+          <p className="f4" style={{ fontSize: 12, color: 'var(--color-foreground-muted)', marginBottom: 72 }}>
+            المقابلة مجانية · لن تدفع حتى ترى النتيجة
+          </p>
 
-          <div className="stats-row" style={{ display:'flex', gap:44, justifyContent:'center', marginTop:56, flexWrap:'wrap', animation:'fadeUp .6s ease both .3s' }}>
-            {[['6','محاور تقييم'],['39','ريال فقط'],['2','لغة للـ CV'],['100%','مقابلات مكتملة']].map((s,i) => (
-              <div key={i} style={{ textAlign:'center' }}>
-                <div className="stat-num">{s[0]}</div>
-                <div style={{ fontSize:11, color:'var(--muted)', marginTop:4 }}>{s[1]}</div>
+          {/* Stats */}
+          <div className="f5" style={{ display: 'flex', gap: 56, justifyContent: 'center', flexWrap: 'wrap' }}>
+            {[['٦', 'محاور تقييم'], ['٣٩', 'ريال فقط'], ['٢', 'لغة للـ CV']].map((s, i) => (
+              <div key={i} style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 44, fontWeight: 600, color: 'var(--color-primary)', lineHeight: 1, marginBottom: 6 }}>{s[0]}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', letterSpacing: '.5px' }}>{s[1]}</div>
               </div>
             ))}
           </div>
         </section>
+
+        <div className="divider"/>
 
         {/* ══ كيف تعمل ══ */}
-        <section className="section-pad" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
-          <div style={{ maxWidth:1100, margin:'0 auto' }}>
-            <div style={{ textAlign:'center', marginBottom:48 }}>
-              <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:10, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:10 }}>كيف تعمل نخبة؟</p>
-              <h2 style={{ fontSize:'clamp(20px,3.5vw,36px)', fontWeight:800, color:'#f8f5ef', marginBottom:10 }}>5 خطوات — من الصفر إلى وظيفة</h2>
-              <p style={{ fontSize:14, color:'var(--muted)' }}>بدلاً من إرسال مئات الطلبات يدوياً</p>
+        <section className="section-alt">
+          <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+            <div style={{ marginBottom: 56 }}>
+              <span className="eyebrow">كيف تعمل نخبة؟</span>
+              <h2 style={{ fontSize: 'clamp(22px, 4vw, 38px)', fontWeight: 700, letterSpacing: '-1px', color: 'var(--color-foreground)', maxWidth: 480 }}>
+                من الصفر إلى وظيفة في خمس خطوات
+              </h2>
             </div>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(180px, 1fr))', gap:2, borderRadius:16, overflow:'hidden', background:'var(--border)' }}>
+
+            <div className="grid-5" style={{ borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'var(--color-border)' }}>
               {[
-                { num:'01', icon:'🎙️', title:'مقابلة مجانية', desc:'يتحدث معك الذكاء الاصطناعي ويكتشف خبراتك وشخصيتك.' },
-                { num:'02', icon:'🧠', title:'تحليل مهاراتك', desc:'تحليل حقيقي لنقاط القوة والضعف وتقييم موضوعي من 100.' },
-                { num:'03', icon:'📄', title:'إنشاء ملفك', desc:'CV عربي وإنجليزي + محتوى LinkedIn جاهز بنقرة واحدة.' },
-                { num:'04', icon:'🏢', title:'نشر ملفك', desc:'ملفك يصل للشركات المناسبة — بدون أي تقديم يدوي.' },
-                { num:'05', icon:'🚀', title:'استقبال الفرص', desc:'الشركات تتواصل معك مباشرة. أنت تختار، لا تنتظر.' },
-              ].map((c,i) => (
-                <div key={c.num} style={{ background:'var(--surface)', padding:'28px 18px', position:'relative' }}>
-                  {i < 4 && <div className="hide-sm" style={{ position:'absolute', top:'50%', right:-1, transform:'translateY(-50%)', color:'var(--border)', fontSize:18, zIndex:1 }}>›</div>}
-                  <div style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:36, fontWeight:300, color:'var(--gold)', opacity:.15, lineHeight:1, marginBottom:12 }}>{c.num}</div>
-                  <div style={{ fontSize:22, marginBottom:10 }}>{c.icon}</div>
-                  <div style={{ fontSize:13, fontWeight:700, color:'#f8f5ef', marginBottom:6 }}>{c.title}</div>
-                  <div style={{ fontSize:11, color:'var(--muted)', lineHeight:1.75 }}>{c.desc}</div>
+                { num: '01', icon: '🎙️', title: 'مقابلة مجانية', desc: 'الذكاء الاصطناعي يكتشف خبراتك وشخصيتك.' },
+                { num: '02', icon: '🧠', title: 'تحليل عميق', desc: 'تقييم موضوعي من 100 لنقاط قوتك.' },
+                { num: '03', icon: '📄', title: 'ملفك جاهز', desc: 'CV عربي وإنجليزي + محتوى LinkedIn.' },
+                { num: '04', icon: '🏢', title: 'نشر للشركات', desc: 'ملفك يصل تلقائياً بدون وسيط.' },
+                { num: '05', icon: '🚀', title: 'الفرص تجيك', desc: 'الشركات تتواصل معك مباشرة.' },
+              ].map((c, i) => (
+                <div key={c.num} className="step-card">
+                  {i < 4 && <div className="hide-sm" style={{ position: 'absolute', top: '50%', right: -1, transform: 'translateY(-50%)', color: 'var(--color-border)', fontSize: 16, zIndex: 1 }}>›</div>}
+                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 32, fontWeight: 300, color: 'var(--color-primary)', opacity: .2, lineHeight: 1, marginBottom: 14 }}>{c.num}</div>
+                  <div style={{ fontSize: 24, marginBottom: 12 }}>{c.icon}</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)', marginBottom: 6, letterSpacing: '-.2px' }}>{c.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', lineHeight: 1.75 }}>{c.desc}</div>
                 </div>
               ))}
             </div>
           </div>
         </section>
+
+        <div className="divider"/>
 
         {/* ══ القيمة ══ */}
-        <section className="section-pad">
-          <div style={{ maxWidth:900, margin:'0 auto', textAlign:'center' }}>
-            <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:10, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:10 }}>القيمة الكاملة</p>
-            <h2 style={{ fontSize:'clamp(20px,3.5vw,36px)', fontWeight:800, color:'#f8f5ef', marginBottom:8 }}>لماذا 39 ريال فقط؟</h2>
-            <p style={{ fontSize:14, color:'var(--muted)', marginBottom:12 }}>لأننا لا نبيع سيرة ذاتية. نبني ملفاً مهنياً كاملاً.</p>
-            <p style={{ fontSize:13, color:'var(--muted)', marginBottom:36 }}>
-              <strong style={{ color:'var(--gold)' }}>ابدأ مجاناً</strong> → شاهد النتيجة → إذا أعجبتك → احصل على الملف الكامل مقابل 39 ريال
+        <section className="section">
+          <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+            <span className="eyebrow">القيمة الكاملة</span>
+            <h2 style={{ fontSize: 'clamp(22px, 4vw, 38px)', fontWeight: 700, letterSpacing: '-1px', color: 'var(--color-foreground)', marginBottom: 12 }}>
+              مقابلة واحدة — ثلاثة مخرجات
+            </h2>
+            <p style={{ fontSize: 15, color: 'var(--color-foreground-muted)', marginBottom: 12, lineHeight: 1.8 }}>
+              ابدأ مجاناً · شاهد النتيجة · ادفع إذا أعجبتك
             </p>
-            <div className="value-grid" style={{ maxWidth:800, margin:'0 auto 36px' }}>
+            <p style={{ fontSize: 13, color: 'var(--color-primary)', marginBottom: 56, fontWeight: 600 }}>
+              ٣٩ ريال · دفعة واحدة · لا اشتراك
+            </p>
+
+            <div className="grid-3" style={{ maxWidth: 800, margin: '0 auto 48px' }}>
               {[
-                { icon:'📄', color:'var(--gold)', title:'CV احترافي', desc:'عربي وإنجليزي — PDF و Word جاهزان للتحميل والتقديم الفوري.' },
-                { icon:'🏢', color:'var(--success)', title:'نشر للشركات', desc:'ملفك يصل للشركات في المنصة — تواصل مباشر بدون وسيط.' },
-                { icon:'💼', color:'#0077b5', title:'محتوى LinkedIn', desc:'عنوان احترافي، نبذة مميزة، وإنجازات موثّقة — جاهز للصق.' },
+                { icon: '📄', color: 'var(--color-primary)', title: 'CV احترافي', desc: 'عربي وإنجليزي — PDF و Word جاهزان للتحميل الفوري.' },
+                { icon: '🏢', color: 'var(--color-success)', title: 'نشر للشركات', desc: 'ملفك يصل للشركات تلقائياً — تواصل مباشر بدون وسيط.' },
+                { icon: '💼', color: '#0077b5', title: 'محتوى LinkedIn', desc: 'عنوان احترافي ونبذة مميزة جاهزة للصق فوراً.' },
               ].map(c => (
-                <div key={c.title} style={{ background:'var(--card)', border:`1px solid ${c.color}33`, borderRadius:14, padding:'24px 18px', textAlign:'right' }}>
-                  <div style={{ fontSize:28, marginBottom:10 }}>{c.icon}</div>
-                  <div style={{ fontSize:14, fontWeight:700, color:'#f8f5ef', marginBottom:6 }}>{c.title}</div>
-                  <div style={{ fontSize:12, color:'var(--muted)', lineHeight:1.75 }}>{c.desc}</div>
+                <div key={c.title} className="card-base" style={{ padding: '24px 20px', textAlign: 'right' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 'var(--radius-sm)', background: `${c.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 14 }}>{c.icon}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-foreground)', marginBottom: 6 }}>{c.title}</div>
+                  <div style={{ fontSize: 12, color: 'var(--color-foreground-muted)', lineHeight: 1.75 }}>{c.desc}</div>
                 </div>
               ))}
             </div>
-            <Link href="/auth/login" className="cta-btn">ابدأ مجاناً — ادفع بعد المقابلة ←</Link>
+
+            <Link href="/auth/login" className="btn-gold">ابدأ مجاناً — ادفع بعد المقابلة ←</Link>
           </div>
         </section>
+
+        <div className="divider"/>
 
         {/* ══ مقارنة ══ */}
-        <section className="section-pad" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)', borderBottom:'1px solid var(--border)' }}>
-          <div style={{ maxWidth:800, margin:'0 auto' }}>
-            <div style={{ textAlign:'center', marginBottom:36 }}>
-              <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:10, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:10 }}>لماذا نخبة؟</p>
-              <h2 style={{ fontSize:'clamp(20px,3.5vw,34px)', fontWeight:800, color:'#f8f5ef' }}>نخبة مقابل الطريقة التقليدية</h2>
+        <section className="section-alt">
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <div style={{ textAlign: 'center', marginBottom: 48 }}>
+              <span className="eyebrow">المقارنة</span>
+              <h2 style={{ fontSize: 'clamp(22px, 4vw, 38px)', fontWeight: 700, letterSpacing: '-1px', color: 'var(--color-foreground)' }}>
+                نخبة مقابل الطريقة التقليدية
+              </h2>
             </div>
-            <div className="comp-grid">
-              <div style={{ background:'var(--card)', border:'1px solid var(--border)', borderRadius:14, padding:'24px 20px' }}>
-                <div style={{ fontSize:13, fontWeight:700, color:'var(--muted)', marginBottom:16, textAlign:'center' }}>الطريقة التقليدية 😓</div>
-                {['CV جامد لا يكشف شخصيتك','تقديم أعمى بدون تقييم','لا تعرف سبب الرفض','LinkedIn فارغ وبلا محتوى','انتظار بدون رد','لا يوجد تحليل للمهارات'].map(i => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10, fontSize:13, color:'var(--muted)' }}>
-                    <span style={{ color:'var(--error)', flexShrink:0 }}>✗</span>{i}
+
+            <div className="grid-2">
+              <div className="card-base" style={{ padding: '28px 24px' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground-muted)', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--color-border)' }}>
+                  الطريقة التقليدية
+                </div>
+                {['CV لا يعبر عنك', 'تقديم أعمى بدون تقييم', 'لا تعرف سبب الرفض', 'LinkedIn فارغ وبلا محتوى', 'انتظار بدون رد'].map(i => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, fontSize: 13, color: 'var(--color-foreground-muted)' }}>
+                    <span style={{ color: 'var(--color-destructive)', fontSize: 11, flexShrink: 0 }}>✕</span>{i}
                   </div>
                 ))}
               </div>
-              <div style={{ background:'rgba(200,160,74,.04)', border:'1px solid rgba(200,160,74,.22)', borderRadius:14, padding:'24px 20px' }}>
-                <div style={{ fontSize:13, fontWeight:700, color:'var(--gold)', marginBottom:16, textAlign:'center' }}>مع نخبة ✨</div>
-                {['مقابلة تكشف قيمتك الحقيقية','تقييم موضوعي من 100','تعرف نقاط قوتك وضعفك','LinkedIn جاهز بنقرة واحدة','الشركات تتواصل معك أنت','CV + نشر + تحليل في خطوة واحدة'].map(i => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:9, marginBottom:10, fontSize:13, color:'var(--text)' }}>
-                    <span style={{ color:'var(--success)', flexShrink:0 }}>✓</span>{i}
+
+              <div className="card-base" style={{ padding: '28px 24px', borderColor: 'var(--color-border-strong)', background: 'rgba(200,160,74,.03)' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-primary)', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--color-border-strong)' }}>
+                  مع نخبة ✨
+                </div>
+                {['مقابلة تكشف قيمتك الحقيقية', 'تقييم موضوعي من 100', 'تعرف نقاط قوتك بالتفصيل', 'LinkedIn جاهز تلقائياً', 'الشركات تتواصل معك أنت'].map(i => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, fontSize: 13, color: 'var(--color-foreground)' }}>
+                    <span style={{ color: 'var(--color-success)', fontSize: 11, flexShrink: 0 }}>✓</span>{i}
                   </div>
                 ))}
               </div>
@@ -182,97 +340,48 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ══ LinkedIn ══ */}
-        <section className="section-pad">
-          <div style={{ maxWidth:800, margin:'0 auto' }}>
-            <div style={{ display:'flex', gap:32, alignItems:'center', flexWrap:'wrap' }}>
-              <div style={{ flex:1, minWidth:280 }}>
-                <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'rgba(0,119,181,.08)', border:'1px solid rgba(0,119,181,.25)', padding:'5px 14px', borderRadius:20, fontSize:11, color:'#0077b5', fontWeight:700, marginBottom:16 }}>
-                  💼 LinkedIn Integration
-                </div>
-                <h2 style={{ fontSize:'clamp(20px,3vw,32px)', fontWeight:800, color:'#f8f5ef', marginBottom:12 }}>
-                  ابنِ ملفك على LinkedIn<br/>
-                  <span style={{ color:'#0077b5' }}>بنقرة واحدة</span>
-                </h2>
-                <p style={{ fontSize:14, color:'var(--muted)', lineHeight:1.85, marginBottom:20 }}>
-                  بعد المقابلة — نخبة تولّد لك نصاً جاهزاً للصقه مباشرة في LinkedIn.
-                </p>
-                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                  {['عنوان وظيفي احترافي','نبذة شخصية مؤثرة','إنجازات بأرقام حقيقية','مهارات موثّقة'].map(f => (
-                    <div key={f} style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, color:'var(--text)' }}>
-                      <span style={{ color:'#0077b5' }}>✓</span>{f}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ flex:1, minWidth:280, background:'var(--card)', border:'1px solid rgba(0,119,181,.25)', borderRadius:16, overflow:'hidden' }}>
-                <div style={{ background:'rgba(0,119,181,.1)', padding:'14px 18px', borderBottom:'1px solid rgba(0,119,181,.15)', display:'flex', alignItems:'center', gap:10 }}>
-                  <div style={{ fontSize:20 }}>💼</div>
-                  <span style={{ fontSize:13, fontWeight:700, color:'#0077b5' }}>محتوى جاهز لـ LinkedIn</span>
-                </div>
-                <div style={{ padding:'18px' }}>
-                  <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:10, color:'var(--muted)', marginBottom:5, letterSpacing:2, textTransform:'uppercase' }}>العنوان الوظيفي</div>
-                    <div style={{ fontSize:13, color:'var(--text)', background:'var(--surface)', padding:'8px 12px', borderRadius:8, lineHeight:1.6 }}>
-                      مشرف تعليمي | 7 سنوات خبرة | خبير تطوير وتحفيز
-                    </div>
-                  </div>
-                  <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:10, color:'var(--muted)', marginBottom:5, letterSpacing:2, textTransform:'uppercase' }}>النبذة الشخصية</div>
-                    <div style={{ fontSize:12, color:'var(--text)', background:'var(--surface)', padding:'8px 12px', borderRadius:8, lineHeight:1.7 }}>
-                      مشرف تعليمي سعودي بخبرة 7 سنوات، رفعت عدد الطالبات من 40 إلى 215...
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => copyLinkedIn('العنوان: مشرف تعليمي | 7 سنوات خبرة')}
-                    style={{ width:'100%', padding:'9px', borderRadius:9, border:'1px solid rgba(0,119,181,.4)', background: copied?'rgba(0,119,181,.15)':'transparent', color:'#0077b5', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
-                    {copied ? '✓ تم النسخ!' : '📋 انسخ للـ LinkedIn'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <div className="divider"/>
 
         {/* ══ CTA النهائي ══ */}
-        <section className="section-pad" style={{ background:'var(--bg2)', borderTop:'1px solid var(--border)', textAlign:'center' }}>
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:10, letterSpacing:5, color:'var(--gold)', textTransform:'uppercase', marginBottom:14 }}>ابدأ الآن</p>
-          <h2 style={{ fontSize:'clamp(22px,4vw,44px)', fontWeight:800, color:'#f8f5ef', marginBottom:12, lineHeight:1.2 }}>
-            جاهز لتكتشف قيمتك؟<br/>
-            <span style={{ background:'linear-gradient(135deg,#7a5e28,#c8a04a,#e4c87a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-              ابدأ المقابلة مجاناً.
-            </span>
+        <section className="section" style={{ textAlign: 'center', position: 'relative', overflow: 'hidden', padding: '120px 40px' }}>
+          <div className="orb" style={{ width: 500, height: 500, background: 'rgba(200,160,74,.06)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}/>
+
+          <span className="eyebrow">ابدأ الآن</span>
+          <h2 style={{ fontSize: 'clamp(32px, 6vw, 64px)', fontWeight: 700, letterSpacing: '-2px', color: 'var(--color-foreground)', marginBottom: 16, lineHeight: 1.08 }}>
+            جاهز لتكتشف قيمتك؟
           </h2>
-          <p style={{ fontSize:14, color:'var(--muted)', maxWidth:440, margin:'0 auto 10px', lineHeight:1.85 }}>
-            ابدأ مجاناً — وادفع فقط إذا أعجبك الناتج.
+          <p style={{ fontSize: 16, color: 'var(--color-foreground-muted)', maxWidth: 380, margin: '0 auto 12px', lineHeight: 1.8 }}>
+            ابدأ مجاناً — ادفع فقط إذا أعجبك الناتج.
           </p>
-          <p style={{ fontSize:13, color:'var(--gold)', marginBottom:32, fontWeight:600 }}>
-            39 ريال فقط · لا اشتراك · لا تجديد تلقائي
+          <p style={{ fontSize: 13, color: 'var(--color-primary)', marginBottom: 40, fontWeight: 600 }}>
+            ٣٩ ريال · لا اشتراك · لا تجديد تلقائي
           </p>
-          <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-            <Link href="/auth/login" className="cta-btn">ابدأ مقابلتك المجانية ←</Link>
-            <Link href="/analyze-cv" style={{ padding:'15px 38px', borderRadius:10, fontSize:15, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none' }}>
-              حلّل سيرتي الذاتية
-            </Link>
+          <div className="btn-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <Link href="/auth/login" className="btn-gold">ابدأ مقابلتك المجانية ←</Link>
+            <Link href="/analyze-cv" className="btn-ghost">حلّل سيرتي الذاتية</Link>
           </div>
-          <p style={{ fontSize:12, color:'var(--muted)', marginTop:14 }}>
-            ✓ المقابلة مجانية تماماً · لا بطاقة ائتمان
+          <p style={{ fontSize: 11, color: 'var(--color-foreground-muted)', marginTop: 16 }}>
+            المقابلة مجانية تماماً · لا بطاقة ائتمان
           </p>
         </section>
 
-      </main>
+      </div>
 
       {/* FOOTER */}
-      <footer style={{ padding:'26px 36px', borderTop:'1px solid var(--border)', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:14 }}>
-        <Link href="/" style={{ display:'flex', alignItems:'center', gap:10, textDecoration:'none' }}>
+      <footer style={{ padding: '28px 36px', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, background: 'var(--color-surface)' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <LogoIcon size={34}/>
-          <div style={{ width:1, height:30, background:'rgba(200,160,74,0.3)' }}/>
+          <div style={{ width: 1, height: 30, background: 'rgba(200,160,74,0.3)' }}/>
           <LogoText size="sm"/>
         </Link>
-        <p style={{ fontSize:11, color:'var(--muted)' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
-        <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
-          {[['للشركات','/for-companies'],['سياسة الخصوصية','/privacy'],['الشروط','/terms'],['تواصل معنا','/contact']].map(([l,h]) => (
-            <Link key={h} href={h} style={{ fontSize:11, color:'var(--muted)', textDecoration:'none' }}>{l}</Link>
+        <p style={{ fontSize: 11, color: 'var(--color-foreground-muted)' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          {[['للشركات', '/for-companies'], ['الخصوصية', '/privacy'], ['الشروط', '/terms'], ['تواصل', '/contact']].map(([l, h]) => (
+            <Link key={h} href={h} style={{ fontSize: 11, color: 'var(--color-foreground-muted)', textDecoration: 'none', transition: 'color var(--duration-fast)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--color-primary)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--color-foreground-muted)'}>
+              {l}
+            </Link>
           ))}
         </div>
       </footer>
