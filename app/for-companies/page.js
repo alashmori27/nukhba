@@ -37,7 +37,24 @@ export default function ForCompanies() {
 
         .orb {
           position: absolute; border-radius: 50%;
-          pointer-events: none; filter: blur(80px); z-index: 0;
+          pointer-events: none; filter: blur(80px); z-index: 1;
+        }
+
+        .hero-video {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%;
+          object-fit: cover; opacity: 0.12; z-index: 0;
+        }
+
+        .hero-overlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(to bottom, rgba(8,8,16,0.3) 0%, rgba(8,8,16,0.1) 40%, rgba(8,8,16,0.6) 100%);
+          z-index: 1; pointer-events: none;
+        }
+
+        .hero-content {
+          position: relative; z-index: 2;
+          display: flex; flex-direction: column; align-items: center; width: 100%;
         }
 
         .btn-gold {
@@ -47,19 +64,18 @@ export default function ForCompanies() {
           color: #06060e; font-size: 15px; font-weight: 700;
           text-decoration: none; font-family: inherit;
           box-shadow: var(--shadow-gold);
-          transition: filter var(--duration-fast) var(--easing-standard),
-                      transform var(--duration-fast) var(--easing-standard);
+          transition: filter var(--duration-fast) var(--easing-standard), transform var(--duration-fast) var(--easing-standard);
           cursor: pointer; border: none;
         }
-        .btn-gold:hover  { filter: brightness(1.1); transform: translateY(-2px); }
-        .btn-gold:active { transform: translateY(0); }
+        .btn-gold:hover { filter: brightness(1.1); transform: translateY(-2px); }
 
         .btn-ghost {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 14px 32px; border-radius: var(--radius-md);
-          border: 1px solid var(--color-border);
+          border: 1px solid rgba(255,255,255,0.15);
           color: var(--color-foreground-muted); font-size: 15px; font-weight: 500;
-          text-decoration: none; font-family: inherit; background: transparent;
+          text-decoration: none; font-family: inherit;
+          background: rgba(255,255,255,0.04); backdrop-filter: blur(8px);
           transition: border-color var(--duration-fast), color var(--duration-fast), transform var(--duration-fast);
           cursor: pointer;
         }
@@ -71,11 +87,7 @@ export default function ForCompanies() {
           border-radius: var(--radius-md);
           transition: border-color var(--duration-base), transform var(--duration-base), box-shadow var(--duration-base);
         }
-        .card-base:hover {
-          border-color: var(--color-border-strong);
-          transform: translateY(-3px);
-          box-shadow: var(--shadow-gold);
-        }
+        .card-base:hover { border-color: var(--color-border-strong); transform: translateY(-3px); box-shadow: var(--shadow-gold); }
 
         .section     { padding: 96px 40px; }
         .section-alt { padding: 96px 40px; background: var(--color-surface); }
@@ -109,18 +121,14 @@ export default function ForCompanies() {
         .pulse-dot:nth-child(2) { animation-delay: .2s; }
         .pulse-dot:nth-child(3) { animation-delay: .4s; }
 
-        a:focus-visible, button:focus-visible {
-          outline: 2px solid var(--color-ring); outline-offset: 3px; border-radius: 4px;
-        }
-
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+          .hero-video { display: none; }
         }
 
         @media (max-width: 768px) {
           .grid-3, .grid-2 { grid-template-columns: 1fr; }
           .section, .section-alt { padding: 64px 20px; }
-          .hide-sm { display: none !important; }
           .btn-row { flex-direction: column; align-items: stretch; }
           .btn-row a { text-align: center; justify-content: center; }
         }
@@ -131,14 +139,19 @@ export default function ForCompanies() {
       <div className="co-page">
 
         {/* ══ HERO ══ */}
-        <section className="section" style={{ minHeight: '92vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden', padding: '100px 24px 80px' }}>
+        <section style={{ minHeight: '92vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden', padding: '100px 24px 80px' }}>
+
+          {/* فيديو الخلفية */}
+          <video className="hero-video" autoPlay loop muted playsInline>
+            <source src="/companies-bg.mp4" type="video/mp4"/>
+          </video>
+          <div className="hero-overlay"/>
 
           <div className="orb" style={{ width: 700, height: 700, background: 'rgba(200,160,74,.06)', top: '30%', left: '50%', transform: 'translate(-50%,-50%)', animation: 'glow 6s ease-in-out infinite' }}/>
 
-          <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="hero-content">
 
-            {/* Badge */}
-            <div className="f1" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(200,160,74,.08)', border: '1px solid rgba(200,160,74,.25)', padding: '6px 16px', borderRadius: 24, marginBottom: 32 }}>
+            <div className="f1" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(200,160,74,.08)', border: '1px solid rgba(200,160,74,.25)', padding: '6px 16px', borderRadius: 24, marginBottom: 32, backdropFilter: 'blur(8px)' }}>
               <div className="pulse-dots">
                 <div className="pulse-dot"/><div className="pulse-dot"/><div className="pulse-dot"/>
               </div>
@@ -165,7 +178,6 @@ export default function ForCompanies() {
               <Link href="/auth/login?role=company" className="btn-ghost">تصفح المرشحين</Link>
             </div>
 
-            {/* Stats */}
             <div className="f5" style={{ display: 'flex', gap: 56, justifyContent: 'center', flexWrap: 'wrap' }}>
               {[['٦', 'محاور تقييم لكل مرشح'], ['١٠٠٪', 'مقابلات مكتملة فقط'], ['٠', 'CVs عشوائية']].map((s, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
@@ -250,7 +262,7 @@ export default function ForCompanies() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground-muted)', marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid var(--color-border)', textAlign: 'center' }}>
                   الطريقة التقليدية
                 </div>
-                {['مئات السير الذاتية العشوائية', 'أيام في القراءة والمقارنة', 'مقابلات مجدولة تستهلك الوقت', 'تقييم ذاتي متحيز', 'مرشحون جيدون يضيعون في الكومة'].map(i => (
+                {['مئات السير الذاتية العشوائية', 'أيام في القراءة والمقارنة', 'مقابلات مجدولة تستهلك الوقت', 'تقييم ذاتي متحيز', 'مرشحون جيدون يضيعون'].map(i => (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, fontSize: 13, color: 'var(--color-foreground-muted)' }}>
                     <span style={{ color: 'var(--color-destructive)', fontSize: 11, flexShrink: 0 }}>✕</span>{i}
                   </div>
@@ -278,9 +290,8 @@ export default function ForCompanies() {
             <span className="eyebrow">التسعير</span>
             <h2 style={{ fontSize: 'clamp(26px,4vw,40px)', fontWeight: 700, letterSpacing: '-1px', color: 'var(--color-foreground)', marginBottom: 12 }}>بسيط وشفاف</h2>
             <p style={{ fontSize: 14, color: 'var(--color-foreground-muted)', maxWidth: 400, margin: '0 auto 52px' }}>ابدأ مجاناً — لا بطاقة ائتمان مطلوبة</p>
-
             <div className="grid-3" style={{ maxWidth: 860, margin: '0 auto' }}>
-              {/* تجريبي */}
+
               <div className="card-base" style={{ padding: 32, textAlign: 'right' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground-muted)', marginBottom: 16 }}>تجريبي</div>
                 <div style={{ fontSize: 40, fontWeight: 700, color: 'var(--color-foreground)', marginBottom: 4 }}>مجاني</div>
@@ -290,12 +301,9 @@ export default function ForCompanies() {
                     <span style={{ color: 'var(--color-success)' }}>✓</span>{f}
                   </div>
                 ))}
-                <Link href="/auth/login?role=company" className="btn-ghost" style={{ display: 'block', marginTop: 24, textAlign: 'center' }}>
-                  ابدأ مجاناً
-                </Link>
+                <Link href="/auth/login?role=company" className="btn-ghost" style={{ display: 'block', marginTop: 24, textAlign: 'center' }}>ابدأ مجاناً</Link>
               </div>
 
-              {/* بالوظيفة - الأبرز */}
               <div className="card-base" style={{ padding: 32, textAlign: 'right', borderColor: 'var(--color-primary)', background: 'rgba(200,160,74,.04)', position: 'relative' }}>
                 <div style={{ position: 'absolute', top: -12, right: '50%', transform: 'translateX(50%)', background: 'linear-gradient(135deg,var(--gold-dk),var(--gold))', color: '#06060e', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 20, whiteSpace: 'nowrap' }}>
                   الأكثر شيوعاً
@@ -310,12 +318,9 @@ export default function ForCompanies() {
                     <span style={{ color: 'var(--color-success)' }}>✓</span>{f}
                   </div>
                 ))}
-                <Link href="/auth/login?role=company" className="btn-gold" style={{ display: 'block', marginTop: 24, textAlign: 'center', justifyContent: 'center' }}>
-                  ابدأ الآن
-                </Link>
+                <Link href="/auth/login?role=company" className="btn-gold" style={{ display: 'block', marginTop: 24, textAlign: 'center', justifyContent: 'center' }}>ابدأ الآن</Link>
               </div>
 
-              {/* شهري */}
               <div className="card-base" style={{ padding: 32, textAlign: 'right' }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground-muted)', marginBottom: 16 }}>شهري</div>
                 <div style={{ fontSize: 40, fontWeight: 700, color: 'var(--color-foreground)', marginBottom: 4 }}>
@@ -327,19 +332,18 @@ export default function ForCompanies() {
                     <span style={{ color: 'var(--color-success)' }}>✓</span>{f}
                   </div>
                 ))}
-                <Link href="/auth/login?role=company" className="btn-ghost" style={{ display: 'block', marginTop: 24, textAlign: 'center' }}>
-                  اشترك شهرياً
-                </Link>
+                <Link href="/auth/login?role=company" className="btn-ghost" style={{ display: 'block', marginTop: 24, textAlign: 'center' }}>اشترك شهرياً</Link>
               </div>
+
             </div>
           </div>
         </section>
 
         <div className="divider"/>
 
-        {/* ══ CTA النهائي ══ */}
+        {/* ══ CTA ══ */}
         <section className="section" style={{ textAlign: 'center', position: 'relative', overflow: 'hidden', padding: '120px 40px' }}>
-          <div className="orb" style={{ width: 500, height: 500, background: 'rgba(200,160,74,.06)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)' }}/>
+          <div className="orb" style={{ width: 500, height: 500, background: 'rgba(200,160,74,.06)', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 0 }}/>
           <div style={{ position: 'relative', zIndex: 1 }}>
             <span className="eyebrow">ابدأ الآن</span>
             <h2 style={{ fontSize: 'clamp(26px,4vw,52px)', fontWeight: 700, letterSpacing: '-1.5px', color: 'var(--color-foreground)', marginBottom: 16 }}>
