@@ -1,3 +1,4 @@
+cat > /mnt/user-data/outputs/InterviewClient-v2.js << 'JSEOF'
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -70,6 +71,8 @@ export default function InterviewClient() {
   const [typing, setTyping]     = useState(false)
   const [stageIdx, setStageIdx] = useState(0)
   const [genProfile, setGen]    = useState(false)
+  const [consented, setConsented] = useState(false)
+
   const bottomRef = useRef(null)
   const inputRef  = useRef(null)
   const stageRef  = useRef(0)
@@ -81,19 +84,6 @@ export default function InterviewClient() {
     const u = localStorage.getItem('nukhba_user')
     if (!u) { router.push('/auth/login'); return }
     setUser(JSON.parse(u))
-    if (jobId) {
-      const savedJob = sessionStorage.getItem('nukhba_job')
-      if (savedJob) {
-        const jobData = JSON.parse(savedJob)
-        setJob(jobData)
-        jobRef.current = jobData
-        startJobInterview(jobData)
-      } else {
-        startGeneralInterview()
-      }
-    } else {
-      startGeneralInterview()
-    }
   }, [])
 
   useEffect(() => { stageRef.current = stageIdx }, [stageIdx])
@@ -128,6 +118,25 @@ export default function InterviewClient() {
     setTyping(false)
   }
 
+  function handleConsent() {
+    setConsented(true)
+    const u = localStorage.getItem('nukhba_user')
+    if (!u) { router.push('/auth/login'); return }
+    if (jobId) {
+      const savedJob = sessionStorage.getItem('nukhba_job')
+      if (savedJob) {
+        const jobData = JSON.parse(savedJob)
+        setJob(jobData)
+        jobRef.current = jobData
+        startJobInterview(jobData)
+      } else {
+        startGeneralInterview()
+      }
+    } else {
+      startGeneralInterview()
+    }
+  }
+
   async function send() {
     if (!input.trim() || typing) return
     const userMsg  = { role:'user', content:input.trim() }
@@ -157,10 +166,8 @@ export default function InterviewClient() {
 
     if (done) {
       if (jobRef.current) {
-        // مقابلة وظيفة — بناء ملف كامل ثم التوجيه لصفحة التأكيد
         await submitJobApplication([...nextMsgs, aMsg])
       } else {
-        // مقابلة عامة — انتقل للمرحلة التالية
         const ni = stageRef.current + 1
         if (ni < STAGES.length) {
           setStageIdx(ni); stageRef.current = ni
@@ -189,7 +196,6 @@ export default function InterviewClient() {
     }
   }
 
-  // مقابلة وظيفة — ملف كامل + إشعار للشركة + توجيه لصفحة التأكيد
   async function submitJobApplication(allMsgs) {
     setGen(true)
     const currentJob = jobRef.current
@@ -197,12 +203,10 @@ export default function InterviewClient() {
     const u = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
 
     try {
-      // بناء ملف كامل من المحادثة
       const profileSys = `Extract candidate profile from job interview for: ${currentJob.title} at ${currentJob.company_name}.\n\n${PROFILE_SYSTEM}`
       const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], profileSys)
       const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
 
-      // استخراج phone و email من المحادثة إذا لم يحفظهم Claude
       if (!profile.phone) {
         const phoneMatch = transcript.match(/(?:05\d{8}|966\d{9})/)
         if (phoneMatch) profile.phone = phoneMatch[0]
@@ -212,42 +216,37 @@ export default function InterviewClient() {
         if (emailMatch) profile.email = emailMatch[0]
       }
 
-      // حفظ في candidates
       const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          profile,
-          userId:    u.id,
-          jobId:     currentJob?.id || null,
-          companyId: currentJob?.company_id || null,
+          profile, userId:u.id,
+          jobId:currentJob?.id || null,
+          companyId:currentJob?.company_id || null,
           transcript,
         })
       })
       const saveData = await saveRes.json()
 
-      // إشعار للشركة
       if (currentJob?.company_id) {
         await fetch('/api/notifications', {
           method:'POST', headers:{'Content-Type':'application/json'},
           body: JSON.stringify({
             user_id: currentJob.company_id,
-            type:    'new_applicant',
-            title:   `متقدم جديد على وظيفة "${currentJob.title}"`,
-            body:    `${profile.name || 'مرشح'} — تقييم: ${profile.overall_score || 0}/100`,
-            meta:    { candidate_id: saveData.id, job_id: currentJob.id }
+            type:'new_applicant',
+            title:`متقدم جديد على وظيفة "${currentJob.title}"`,
+            body:`${profile.name || 'مرشح'} — تقييم: ${profile.overall_score || 0}/100`,
+            meta:{ candidate_id:saveData.id, job_id:currentJob.id }
           })
         })
       }
 
-      // إشعار للمتقدم
       await fetch('/api/notifications', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          user_id: u.id,
-          type:    'application_sent',
-          title:   `تم إرسال طلبك على وظيفة "${currentJob.title}"`,
-          body:    `طلبك في ${currentJob.company_name} قيد المراجعة — ستتواصل معك الشركة قريباً`,
-          meta:    { job_id: currentJob.id }
+          user_id:u.id, type:'application_sent',
+          title:`تم إرسال طلبك على وظيفة "${currentJob.title}"`,
+          body:`طلبك في ${currentJob.company_name} قيد المراجعة`,
+          meta:{ job_id:currentJob.id }
         })
       })
 
@@ -258,7 +257,6 @@ export default function InterviewClient() {
     setGen(false)
   }
 
-  // مقابلة عامة — ملف كامل + توجيه لشاشة الموافقة والدفع
   async function buildProfile(allMsgs) {
     setGen(true)
     const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
@@ -293,6 +291,36 @@ export default function InterviewClient() {
   const canSend    = input.trim() && !typing
   const currentJob = job
 
+  // ══ شاشة الموافقة ══
+  if (!consented) return (
+    <div style={{ minHeight:'100vh', background:'#080810', fontFamily:"'Tajawal',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+      <div style={{ maxWidth:480, width:'100%', background:'#13131f', border:'1px solid #252538', borderRadius:20, padding:40, textAlign:'center' }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🎙️</div>
+        <h2 style={{ fontSize:22, fontWeight:800, color:'#ede8df', marginBottom:12 }}>قبل البدء</h2>
+        <p style={{ fontSize:14, color:'#7a7690', lineHeight:1.9, marginBottom:24 }}>
+          بالمتابعة، أنت توافق على تسجيل هذه المقابلة واستخدامها لبناء ملفك المهني وعرضه على الشركات المناسبة. يمكنك حذف ملفك في أي وقت من لوحة التحكم.
+        </p>
+        <div style={{ background:'rgba(200,160,74,.06)', border:'1px solid rgba(200,160,74,.2)', borderRadius:12, padding:'16px 18px', marginBottom:28, textAlign:'right' }}>
+          {['سيتم تسجيل المقابلة وتحليلها بالذكاء الاصطناعي','ملفك الناتج سيظهر للشركات بعد موافقتك','بياناتك محفوظة ولا تُشارك مع أطراف ثالثة'].map(t => (
+            <div key={t} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8, fontSize:13, color:'#c8a04a' }}>
+              <span>✓</span><span>{t}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={handleConsent}
+          style={{ width:'100%', padding:'14px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:12 }}>
+          أوافق وأبدأ المقابلة ←
+        </button>
+        <button onClick={() => router.push('/candidate/dashboard')}
+          style={{ width:'100%', padding:'10px', borderRadius:10, border:'1px solid #252538', background:'transparent', color:'#7a7690', fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+          رجوع
+        </button>
+      </div>
+    </div>
+  )
+
+  // ══ شاشة المقابلة ══
   return (
     <div style={{ height:'100vh', display:'flex', flexDirection:'column', background:'#080810', fontFamily:"'Tajawal',sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
@@ -318,7 +346,7 @@ export default function InterviewClient() {
         <button onClick={() => router.push('/candidate/dashboard')} style={{ fontSize:13, color:'#7a7690', padding:'6px 14px', borderRadius:8, border:'1px solid #252538', background:'transparent', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>← لوحة التحكم</button>
       </div>
 
-      {/* Progress bar — فقط للمقابلة العامة */}
+      {/* Progress bar */}
       {!currentJob && (
         <div style={{ padding:'10px 24px 0', background:'#0e0e1a', flexShrink:0 }}>
           <div style={{ display:'flex', gap:5, marginBottom:6 }}>
