@@ -36,6 +36,8 @@ export async function POST(req) {
     const { data: company } = await supabase.from('users').select('name').eq('id', user.id).single()
 
     const body = await req.json()
+    console.log('🔍 nationality_preference received:', body.nationality_preference)
+    console.log('🔍 nationality_preference received:', body.nationality_preference)
     const { data, error } = await supabase
       .from('jobs')
       .insert([{
@@ -49,6 +51,7 @@ export async function POST(req) {
         salary_visible: body.salary_visible,
         work_type:    body.work_type,
         questions:    body.questions,
+        nationality_preference: body.nationality_preference || 'all',
         created_at:   new Date().toISOString()
       }])
       .select()
