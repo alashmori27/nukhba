@@ -37,7 +37,6 @@ export async function POST(req) {
 
     const body = await req.json()
     console.log('🔍 nationality_preference received:', body.nationality_preference)
-    console.log('🔍 nationality_preference received:', body.nationality_preference)
     const { data, error } = await supabase
       .from('jobs')
       .insert([{
