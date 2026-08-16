@@ -49,8 +49,9 @@ Then collect in order (ONE at a time):
 1. Full name (الاسم الكامل)
 2. Mobile number - tell them: "رقم جوالك سيظهر للشركة للتواصل معك"
 3. Email address (البريد الإلكتروني)
+4. Nationality (الجنسية)
 
-After collecting all 3, say "شكراً، سنبدأ الآن بأسئلة المقابلة" then move to Phase 2.
+After collecting all 4, say "شكراً، سنبدأ الآن بأسئلة المقابلة" then move to Phase 2.
 
 PHASE 2 - JOB INTERVIEW QUESTIONS:
 Use ONLY these questions provided by the company:
@@ -215,6 +216,7 @@ export default function InterviewClient() {
         const emailMatch = transcript.match(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/)
         if (emailMatch) profile.email = emailMatch[0]
       }
+      if (!profile.nationality) profile.nationality = ''
 
       const saveRes = await fetch('/api/candidates', {
         method:'POST', headers:{'Content-Type':'application/json'},

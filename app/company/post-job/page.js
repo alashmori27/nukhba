@@ -15,7 +15,8 @@ export default function PostJob() {
   const [loading, setLoading] = useState(false)
   const [form, setForm]       = useState({
     title:'', description:'', requirements:'',
-    location:'', salary_type:'hidden', salary_range:'', work_type:'full-time'
+    location:'', salary_type:'hidden', salary_range:'', work_type:'full-time',
+    nationality_preference:'all', nationality_specific:''
   })
   const [questions, setQuestions] = useState([])
   const [questionsMode, setQuestionsMode] = useState('ai') // 'ai' | 'manual'
@@ -74,6 +75,7 @@ export default function PostJob() {
           ...form,
           salary_range: salary,
           salary_visible: form.salary_type === 'range',
+          nationality_preference: form.nationality_preference === 'specific' ? form.nationality_specific : form.nationality_preference,
           questions: validQuestions,
           company_id: user.id,
           company_name: user.name
@@ -191,6 +193,31 @@ export default function PostJob() {
                   <div style={{ padding:'10px 14px', background:'rgba(200,160,74,.05)', border:`1px solid rgba(200,160,74,.2)`, borderRadius:8, fontSize:12, color:C.muted }}>
                     ℹ️ لن يظهر الراتب للمتقدمين — سيُحدد بعد المقابلة النهائية
                   </div>
+                )}
+              </div>
+
+              {/* تفضيل الجنسية */}
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:10, display:'block' }}>الجنسية المطلوبة</label>
+                <div style={{ display:'flex', gap:10, marginBottom:12 }}>
+                  {[
+                    ['all','جميع الجنسيات'],
+                    ['saudi','سعوديون فقط'],
+                    ['specific','جنسيات محددة'],
+                  ].map(([val,label]) => (
+                    <button key={val} onClick={() => updateForm('nationality_preference',val)} style={{
+                      flex:1, padding:'10px', borderRadius:10, fontSize:13, cursor:'pointer',
+                      fontFamily:"'Tajawal',sans-serif",
+                      border:`1px solid ${form.nationality_preference===val?C.gold:C.border}`,
+                      background: form.nationality_preference===val?'rgba(200,160,74,.1)':'transparent',
+                      color: form.nationality_preference===val?C.gold:C.muted
+                    }}>{label}</button>
+                  ))}
+                </div>
+                {form.nationality_preference==='specific' && (
+                  <input value={form.nationality_specific} onChange={e => updateForm('nationality_specific',e.target.value)}
+                    placeholder="مثال: سعودي، مصري، هندي"
+                    style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
                 )}
               </div>
 

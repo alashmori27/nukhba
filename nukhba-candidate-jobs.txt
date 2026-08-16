@@ -77,11 +77,6 @@ export default function CandidateJobs() {
                   <div style={{ fontSize:13, color:C.muted, lineHeight:1.75, marginBottom:14, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{job.description}</div>
                   <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
                     {job.location && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>📍 {job.location}</span>}
-                    {job.nationality_preference && job.nationality_preference !== 'all' && (
-                      <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>
-                        🌍 {job.nationality_preference === 'saudi' ? 'سعودي فقط' : 'جنسيات أخرى'}
-                      </span>
-                    )}
                     {job.salary_range && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:C.surface, border:`1px solid ${C.border}`, color:C.muted }}>💰 {job.salary_range}</span>}
                     {job.questions?.length > 0 && <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:'rgba(200,160,74,.1)', border:`1px solid rgba(200,160,74,.3)`, color:C.gold }}>🎙️ {job.questions.length} أسئلة مقابلة</span>}
                     <span style={{ padding:'4px 12px', borderRadius:20, fontSize:12, background:'rgba(74,156,110,.1)', border:'1px solid rgba(74,156,110,.3)', color:'#4a9c6e' }}>💳 39 ريال</span>

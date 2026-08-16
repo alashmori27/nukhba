@@ -35,6 +35,7 @@ function CVContent({ p, lang='ar' }) {
         <div style={{ fontSize:14, color:G, marginBottom:6 }}>{isAr ? p.specialization : enVal('specialization_en','specialization')}</div>
         <div style={{ fontSize:12, color:'#7a7690', display:'flex', justifyContent:'center', gap:16, flexWrap:'wrap' }}>
           {p.location && <span>📍 {isAr ? p.location : tr(p.location)}</span>}
+          {p.nationality && <span>🌍 {isAr ? p.nationality : tr(p.nationality)}</span>}
           {p.phone && <span>📱 {p.phone}</span>}
         </div>
       </div>
@@ -236,7 +237,7 @@ export default function ProfilePage() {
         // ══ النسخة العربية ══
         new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:100}, children:[arRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
         new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:80},  children:[arRun(p.specialization||'',{size:28,color:'666666'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:240}, children:[arRun([p.location,p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:240}, children:[arRun([p.location,p.nationality,p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
 
         arSec('الملخص المهني'), arPara(p.summary_ar||'',{spacing:{after:200}}),
         arSec('المعلومات الأساسية'),
@@ -256,7 +257,7 @@ export default function ProfilePage() {
         // ══ النسخة الإنجليزية ══
         new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:100}, children:[enRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
         new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:80},  children:[enRun(enVal('specialization_en','specialization'),{size:28,color:'666666'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:240}, children:[enRun([tr(p.location),p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:240}, children:[enRun([tr(p.location),tr(p.nationality),p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
 
         enSec('PROFESSIONAL SUMMARY'), enPara(p.summary_en||'',{spacing:{after:200}}),
         enSec('KEY INFORMATION'),

@@ -1,0 +1,1311 @@
+===== lib/constants.js =====
+export const STAGES = [
+  { id: 'basics',       icon: '👤', ar: 'المعلومات الأساسية', en: 'Basic Info' },
+  { id: 'experience',   icon: '💼', ar: 'الخبرة والمسيرة',    en: 'Experience' },
+  { id: 'fit',          icon: '🎯', ar: 'الكفاءة والملاءمة',  en: 'Fit & Role' },
+  { id: 'achievements', icon: '🏆', ar: 'الإنجازات والقيمة', en: 'Achievements' },
+  { id: 'personality',  icon: '🤝', ar: 'المهارات الشخصية',  en: 'Personality' },
+  { id: 'expectations', icon: '🚀', ar: 'التوقعات والجاهزية', en: 'Expectations' },
+]
+
+export const INTERVIEW_SYSTEM = `You are an AI interviewer for Nukhba (نخبة) — a Saudi talent platform. Be warm, sharp, and professional.
+
+CRITICAL RULES — follow strictly:
+1. Review the ENTIRE conversation history before every response
+2. NEVER ask about information already provided — if candidate gave phone, name, age, city or any detail, skip it completely
+3. Continue naturally from exactly where the conversation left off
+4. Do NOT re-introduce yourself or re-greet after the first message
+5. Ask ONE question at a time only
+
+Language: Mirror the candidate — Arabic input → respond in Arabic. English input → respond in English.
+
+Current stage: {STAGE}
+
+Stage guidelines:
+- basics: First message only — greet briefly as نخبة and ask for name. Then sequentially: phone number (once only, explain it appears on CV), age, Saudi city, specialization/field, educational qualification.
+- experience: Career journey, last role, key responsibilities, years of experience, industries worked in.
+- fit: Ideal role, why they are suited for it, preferred work environment and culture.
+- achievements: Specific accomplishments with measurable impact and numbers. Ask for concrete examples.
+- personality: How they handle pressure, conflict resolution, leadership style, core work values.
+- expectations: Monthly salary in SAR, when they can start, openness to relocation, preferred work type.
+
+When ALL questions in current stage are answered, end your message with exactly: [STAGE_COMPLETE]
+
+Style: Concise — 1 sentence acknowledgment + 1 question. Be human and natural, not robotic.`
+
+export const PROFILE_SYSTEM = `You are a professional HR analyst. Extract a comprehensive bilingual candidate profile from this interview transcript.
+
+CRITICAL: Return ONLY valid JSON. No markdown, no backticks, no extra text before or after.
+
+LANGUAGE RULES (strictly follow):
+- Arabic fields (name, location, specialization, etc.): keep in Arabic as stated by candidate
+- ALL "_en" fields: must be written in FLUENT, NATURAL English — not word-for-word translation
+- achievements_en: translate each achievement to professional English, preserve numbers and metrics exactly
+- strengths_en: translate to natural English professional language
+- soft_skills_en: use standard English HR terminology
+- summary_en: write a polished 3-sentence English professional summary
+- salary_expectation_en: format as "X,XXX SAR/month" (convert Arabic numbers if needed)
+- availability_en: "Immediately" / "Within 2 weeks" / "Within 1 month" / "Within 3 months"
+- open_to_relocation_en: "Yes, open to relocation" / "No, prefer [city]" / "Flexible"
+- experience_years_en: "X years" format
+- last_role_en: translate job title to English HR standard
+- qualification_en: "High School Diploma" / "Bachelor's in [field]" / "Master's in [field]" / "Currently in High School"
+
+JSON structure:
+{
+  "name": "",
+  "phone": "",
+  "age": "",
+  "location": "",
+  "specialization": "",
+  "specialization_en": "",
+  "qualification": "",
+  "qualification_en": "",
+  "experience_years": "",
+  "experience_years_en": "",
+  "last_role": "",
+  "last_role_en": "",
+  "industries": [],
+  "key_responsibilities": [],
+  "ideal_role": "",
+  "work_environment": "",
+  "achievements": [],
+  "achievements_en": [],
+  "soft_skills": [],
+  "soft_skills_en": [],
+  "work_values": [],
+  "work_values_en": [],
+  "strengths": [],
+  "strengths_en": [],
+  "salary_expectation": "",
+  "salary_expectation_en": "",
+  "availability": "",
+  "availability_en": "",
+  "open_to_relocation": "",
+  "open_to_relocation_en": "",
+  "preferred_work_type": "",
+  "summary_ar": "",
+  "summary_en": "",
+  "overall_score": 0,
+  "flags": []
+}
+
+Scoring (overall_score 0-100):
+- 90-100: Exceptional candidate, clear achievements with metrics, excellent communication
+- 70-89: Strong candidate, solid experience, good self-awareness
+- 50-69: Average candidate, some experience but vague answers
+- 30-49: Weak candidate, limited experience or poor communication
+- 0-29: Very weak, major gaps or contradictions
+
+flags: List specific concerns (vague answers, gaps in experience, unrealistic expectations, contradictions).
+summary_ar: 3 professional sentences in Arabic capturing the candidate's value proposition.
+summary_en: 3 polished sentences in English — write as if for a LinkedIn profile.`
+
+===== app/candidate/profile/page.js =====
+'use client'
+import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
+
+function tr(text) {
+  if (!text) return '—'
+  const map = {
+    'فوري':'Immediately','فوراً':'Immediately','فورا':'Immediately',
+    'نعم':'Yes','لا':'No','لا يوجد':'None','غير محدد':'Not specified',
+    'عن بُعد':'Remote','عن بعد':'Remote',
+    'دوام كامل':'Full-time','دوام جزئي':'Part-time','هجين':'Hybrid',
+    'شهر واحد':'1 month','شهران':'2 months','ثلاثة أشهر':'3 months',
+    'أسبوع':'1 week','أسبوعان':'2 weeks',
+    'ثانوية عامة':'High School','بكالوريوس':"Bachelor's Degree",
+    'ماجستير':"Master's Degree",'دكتوراه':'PhD','دبلوم':'Diploma',
+    'القصيم':'Al-Qassim','الرياض':'Riyadh','جدة':'Jeddah',
+    'الدمام':'Dammam','المدينة المنورة':'Madinah','مكة المكرمة':'Makkah',
+  }
+  if (map[text.trim()]) return map[text.trim()]
+  return text.replace(/ريال سعودي/gi,'SAR').replace(/ريال/gi,'SAR').replace(/شهرياً/gi,'/month')
+}
+
+const G  = '#c8a04a'
+const GD = '#7a5e28'
+
+function CVContent({ p, lang='ar' }) {
+  const isAr = lang === 'ar'
+  const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
+  const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF] || []).map(tr)
+
+  return (
+    <div style={{ background:'#080810', fontFamily:"'Tajawal',sans-serif", direction:isAr?'rtl':'ltr', width:'100%' }}>
+      <div style={{ background:`linear-gradient(135deg,#1a1a2e,#2a1a0e)`, padding:'32px 36px', textAlign:'center', borderBottom:`2px solid ${G}` }}>
+        <div style={{ fontSize:26, fontWeight:800, color:'#f8f5ef', marginBottom:6 }}>{p.name}</div>
+        <div style={{ fontSize:14, color:G, marginBottom:6 }}>{isAr ? p.specialization : enVal('specialization_en','specialization')}</div>
+        <div style={{ fontSize:12, color:'#7a7690', display:'flex', justifyContent:'center', gap:16, flexWrap:'wrap' }}>
+          {p.location && <span>📍 {isAr ? p.location : tr(p.location)}</span>}
+          {p.phone && <span>📱 {p.phone}</span>}
+        </div>
+      </div>
+      <div style={{ padding:'24px 32px' }}>
+        {(isAr ? p.summary_ar : p.summary_en) && (
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الملخص المهني':'Professional Summary'}</div>
+            <p style={{ fontSize:13, color:'#ede8df', lineHeight:1.85 }}>{isAr ? p.summary_ar : p.summary_en}</p>
+          </div>
+        )}
+        <div style={{ marginBottom:20 }}>
+          <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'المعلومات الأساسية':'Key Information'}</div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+            {(isAr ? [
+              ['سنوات الخبرة', p.experience_years],['آخر وظيفة', p.last_role],
+              ['المؤهل', p.qualification],['الراتب المتوقع', p.salary_expectation],
+              ['الإتاحة', p.availability],['التنقل', p.open_to_relocation],
+            ] : [
+              ['Experience', enVal('experience_years_en','experience_years')],['Last Role', enVal('last_role_en','last_role')],
+              ['Qualification', enVal('qualification_en','qualification')],['Salary Expected', enVal('salary_expectation_en','salary_expectation')],
+              ['Availability', enVal('availability_en','availability')],['Relocation', enVal('open_to_relocation_en','open_to_relocation')],
+            ]).filter(([,v]) => v && v !== '—').map(([l,v]) => (
+              <div key={l} style={{ background:'#13131f', borderRadius:8, padding:'9px 12px' }}>
+                <div style={{ fontSize:10, color:'#7a7690', marginBottom:2 }}>{l}</div>
+                <div style={{ fontSize:12, color:'#ede8df', fontWeight:600 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {p.achievements?.length > 0 && (
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'الإنجازات':'Achievements'}</div>
+            {(isAr ? p.achievements : enArr('achievements_en','achievements')).map((a,i) => (
+              <div key={i} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'flex-start' }}>
+                <span style={{ color:G, fontSize:12, flexShrink:0, marginTop:2 }}>◆</span>
+                <span style={{ fontSize:13, color:'#ede8df', lineHeight:1.75 }}>{a}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {p.strengths?.length > 0 && (
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:'#4a9c6e', letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid #4a9c6e`, marginBottom:14 }}>{isAr?'نقاط القوة':'Strengths'}</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+              {(isAr ? p.strengths : enArr('strengths_en','strengths')).map((s,i) => (
+                <div key={i} style={{ display:'flex', gap:6, alignItems:'center' }}>
+                  <span style={{ color:'#4a9c6e', fontSize:12 }}>✓</span>
+                  <span style={{ fontSize:12, color:'#ede8df' }}>{s}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {p.soft_skills?.length > 0 && (
+          <div style={{ marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:800, color:G, letterSpacing: isAr ? 0 : 3, textTransform: isAr ? 'none' : 'uppercase', paddingBottom:7, borderBottom:`2px solid ${G}`, marginBottom:14 }}>{isAr?'المهارات':'Skills'}</div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:7 }}>
+              {(isAr ? p.soft_skills : enArr('soft_skills_en','soft_skills')).map((s,i) => (
+                <span key={i} style={{ padding:'4px 12px', borderRadius:20, fontSize:11, background:'#13131f', border:`1px solid ${G}`, color:G }}>{s}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        <div style={{ marginTop:20, paddingTop:12, borderTop:'1px solid #252538', textAlign:'center', fontSize:10, color:'#7a7690' }}>
+          {isAr ? 'نخبة · nukhbahr.com' : 'Nukhba · nukhbahr.com'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function ProfilePage() {
+  const [profile, setProfile]             = useState(null)
+  const [editedProfile, setEditedProfile] = useState(null)
+  const [isPaid, setIsPaid]               = useState(false)
+  const [candidateId, setCandidateId]     = useState(null)
+  const [loading, setLoading]             = useState({word:false, imgAr:false, imgEn:false})
+  const [copied, setCopied]               = useState(false)
+  const [editMode, setEditMode]           = useState(false)
+  const [editLang, setEditLang]           = useState('ar')
+  const [editSaved, setEditSaved]         = useState(false)
+  const arRef = useRef(null)
+  const enRef = useRef(null)
+
+  useEffect(() => {
+    const stored = sessionStorage.getItem('nukhba_profile')
+    const edited = localStorage.getItem('nukhba_profile_edited')
+    const cid    = sessionStorage.getItem('nukhba_candidate_id')
+    const paid   = sessionStorage.getItem('nukhba_paid') === 'true'
+    if (stored) {
+      const p = JSON.parse(stored)
+      setProfile(p)
+      // نمزج التعديلات مع الملف الأصلي للحفاظ على الحقول الإنجليزية
+      setEditedProfile(edited ? { ...p, ...JSON.parse(edited) } : p)
+    }
+    if (cid) setCandidateId(cid)
+    if (paid) setIsPaid(true)
+    if (cid && !paid) {
+      fetch(`/api/candidates/${cid}/paid`).then(r => r.json()).then(d => {
+        if (d.is_paid) { setIsPaid(true); sessionStorage.setItem('nukhba_paid','true') }
+      }).catch(() => {})
+    }
+  }, [])
+
+  function setLoad(key, val) { setLoading(p => ({...p, [key]:val})) }
+  function lockAlert() { alert('ادفع 39 ريال للحصول على CV + نشر ملفك للشركات + محتوى LinkedIn') }
+
+  function saveEdits() {
+    // نحفظ التعديلات مع الحفاظ على الحقول الأصلية غير المعدّلة
+    const merged = { ...profile, ...editedProfile }
+    localStorage.setItem('nukhba_profile_edited', JSON.stringify(merged))
+    setEditedProfile(merged)
+    setEditMode(false)
+    setEditSaved(true)
+    setTimeout(() => setEditSaved(false), 2500)
+  }
+
+  function resetEdits() {
+    setEditedProfile(profile)
+    localStorage.removeItem('nukhba_profile_edited')
+    setEditMode(false)
+  }
+
+  function updateField(field, value) {
+    setEditedProfile(p => ({ ...p, [field]: value }))
+  }
+
+  function updateArrayField(field, index, value) {
+    setEditedProfile(p => {
+      const arr = [...(p[field] || [])]
+      arr[index] = value
+      return { ...p, [field]: arr }
+    })
+  }
+
+  function addArrayItem(field) {
+    setEditedProfile(p => ({ ...p, [field]: [...(p[field] || []), ''] }))
+  }
+
+  function removeArrayItem(field, index) {
+    setEditedProfile(p => {
+      const arr = [...(p[field] || [])]
+      arr.splice(index, 1)
+      return { ...p, [field]: arr }
+    })
+  }
+
+  async function downloadImage(ref, filename, key) {
+    if (!isPaid) return lockAlert()
+    setLoad(key, true)
+    try {
+      const html2canvas = (await import('html2canvas')).default
+      const canvas = await html2canvas(ref.current, { backgroundColor:'#080810', scale:2, useCORS:true, logging:false })
+      const a = document.createElement('a')
+      a.href = canvas.toDataURL('image/png')
+      a.download = filename
+      a.click()
+    } catch(e) { alert('خطأ: ' + e.message) }
+    setLoad(key, false)
+  }
+
+ async function downloadWord() {
+    if (!isPaid) return lockAlert()
+    setLoad('word', true)
+    try {
+      const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } = await import('docx')
+      const p = editedProfile
+      const enVal = (enF, arF) => p[enF] || tr(p[arF] || '')
+      const enArr = (enF, arF) => p[enF]?.length > 0 ? p[enF] : (p[arF]||[]).map(tr)
+
+      // ── مساعدات عربية (RTL كامل) ──
+      const arRun  = (text, opts={}) => new TextRun({ text, rtl:true, rightToLeft:true, font:{name:'Arial'}, size:22, ...opts })
+      const arPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, rightToLeft:true, rightToLeft:true, ...opts, children:[arRun(text, {size:opts.size||22})] })
+      const arSec  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[arRun(t,{bold:true,size:26,color:'C8A04A'})] })
+      const arRow = (l,v) => new Paragraph({ 
+  alignment:AlignmentType.RIGHT, 
+  bidirectional:true, 
+  spacing:{after:80}, 
+  children:[
+    arRun(`${l}: `, {bold:true, size:20, color:'C8A04A'}),
+    arRun(`${v||'—'}`, {size:20}),
+  ]
+})
+      const arBul  = t => new Paragraph({ alignment:AlignmentType.RIGHT, bidirectional:true, spacing:{after:80}, children:[arRun(`• ${t||''}`,{size:20})] })
+
+      // ── مساعدات إنجليزية (LTR كامل) ──
+      const enRun  = (text, opts={}) => new TextRun({ text, rtl:false, font:{name:'Calibri'}, size:22, ...opts })
+      const enPara = (text, opts={}) => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, ...opts, children:[enRun(text, {size:opts.size||22})] })
+      const enSec  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'C8A04A'}}, spacing:{after:120}, children:[enRun(t,{bold:true,size:26,color:'C8A04A'})] })
+      const enRow  = (l,v) => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, spacing:{after:80}, children:[
+        enRun(`${l}: `, {bold:true, size:20, color:'C8A04A'}),
+        enRun(v||'—', {size:20}),
+      ]})
+      const enBul  = t => new Paragraph({ alignment:AlignmentType.LEFT, bidirectional:false, spacing:{after:80}, children:[enRun(`• ${t||''}`,{size:20})] })
+      const sp = () => new Paragraph({text:'',spacing:{after:160}})
+
+      const doc = new Document({ sections:[{ properties:{ page:{margin:{top:900,right:900,bottom:900,left:900}}, bidi:true }, children:[
+
+        // ══ النسخة العربية ══
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:100}, children:[arRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:80},  children:[arRun(p.specialization||'',{size:28,color:'666666'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:true, spacing:{after:240}, children:[arRun([p.location,p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
+
+        arSec('الملخص المهني'), arPara(p.summary_ar||'',{spacing:{after:200}}),
+        arSec('المعلومات الأساسية'),
+        arRow('سنوات الخبرة', p.experience_years),
+        arRow('آخر وظيفة', p.last_role),
+        arRow('المؤهل', p.qualification),
+        arRow('الراتب المتوقع', p.salary_expectation),
+        arRow('الإتاحة', p.availability),
+        arRow('التنقل', p.open_to_relocation), sp(),
+        ...(p.achievements?.length>0 ? [arSec('الإنجازات'), ...p.achievements.map(a=>arBul(a)), sp()] : []),
+        ...(p.strengths?.length>0    ? [arSec('نقاط القوة'), ...p.strengths.map(s=>arBul(s)), sp()] : []),
+        ...(p.soft_skills?.length>0  ? [arSec('المهارات'), arPara(p.soft_skills.join('  •  '),{spacing:{after:200}})] : []),
+
+        // ══ فاصل صفحة ══
+        new Paragraph({children:[new TextRun({text:''})], pageBreakBefore:true}),
+
+        // ══ النسخة الإنجليزية ══
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:100}, children:[enRun(p.name||'',{bold:true,size:56,color:'C8A04A'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:80},  children:[enRun(enVal('specialization_en','specialization'),{size:28,color:'666666'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER, bidirectional:false, spacing:{after:240}, children:[enRun([tr(p.location),p.phone].filter(Boolean).join('  |  '),{size:22,color:'888888'})]}),
+
+        enSec('PROFESSIONAL SUMMARY'), enPara(p.summary_en||'',{spacing:{after:200}}),
+        enSec('KEY INFORMATION'),
+        enRow('Experience',     enVal('experience_years_en','experience_years')),
+        enRow('Last Role',      enVal('last_role_en','last_role')),
+        enRow('Qualification',  enVal('qualification_en','qualification')),
+        enRow('Salary Expected',enVal('salary_expectation_en','salary_expectation')),
+        enRow('Availability',   enVal('availability_en','availability')),
+        enRow('Relocation',     enVal('open_to_relocation_en','open_to_relocation')), sp(),
+        ...(p.achievements?.length>0 ? [enSec('ACHIEVEMENTS'), ...enArr('achievements_en','achievements').map(a=>enBul(a)), sp()] : []),
+        ...(p.strengths?.length>0    ? [enSec('STRENGTHS'),    ...enArr('strengths_en','strengths').map(s=>enBul(s)), sp()] : []),
+        ...(p.soft_skills?.length>0  ? [enSec('SKILLS'),       enPara(enArr('soft_skills_en','soft_skills').join('  •  '),{spacing:{after:200}})] : []),
+
+        new Paragraph({alignment:AlignmentType.CENTER, spacing:{before:400}, children:[enRun('Generated by Nukhba · nukhbahr.com',{size:16,color:'aaaaaa',italics:true})]})
+
+      ]}]})
+
+      const blob = await Packer.toBlob(doc)
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href=url; a.download=`${p.name||'CV'}-Nukhba.docx`; a.click()
+      URL.revokeObjectURL(url)
+    } catch(e) { alert('خطأ: ' + e.message) }
+    setLoad('word', false)
+  }
+
+  function copyLinkedIn() {
+    if (!isPaid) return lockAlert()
+    const p = editedProfile
+    const text = `🔷 العنوان الوظيفي:\n${p.specialization || ''} | ${p.experience_years || ''} | ${p.location || ''}\n\n🔷 النبذة الشخصية:\n${p.summary_ar || ''}\n\n🔷 أبرز الإنجازات:\n${(p.achievements || []).map(a => `• ${a}`).join('\n')}\n\n🔷 المهارات:\n${(p.soft_skills || []).join(' | ')}\n\n─────────────\nتم بناء هذا الملف بواسطة نخبة · nukhbahr.com`
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 3000)
+  }
+
+  if (!profile) return (
+    <div style={{ minHeight:'100vh', background:'#080810', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:20, fontFamily:"'Tajawal',sans-serif" }}>
+      <div style={{ fontSize:48 }}>🔍</div>
+      <p style={{ color:'#7a7690', fontSize:16 }}>لا يوجد ملف — ابدأ مقابلة أولاً</p>
+      <Link href="/candidate/interview" style={{ padding:'12px 28px', borderRadius:10, fontSize:14, fontWeight:700, background:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', textDecoration:'none' }}>ابدأ المقابلة</Link>
+    </div>
+  )
+
+  const p = editedProfile || profile
+
+  return (
+    <>
+      <style>{`
+       @media print {
+  .no-print { display:none!important }
+  .cv-ar { page-break-after: always }
+  .cv-section { page-break-inside: avoid !important; }
+  
+  body { 
+    background:#ffffff!important; 
+    color:#000000!important;
+    -webkit-print-color-adjust:exact; 
+    print-color-adjust:exact; 
+    margin:0; 
+  }
+  
+  * { 
+    background:#ffffff!important; 
+    color:#000000!important;
+    border-color:#dddddd!important;
+  }
+  
+  [style*="color:#c8a04a"], [style*="color:var(--gold)"] {
+    color:#8a6322!important;
+  }
+  
+  @page { margin:15mm; size:A4; }
+}
+        .edit-input { width:100%; background:#13131f; border:1px solid #252538; border-radius:8px; padding:8px 12px; color:#ede8df; font-family:'Tajawal',sans-serif; font-size:13px; outline:none; resize:vertical; transition:border-color .2s; }
+        .edit-input:focus { border-color:#c8a04a; }
+      `}</style>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+
+      {/* Topbar */}
+      <div className="no-print" style={{ position:'sticky', top:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', height:60, background:'rgba(8,8,16,.95)', backdropFilter:'blur(16px)', borderBottom:'1px solid #252538' }}>
+        <Link href="/" style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${GD},${G})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', textDecoration:'none' }}>نخبة</Link>
+        <div style={{ display:'flex', gap:8 }}>
+          <Link href="/candidate/profiles" style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>← ملفاتي</Link>
+          <Link href="/candidate/dashboard" style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:'1px solid #252538', color:'#7a7690', background:'transparent', textDecoration:'none' }}>لوحة التحكم</Link>
+        </div>
+      </div>
+
+      <div style={{ background:'#080810', minHeight:'100vh', padding:'28px 20px 60px' }}>
+        <div style={{ maxWidth:760, margin:'0 auto' }}>
+
+          {/* أزرار التحميل / قفل */}
+          <div className="no-print" style={{ marginBottom:24 }}>
+            <div style={{ fontSize:18, fontWeight:800, color:'#ede8df', marginBottom:4 }}>ملفك الاحترافي</div>
+            <div style={{ fontSize:13, color:'#7a7690', marginBottom:16 }}>صفحة عربية + صفحة إنجليزية</div>
+
+            {!isPaid ? (
+              <div style={{ background:'rgba(200,160,74,.05)', border:'2px solid rgba(200,160,74,.3)', borderRadius:14, padding:'24px', textAlign:'center', marginBottom:16 }}>
+                <div style={{ fontSize:32, marginBottom:10 }}>🔒</div>
+                <div style={{ fontSize:15, fontWeight:700, color:'#ede8df', marginBottom:8 }}>ادفع 39 ريال لتحميل ملفك</div>
+                <p style={{ fontSize:13, color:'#7a7690', lineHeight:1.75, marginBottom:18 }}>
+                  CV احترافي + تعديل شخصي + نشر للشركات + محتوى LinkedIn
+                </p>
+                <button onClick={() => alert('Moyasar — قريباً!')} style={{ padding:'12px 28px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  ادفع 39 ريال وانطلق ←
+                </button>
+                <p style={{ fontSize:11, color:'#7a7690', marginTop:10 }}>يمكنك التصفح أدناه — التحميل بعد الدفع</p>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10, marginBottom:10 }}>
+                  {[
+                    { label:'📄 PDF', onClick:() => window.print(), bg:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', border:'none' },
+                    { label:loading.word?'⏳...':'📝 Word', onClick:downloadWord, bg:'transparent', color:G, border:`1px solid ${G}` },
+                    { label:loading.imgAr?'⏳...':'🖼️ صورة عربي', onClick:() => downloadImage(arRef,`${p.name}-AR.png`,'imgAr'), bg:'transparent', color:'#4a9c6e', border:'1px solid #4a9c6e' },
+                    { label:loading.imgEn?'⏳...':'🖼️ Image EN', onClick:() => downloadImage(enRef,`${p.name}-EN.png`,'imgEn'), bg:'transparent', color:'#4a6fa5', border:'1px solid #4a6fa5' },
+                  ].map((btn,i) => (
+                    <button key={i} onClick={btn.onClick} style={{ padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:btn.bg, border:btn.border, color:btn.color, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
+
+                <button onClick={copyLinkedIn} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:copied?'rgba(0,119,181,.15)':'transparent', border:'1px solid #0077b5', color:'#0077b5', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:10, transition:'all .2s' }}>
+                  {copied ? '✓ تم النسخ! افتح LinkedIn والصق' : '💼 انسخ بياناتك لـ LinkedIn'}
+                </button>
+
+                <button onClick={() => setEditMode(!editMode)} style={{ width:'100%', padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, background:editMode?'rgba(200,160,74,.1)':'transparent', border:`1px solid ${editMode?G:'#252538'}`, color:editMode?G:'#7a7690', cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
+                  {editMode ? '← إغلاق التعديل' : '✏️ عدّل ملفك الشخصي'}
+                </button>
+
+                {editSaved && (
+                  <div style={{ marginTop:8, padding:'8px 14px', background:'rgba(74,156,110,.1)', border:'1px solid rgba(74,156,110,.3)', borderRadius:8, fontSize:12, color:'#4a9c6e', textAlign:'center' }}>
+                    ✓ تم حفظ التعديلات — ستظهر في CV المحمّل
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── وضع التعديل ── */}
+          {editMode && isPaid && (
+            <div className="no-print" style={{ background:'#0e0e1a', border:`1px solid ${G}33`, borderRadius:16, padding:24, marginBottom:24 }}>
+              <div style={{ fontSize:15, fontWeight:800, color:'#ede8df', marginBottom:4 }}>✏️ تعديل ملفك الشخصي</div>
+              <div style={{ fontSize:12, color:'#7a7690', marginBottom:16 }}>التعديلات تظهر في CV المحمّل فقط — الشركات ترى الملف الأصلي الموثّق</div>
+
+              {/* تبويب اللغة */}
+              <div style={{ display:'flex', gap:8, marginBottom:20, background:'#13131f', borderRadius:10, padding:4 }}>
+                {[['ar','🇸🇦 العربي'],['en','🇬🇧 English']].map(([lang,label]) => (
+                  <button key={lang} onClick={() => setEditLang(lang)} style={{ flex:1, padding:'9px', borderRadius:8, border:'none', background:editLang===lang?`linear-gradient(135deg,${GD},${G})`:'transparent', color:editLang===lang?'#06060e':'#7a7690', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", transition:'all .2s' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+                {editLang === 'ar' ? (
+                  <>
+                    {/* الملخص العربي */}
+                    <div>
+                      <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>الملخص المهني</label>
+                      <textarea className="edit-input" rows={4} value={editedProfile?.summary_ar || ''} onChange={e => updateField('summary_ar', e.target.value)}/>
+                    </div>
+
+                    {/* الإنجازات */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>الإنجازات</label>
+                        <button onClick={() => addArrayItem('achievements')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
+                      </div>
+                      {(editedProfile?.achievements || []).map((a,i) => (
+                        <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                          <textarea className="edit-input" rows={2} value={a} onChange={e => updateArrayField('achievements', i, e.target.value)} style={{ flex:1 }}/>
+                          <button onClick={() => removeArrayItem('achievements', i)} style={{ padding:'0 10px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', cursor:'pointer', fontSize:14, flexShrink:0 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* المهارات */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>المهارات</label>
+                        <button onClick={() => addArrayItem('soft_skills')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ إضافة</button>
+                      </div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        {(editedProfile?.soft_skills || []).map((s,i) => (
+                          <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
+                            <input value={s} onChange={e => updateArrayField('soft_skills', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max((s||'').length, 4)}ch`, fontFamily:"'Tajawal',sans-serif" }}/>
+                            <button onClick={() => removeArrayItem('soft_skills', i)} style={{ background:'transparent', border:'none', color:'#7a7690', cursor:'pointer', fontSize:12, padding:'0 2px' }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {/* Professional Summary */}
+                    <div>
+                      <label style={{ fontSize:11, color:G, marginBottom:6, display:'block', fontWeight:700 }}>Professional Summary</label>
+                      <textarea className="edit-input" rows={4} value={editedProfile?.summary_en || ''} onChange={e => updateField('summary_en', e.target.value)} dir="ltr"/>
+                    </div>
+
+                    {/* Achievements EN */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>Achievements</label>
+                        <button onClick={() => addArrayItem('achievements_en')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ Add</button>
+                      </div>
+                      {(editedProfile?.achievements_en || []).map((a,i) => (
+                        <div key={i} style={{ display:'flex', gap:8, marginBottom:8 }}>
+                          <textarea className="edit-input" rows={2} value={a} onChange={e => updateArrayField('achievements_en', i, e.target.value)} style={{ flex:1 }} dir="ltr"/>
+                          <button onClick={() => removeArrayItem('achievements_en', i)} style={{ padding:'0 10px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', cursor:'pointer', fontSize:14, flexShrink:0 }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Skills EN */}
+                    <div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                        <label style={{ fontSize:11, color:G, fontWeight:700 }}>Skills</label>
+                        <button onClick={() => addArrayItem('soft_skills_en')} style={{ fontSize:11, color:G, background:'transparent', border:`1px solid ${G}`, borderRadius:6, padding:'3px 10px', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>+ Add</button>
+                      </div>
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                        {(editedProfile?.soft_skills_en || []).map((s,i) => (
+                          <div key={i} style={{ display:'flex', alignItems:'center', gap:4, background:'#13131f', border:`1px solid ${G}33`, borderRadius:20, padding:'4px 10px' }}>
+                            <input value={s} onChange={e => updateArrayField('soft_skills_en', i, e.target.value)} style={{ background:'transparent', border:'none', color:'#ede8df', fontSize:12, outline:'none', width:`${Math.max((s||'').length, 4)}ch`, fontFamily:'Calibri, sans-serif' }} dir="ltr"/>
+                            <button onClick={() => removeArrayItem('soft_skills_en', i)} style={{ background:'transparent', border:'none', color:'#7a7690', cursor:'pointer', fontSize:12, padding:'0 2px' }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div style={{ display:'flex', gap:10, marginTop:20 }}>
+                <button onClick={saveEdits} style={{ flex:1, padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', fontSize:14, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  حفظ التعديلات ✓
+                </button>
+                <button onClick={resetEdits} style={{ padding:'11px 16px', borderRadius:10, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                  إعادة تعيين
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Arabic CV */}
+          <div className="cv-ar" ref={arRef} style={{ marginBottom:32, borderRadius:16, overflow:'hidden', border:'1px solid #252538', direction:'rtl' }}>
+            <CVContent p={p} lang="ar"/>
+          </div>
+
+          {/* English CV */}
+          <div className="cv-en" ref={enRef} style={{ borderRadius:16, overflow:'hidden', border:'1px solid #252538', direction:'ltr' }}>
+            <CVContent p={p} lang="en"/>
+          </div>
+
+        </div>
+      </div>
+    </>
+  )
+}
+
+===== app/company/post-job/page.js =====
+'use client'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+
+const C = {
+  bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
+  border:'#252538', gold:'#c8a04a', goldDk:'#7a5e28', text:'#ede8df', muted:'#7a7690'
+}
+
+export default function PostJob() {
+  const router = useRouter()
+  const [user, setUser]       = useState(null)
+  const [step, setStep]       = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [form, setForm]       = useState({
+    title:'', description:'', requirements:'',
+    location:'', salary_type:'hidden', salary_range:'', work_type:'full-time'
+  })
+  const [questions, setQuestions] = useState([])
+  const [questionsMode, setQuestionsMode] = useState('ai') // 'ai' | 'manual'
+
+  useEffect(() => {
+    const u = localStorage.getItem('nukhba_user')
+    if (!u) { router.push('/auth/login'); return }
+    const parsed = JSON.parse(u)
+    if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
+    setUser(parsed)
+  }, [])
+
+  async function generateQuestions() {
+    if (!form.title || !form.description || !form.requirements) {
+      alert('يرجى تعبئة اسم الوظيفة والوصف والمتطلبات')
+      return
+    }
+    setLoading(true)
+    try {
+      const res = await fetch('/api/chat', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          messages:[{ role:'user', content:`أنت متخصص HR خبير. بناءً على هذه الوظيفة اكتب 8 أسئلة مقابلة ذكية ومخصصة.\n\nالوظيفة: ${form.title}\nالوصف: ${form.description}\nالمتطلبات: ${form.requirements}\n\nأرجع JSON فقط: {"questions":["سؤال 1","سؤال 2","سؤال 3","سؤال 4","سؤال 5","سؤال 6","سؤال 7","سؤال 8"]}` }],
+          systemPrompt:'أنت متخصص HR. أرجع JSON فقط بدون أي نص إضافي.'
+        })
+      })
+      const data   = await res.json()
+      const parsed = JSON.parse(data.text.replace(/```json|```/g,'').trim())
+      setQuestions(parsed.questions)
+      setStep(2)
+    } catch(e) { alert('خطأ: ' + e.message) }
+    setLoading(false)
+  }
+
+  function goToManualQuestions() {
+    if (!form.title || !form.description || !form.requirements) {
+      alert('يرجى تعبئة اسم الوظيفة والوصف والمتطلبات أولاً')
+      return
+    }
+    setQuestions([''])
+    setStep(2)
+  }
+
+  async function publishJob() {
+    const validQuestions = questions.filter(q => q.trim())
+    if (validQuestions.length === 0) {
+      alert('يرجى إضافة سؤال واحد على الأقل')
+      return
+    }
+    setLoading(true)
+    try {
+      const salary = form.salary_type === 'hidden' ? 'يُحدد بعد المقابلة' : form.salary_range
+      const res = await fetch('/api/jobs', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          ...form,
+          salary_range: salary,
+          salary_visible: form.salary_type === 'range',
+          questions: validQuestions,
+          company_id: user.id,
+          company_name: user.name
+        })
+      })
+      const data = await res.json()
+      if (data.error) throw new Error(data.error)
+      setStep(3)
+    } catch(e) { alert('خطأ: ' + e.message) }
+    setLoading(false)
+  }
+
+  const updateForm = (key, val) => setForm(p => ({...p, [key]:val}))
+  const addQuestion    = () => setQuestions(p => [...p, ''])
+  const deleteQuestion = i  => setQuestions(p => p.filter((_,idx) => idx !== i))
+  const updateQuestion = (i,val) => setQuestions(p => { const n=[...p]; n[i]=val; return n })
+
+  if (!user) return null
+
+  return (
+    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
+        <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · للشركات</div>
+        <Link href="/company/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}` }}>← لوحة التحكم</Link>
+      </div>
+
+      <div style={{ maxWidth:700, margin:'0 auto', padding:'32px 24px' }}>
+
+        {/* Steps */}
+        <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:32 }}>
+          {[['1','تفاصيل الوظيفة'],['2','أسئلة المقابلة'],['3','تم النشر']].map(([num,label],i) => (
+            <div key={num} style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
+              <div style={{ width:32, height:32, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, flexShrink:0, background:step>i?C.gold:step===i+1?`linear-gradient(135deg,${C.goldDk},${C.gold})`:C.surface, color:step>=i+1?'#06060e':C.muted, border:step<i+1?`1px solid ${C.border}`:'none' }}>{step>i+1?'✓':num}</div>
+              <span style={{ fontSize:12, color:step===i+1?C.gold:C.muted, whiteSpace:'nowrap' }}>{label}</span>
+              {i<2 && <div style={{ flex:1, height:1, background:step>i+1?C.gold:C.border }}/>}
+            </div>
+          ))}
+        </div>
+
+        {/* STEP 1 */}
+        {step===1 && (
+          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32 }}>
+            <h1 style={{ fontSize:22, fontWeight:800, marginBottom:6 }}>تفاصيل الوظيفة</h1>
+            <p style={{ fontSize:13, color:C.muted, marginBottom:28 }}>املأ تفاصيل الوظيفة ثم اختر طريقة أسئلة المقابلة</p>
+
+            <div style={{ display:'flex', flexDirection:'column', gap:18 }}>
+              {/* Title */}
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:6, display:'block' }}>مسمى الوظيفة *</label>
+                <input value={form.title} onChange={e => updateForm('title',e.target.value)}
+                  placeholder="مثال: مدير مستودعات — محاسب مالي"
+                  style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+              </div>
+
+              {/* Description */}
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:6, display:'block' }}>وصف الوظيفة *</label>
+                <textarea value={form.description} onChange={e => updateForm('description',e.target.value)}
+                  placeholder="اشرح طبيعة العمل والمهام الرئيسية..." rows={3}
+                  style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14, resize:'vertical' }}/>
+              </div>
+
+              {/* Requirements */}
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:6, display:'block' }}>المتطلبات والمؤهلات *</label>
+                <textarea value={form.requirements} onChange={e => updateForm('requirements',e.target.value)}
+                  placeholder="سنوات الخبرة، الشهادات، المهارات المطلوبة..." rows={3}
+                  style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14, resize:'vertical' }}/>
+              </div>
+
+              {/* Location + Work type */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14 }}>
+                <div>
+                  <label style={{ fontSize:12, color:C.muted, marginBottom:6, display:'block' }}>الموقع</label>
+                  <input value={form.location} onChange={e => updateForm('location',e.target.value)}
+                    placeholder="الرياض — جدة — عن بُعد"
+                    style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+                </div>
+                <div>
+                  <label style={{ fontSize:12, color:C.muted, marginBottom:6, display:'block' }}>نوع العمل</label>
+                  <select value={form.work_type} onChange={e => updateForm('work_type',e.target.value)}
+                    style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}>
+                    <option value="full-time">دوام كامل</option>
+                    <option value="part-time">دوام جزئي</option>
+                    <option value="remote">عن بُعد</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* الراتب — اختياري */}
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:10, display:'block' }}>الراتب</label>
+                <div style={{ display:'flex', gap:10, marginBottom:12 }}>
+                  {[
+                    ['hidden','يُحدد بعد المقابلة'],
+                    ['range','تحديد نطاق الراتب'],
+                  ].map(([val,label]) => (
+                    <button key={val} onClick={() => updateForm('salary_type',val)} style={{
+                      flex:1, padding:'10px', borderRadius:10, fontSize:13, cursor:'pointer',
+                      fontFamily:"'Tajawal',sans-serif",
+                      border:`1px solid ${form.salary_type===val?C.gold:C.border}`,
+                      background: form.salary_type===val?'rgba(200,160,74,.1)':'transparent',
+                      color: form.salary_type===val?C.gold:C.muted
+                    }}>{label}</button>
+                  ))}
+                </div>
+                {form.salary_type==='range' && (
+                  <input value={form.salary_range} onChange={e => updateForm('salary_range',e.target.value)}
+                    placeholder="مثال: ٨٠٠٠ — ١٢٠٠٠ ريال"
+                    style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'11px 16px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14 }}/>
+                )}
+                {form.salary_type==='hidden' && (
+                  <div style={{ padding:'10px 14px', background:'rgba(200,160,74,.05)', border:`1px solid rgba(200,160,74,.2)`, borderRadius:8, fontSize:12, color:C.muted }}>
+                    ℹ️ لن يظهر الراتب للمتقدمين — سيُحدد بعد المقابلة النهائية
+                  </div>
+                )}
+              </div>
+
+              {/* أسئلة المقابلة */}
+              <div>
+                <label style={{ fontSize:12, color:C.muted, marginBottom:10, display:'block' }}>طريقة أسئلة المقابلة</label>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+                  <button onClick={generateQuestions} disabled={loading} style={{
+                    padding:'14px', borderRadius:10, border:`1px solid ${C.gold}`,
+                    background:'rgba(200,160,74,.1)', color:C.gold,
+                    fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif",
+                    opacity:loading?.7:1
+                  }}>
+                    {loading?'⏳ جاري التوليد...':'✨ توليد بالذكاء الاصطناعي'}
+                  </button>
+                  <button onClick={goToManualQuestions} style={{
+                    padding:'14px', borderRadius:10, border:`1px solid ${C.border}`,
+                    background:'transparent', color:C.muted,
+                    fontSize:14, fontWeight:700, cursor:'pointer', fontFamily:"'Tajawal',sans-serif"
+                  }}>
+                    ✏️ أكتب أسئلتي بنفسي
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2 */}
+        {step===2 && (
+          <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:32 }}>
+            <h2 style={{ fontSize:20, fontWeight:800, marginBottom:6 }}>أسئلة المقابلة</h2>
+            <p style={{ fontSize:13, color:C.muted, marginBottom:24 }}>راجع الأسئلة وعدّلها أو احذفها أو أضف جديدة</p>
+
+            <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:16 }}>
+              {questions.map((q,i) => (
+                <div key={i} style={{ display:'flex', gap:10, alignItems:'flex-start' }}>
+                  <div style={{ width:28, height:28, borderRadius:'50%', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:700, color:'#06060e', flexShrink:0, marginTop:8 }}>{i+1}</div>
+                  <textarea value={q} onChange={e => updateQuestion(i,e.target.value)} rows={2}
+                    placeholder="اكتب سؤالك هنا..."
+                    style={{ flex:1, background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:14, resize:'vertical' }}/>
+                  <button onClick={() => deleteQuestion(i)} style={{ padding:'8px 12px', borderRadius:8, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", flexShrink:0, marginTop:4 }}>حذف</button>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={addQuestion} style={{ width:'100%', padding:'11px', borderRadius:10, border:`2px dashed ${C.border}`, background:'transparent', color:C.muted, fontSize:14, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:20 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor=C.gold; e.currentTarget.style.color=C.gold }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor=C.border; e.currentTarget.style.color=C.muted }}
+            >+ إضافة سؤال</button>
+
+            <div style={{ display:'flex', gap:12 }}>
+              <button onClick={() => setStep(1)} style={{ padding:'12px 24px', borderRadius:10, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:14, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>← رجوع</button>
+              <button onClick={publishJob} disabled={loading} style={{ flex:1, padding:'12px', borderRadius:10, border:'none', background:loading?C.border:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:loading?C.muted:'#06060e', fontSize:15, fontWeight:800, cursor:loading?'default':'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                {loading?'⏳ جاري النشر...':'🚀 نشر الوظيفة'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3 */}
+        {step===3 && (
+          <div style={{ background:C.card, border:`1px solid ${C.gold}`, borderRadius:16, padding:48, textAlign:'center' }}>
+            <div style={{ fontSize:56, marginBottom:16 }}>🎉</div>
+            <h2 style={{ fontSize:24, fontWeight:800, color:C.gold, marginBottom:8 }}>تم نشر الوظيفة!</h2>
+            <p style={{ fontSize:14, color:C.muted, marginBottom:32 }}>
+              وظيفة <strong style={{ color:C.text }}>{form.title}</strong> أصبحت متاحة للمتقدمين
+            </p>
+            <div style={{ display:'flex', gap:12, justifyContent:'center' }}>
+              <button onClick={() => { setStep(1); setForm({ title:'', description:'', requirements:'', location:'', salary_type:'hidden', salary_range:'', work_type:'full-time' }); setQuestions([]) }}
+                style={{ padding:'11px 24px', borderRadius:10, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:14, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                + نشر وظيفة أخرى
+              </button>
+              <Link href="/company/dashboard" style={{ padding:'11px 24px', borderRadius:10, fontSize:14, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e' }}>لوحة التحكم</Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+===== app/candidate/interview/InterviewClient.js =====
+cat > /mnt/user-data/outputs/InterviewClient-v2.js << 'JSEOF'
+'use client'
+import { useEffect, useState, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { STAGES, INTERVIEW_SYSTEM, PROFILE_SYSTEM } from '@/lib/constants'
+
+async function callChat(messages, systemPrompt) {
+  const res = await fetch('/api/chat', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ messages, systemPrompt }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data.text || ''
+}
+
+function Dots() {
+  return (
+    <div style={{ display:'flex', gap:5, alignItems:'center', padding:'13px 18px' }}>
+      {[0,1,2].map(i => <div key={i} style={{ width:7, height:7, borderRadius:'50%', background:'#c8a04a', animation:`pulse 1.3s ease-in-out ${i*.18}s infinite` }}/>)}
+      <style>{`@keyframes pulse{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}`}</style>
+    </div>
+  )
+}
+
+const GENERAL_SYSTEM = INTERVIEW_SYSTEM
+
+function buildJobSystem(job) {
+  const questionsText = job.questions?.map((q,i) => `${i+1}. ${q}`).join('\n') || ''
+  return `You are Nukhba's AI interviewer conducting a job interview.
+
+Mirror the candidate's language: Arabic → respond in Arabic. English → respond in English.
+
+You are interviewing for this specific position:
+- Job Title: ${job.title}
+- Company: ${job.company_name}
+- Location: ${job.location || 'غير محدد'}
+- Description: ${job.description}
+- Requirements: ${job.requirements}
+
+CRITICAL RULES:
+1. Review the ENTIRE conversation history before every response
+2. NEVER ask about information already provided
+3. Ask ONE question at a time only
+
+PHASE 1 - COLLECT CANDIDATE INFO (do this FIRST):
+Start by welcoming the candidate warmly in Arabic and introducing the job briefly.
+Then collect in order (ONE at a time):
+1. Full name (الاسم الكامل)
+2. Mobile number - tell them: "رقم جوالك سيظهر للشركة للتواصل معك"
+3. Email address (البريد الإلكتروني)
+
+After collecting all 3, say "شكراً، سنبدأ الآن بأسئلة المقابلة" then move to Phase 2.
+
+PHASE 2 - JOB INTERVIEW QUESTIONS:
+Use ONLY these questions provided by the company:
+${questionsText}
+
+After ALL questions are answered, say a warm closing and end with exactly: [STAGE_COMPLETE]`
+}
+
+export default function InterviewClient() {
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const jobId        = searchParams.get('jobId')
+
+  const [user, setUser]         = useState(null)
+  const [job, setJob]           = useState(null)
+  const [messages, setMessages] = useState([])
+  const [input, setInput]       = useState('')
+  const [typing, setTyping]     = useState(false)
+  const [stageIdx, setStageIdx] = useState(0)
+  const [genProfile, setGen]    = useState(false)
+  const [consented, setConsented] = useState(false)
+
+  const bottomRef = useRef(null)
+  const inputRef  = useRef(null)
+  const stageRef  = useRef(0)
+  const jobRef    = useRef(null)
+
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:'smooth' }) }, [messages, typing, genProfile])
+
+  useEffect(() => {
+    const u = localStorage.getItem('nukhba_user')
+    if (!u) { router.push('/auth/login'); return }
+    setUser(JSON.parse(u))
+  }, [])
+
+  useEffect(() => { stageRef.current = stageIdx }, [stageIdx])
+
+  async function startGeneralInterview() {
+    setTyping(true)
+    try {
+      const sys  = GENERAL_SYSTEM.replace('{STAGE}','basics')
+      const text = await callChat(
+        [{ role:'user', content:'Start the interview. Greet the candidate warmly in Arabic and ask for their name.' }],
+        sys
+      )
+      setMessages([{ role:'assistant', content:text.replace('[STAGE_COMPLETE]','').trim() }])
+    } catch(e) {
+      setMessages([{ role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
+    }
+    setTyping(false)
+  }
+
+  async function startJobInterview(jobData) {
+    setTyping(true)
+    try {
+      const sys  = buildJobSystem(jobData)
+      const text = await callChat(
+        [{ role:'user', content:`ابدأ مقابلة العمل لوظيفة "${jobData.title}" في "${jobData.company_name}". رحّب بالمتقدم باللغة العربية، عرّفه على الوظيفة بإيجاز، ثم اطلب اسمه الكامل.` }],
+        sys
+      )
+      setMessages([{ role:'assistant', content:text.replace('[STAGE_COMPLETE]','').trim() }])
+    } catch(e) {
+      setMessages([{ role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
+    }
+    setTyping(false)
+  }
+
+  function handleConsent() {
+    setConsented(true)
+    const u = localStorage.getItem('nukhba_user')
+    if (!u) { router.push('/auth/login'); return }
+    if (jobId) {
+      const savedJob = sessionStorage.getItem('nukhba_job')
+      if (savedJob) {
+        const jobData = JSON.parse(savedJob)
+        setJob(jobData)
+        jobRef.current = jobData
+        startJobInterview(jobData)
+      } else {
+        startGeneralInterview()
+      }
+    } else {
+      startGeneralInterview()
+    }
+  }
+
+  async function send() {
+    if (!input.trim() || typing) return
+    const userMsg  = { role:'user', content:input.trim() }
+    const nextMsgs = [...messages, userMsg]
+    setMessages(nextMsgs)
+    setInput('')
+    if (inputRef.current) inputRef.current.style.height='auto'
+    setTyping(true)
+
+    let reply = ''
+    try {
+      const currentJob = jobRef.current
+      const sys = currentJob
+        ? buildJobSystem(currentJob)
+        : GENERAL_SYSTEM.replace('{STAGE}', STAGES[stageRef.current]?.id || 'basics')
+      reply = await callChat(nextMsgs.map(m => ({ role:m.role, content:m.content })), sys)
+    } catch(e) {
+      setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
+      setTyping(false); return
+    }
+
+    const done  = reply.includes('[STAGE_COMPLETE]')
+    const clean = reply.replace('[STAGE_COMPLETE]','').trim()
+    const aMsg  = { role:'assistant', content:clean }
+    setMessages(p => [...p, aMsg])
+    setTyping(false)
+
+    if (done) {
+      if (jobRef.current) {
+        await submitJobApplication([...nextMsgs, aMsg])
+      } else {
+        const ni = stageRef.current + 1
+        if (ni < STAGES.length) {
+          setStageIdx(ni); stageRef.current = ni
+          setTimeout(async () => {
+            setTyping(true)
+            try {
+              const nextStage = STAGES[ni]
+              const transMsg  = { role:'user', content:`انتقل إلى مرحلة "${nextStage.ar}" وابدأ بأول سؤال فيها.` }
+              const allMsgs   = [...nextMsgs, aMsg, transMsg]
+              const sys2      = GENERAL_SYSTEM.replace('{STAGE}', nextStage.id)
+              const nextReply = await callChat(allMsgs.map(m => ({ role:m.role, content:m.content })), sys2)
+              const nextClean = nextReply.replace('[STAGE_COMPLETE]','').trim()
+              setMessages(p => [...p,
+                { role:'assistant', content:`✦ ${nextStage.ar} · ${nextStage.en}` },
+                { role:'assistant', content:nextClean }
+              ])
+            } catch(e) {
+              setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
+            }
+            setTyping(false)
+          }, 800)
+        } else {
+          await buildProfile([...nextMsgs, aMsg])
+        }
+      }
+    }
+  }
+
+  async function submitJobApplication(allMsgs) {
+    setGen(true)
+    const currentJob = jobRef.current
+    const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
+    const u = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
+
+    try {
+      const profileSys = `Extract candidate profile from job interview for: ${currentJob.title} at ${currentJob.company_name}.\n\n${PROFILE_SYSTEM}`
+      const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], profileSys)
+      const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
+
+      if (!profile.phone) {
+        const phoneMatch = transcript.match(/(?:05\d{8}|966\d{9})/)
+        if (phoneMatch) profile.phone = phoneMatch[0]
+      }
+      if (!profile.email) {
+        const emailMatch = transcript.match(/[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}/)
+        if (emailMatch) profile.email = emailMatch[0]
+      }
+
+      const saveRes = await fetch('/api/candidates', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          profile, userId:u.id,
+          jobId:currentJob?.id || null,
+          companyId:currentJob?.company_id || null,
+          transcript,
+        })
+      })
+      const saveData = await saveRes.json()
+
+      if (currentJob?.company_id) {
+        await fetch('/api/notifications', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            user_id: currentJob.company_id,
+            type:'new_applicant',
+            title:`متقدم جديد على وظيفة "${currentJob.title}"`,
+            body:`${profile.name || 'مرشح'} — تقييم: ${profile.overall_score || 0}/100`,
+            meta:{ candidate_id:saveData.id, job_id:currentJob.id }
+          })
+        })
+      }
+
+      await fetch('/api/notifications', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          user_id:u.id, type:'application_sent',
+          title:`تم إرسال طلبك على وظيفة "${currentJob.title}"`,
+          body:`طلبك في ${currentJob.company_name} قيد المراجعة`,
+          meta:{ job_id:currentJob.id }
+        })
+      })
+
+      router.push('/candidate/job-applied')
+    } catch(e) {
+      setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
+    }
+    setGen(false)
+  }
+
+  async function buildProfile(allMsgs) {
+    setGen(true)
+    const transcript = allMsgs.map(m => `${m.role==='user'?'Candidate':'Interviewer'}: ${m.content}`).join('\n\n')
+    try {
+      const raw     = await callChat([{ role:'user', content:`Interview transcript:\n\n${transcript}` }], PROFILE_SYSTEM)
+      const profile = JSON.parse(raw.replace(/```json|```/g,'').trim())
+      const u       = JSON.parse(localStorage.getItem('nukhba_user') || '{}')
+
+      const saveRes = await fetch('/api/candidates', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ profile, userId:u.id, jobId:null, transcript })
+      })
+      const saveData = await saveRes.json()
+
+      sessionStorage.setItem('nukhba_candidate_id', saveData.id)
+      sessionStorage.setItem('nukhba_profile', JSON.stringify(profile))
+      router.push('/candidate/interview-complete')
+    } catch(e) {
+      setMessages(p => [...p, { role:'assistant', content:`⚠️ تعذّر إنشاء الملف: ${e.message}` }])
+    }
+    setGen(false)
+  }
+
+  const onKey   = e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); send() } }
+  const onInput = e => {
+    setInput(e.target.value)
+    e.target.style.height='auto'
+    e.target.style.height=Math.min(e.target.scrollHeight,130)+'px'
+  }
+
+  const stage      = STAGES[stageIdx]
+  const canSend    = input.trim() && !typing
+  const currentJob = job
+
+  // ══ شاشة الموافقة ══
+  if (!consented) return (
+    <div style={{ minHeight:'100vh', background:'#080810', fontFamily:"'Tajawal',sans-serif", display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+      <div style={{ maxWidth:480, width:'100%', background:'#13131f', border:'1px solid #252538', borderRadius:20, padding:40, textAlign:'center' }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🎙️</div>
+        <h2 style={{ fontSize:22, fontWeight:800, color:'#ede8df', marginBottom:12 }}>قبل البدء</h2>
+        <p style={{ fontSize:14, color:'#7a7690', lineHeight:1.9, marginBottom:24 }}>
+          بالمتابعة، أنت توافق على تسجيل هذه المقابلة واستخدامها لبناء ملفك المهني وعرضه على الشركات المناسبة. يمكنك حذف ملفك في أي وقت من لوحة التحكم.
+        </p>
+        <div style={{ background:'rgba(200,160,74,.06)', border:'1px solid rgba(200,160,74,.2)', borderRadius:12, padding:'16px 18px', marginBottom:28, textAlign:'right' }}>
+          {['سيتم تسجيل المقابلة وتحليلها بالذكاء الاصطناعي','ملفك الناتج سيظهر للشركات بعد موافقتك','بياناتك محفوظة ولا تُشارك مع أطراف ثالثة'].map(t => (
+            <div key={t} style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8, fontSize:13, color:'#c8a04a' }}>
+              <span>✓</span><span>{t}</span>
+            </div>
+          ))}
+        </div>
+        <button onClick={handleConsent}
+          style={{ width:'100%', padding:'14px', borderRadius:10, border:'none', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', fontSize:15, fontWeight:800, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", marginBottom:12 }}>
+          أوافق وأبدأ المقابلة ←
+        </button>
+        <button onClick={() => router.push('/candidate/dashboard')}
+          style={{ width:'100%', padding:'10px', borderRadius:10, border:'1px solid #252538', background:'transparent', color:'#7a7690', fontSize:13, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+          رجوع
+        </button>
+      </div>
+    </div>
+  )
+
+  // ══ شاشة المقابلة ══
+  return (
+    <div style={{ height:'100vh', display:'flex', flexDirection:'column', background:'#080810', fontFamily:"'Tajawal',sans-serif" }}>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+
+      {/* Top bar */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 24px', height:60, background:'#0e0e1a', borderBottom:'1px solid #252538', flexShrink:0 }}>
+        <div style={{ fontSize:18, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
+        <div style={{ display:'flex', alignItems:'center', gap:7, background:'#13131f', border:'1px solid #252538', padding:'5px 14px', borderRadius:24, fontSize:13, maxWidth:'50%' }}>
+          {currentJob ? (
+            <>
+              <span>🏢</span>
+              <span style={{ color:'#c8a04a', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{currentJob.title}</span>
+              <span style={{ color:'#7a7690', fontSize:11, flexShrink:0 }}>· {currentJob.company_name}</span>
+            </>
+          ) : (
+            <>
+              <span>{stage.icon}</span>
+              <span style={{ color:'#c8a04a' }}>{stage.ar}</span>
+              <span style={{ color:'#7a7690', fontSize:11 }}>· {stage.en}</span>
+            </>
+          )}
+        </div>
+        <button onClick={() => router.push('/candidate/dashboard')} style={{ fontSize:13, color:'#7a7690', padding:'6px 14px', borderRadius:8, border:'1px solid #252538', background:'transparent', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>← لوحة التحكم</button>
+      </div>
+
+      {/* Progress bar */}
+      {!currentJob && (
+        <div style={{ padding:'10px 24px 0', background:'#0e0e1a', flexShrink:0 }}>
+          <div style={{ display:'flex', gap:5, marginBottom:6 }}>
+            {STAGES.map((s,i) => <div key={s.id} style={{ flex:1, height:3, borderRadius:2, background:i<=stageIdx?'#c8a04a':'#252538', transition:'background .5s' }}/>)}
+          </div>
+          <div style={{ display:'flex', gap:5, paddingBottom:10 }}>
+            {STAGES.map((s,i) => <div key={s.id} style={{ flex:1, textAlign:'center', fontSize:9, color:i===stageIdx?'#c8a04a':'#7a7690', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.ar}</div>)}
+          </div>
+        </div>
+      )}
+
+      {/* Chat */}
+      <div style={{ flex:1, overflowY:'auto', padding:'20px 0' }}>
+        <div style={{ maxWidth:700, margin:'0 auto', padding:'0 20px', display:'flex', flexDirection:'column', gap:16 }}>
+          {messages.map((m,i) => {
+            if (m.content.startsWith('✦')) return (
+              <div key={i} style={{ textAlign:'center', padding:'8px 0' }}>
+                <span style={{ fontSize:12, color:'#c8a04a', background:'rgba(200,160,74,.1)', border:'1px solid rgba(200,160,74,.25)', padding:'5px 16px', borderRadius:20 }}>{m.content}</span>
+              </div>
+            )
+            return (
+              <div key={i} style={{ display:'flex', justifyContent:m.role==='user'?'flex-end':'flex-start', alignItems:'flex-end', gap:10 }}>
+                {m.role==='assistant' && (
+                  <div style={{ width:32, height:32, borderRadius:'50%', flexShrink:0, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:'#06060e' }}>ن</div>
+                )}
+                <div style={{ maxWidth:'72%', padding:'12px 16px', fontSize:15, lineHeight:1.75, borderRadius:m.role==='user'?'16px 4px 16px 16px':'4px 16px 16px 16px', background:m.role==='user'?'linear-gradient(135deg,#7a5e28,#c8a04a)':'#181828', color:m.role==='user'?'#06060e':'#ede8df', border:m.role==='assistant'?'1px solid #252538':'none', direction:/[\u0600-\u06FF]/.test(m.content)?'rtl':'ltr', fontWeight:m.role==='user'?600:400 }}>{m.content}</div>
+              </div>
+            )
+          })}
+
+          {typing && (
+            <div style={{ display:'flex', alignItems:'flex-end', gap:10 }}>
+              <div style={{ width:32, height:32, borderRadius:'50%', background:'linear-gradient(135deg,#7a5e28,#c8a04a)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:800, color:'#06060e' }}>ن</div>
+              <div style={{ background:'#181828', border:'1px solid #252538', borderRadius:'4px 16px 16px 16px' }}><Dots/></div>
+            </div>
+          )}
+
+          {genProfile && (
+            <div style={{ textAlign:'center', padding:28, color:'#c8a04a', fontSize:15 }}>
+              <div style={{ fontSize:40, marginBottom:12 }}>✨</div>
+              {jobRef.current ? 'جاري إرسال طلبك للشركة...' : 'جاري إنشاء ملفك الاحترافي...'}
+            </div>
+          )}
+          <div ref={bottomRef}/>
+        </div>
+      </div>
+
+      {/* Input */}
+      <div style={{ flexShrink:0, padding:'12px 20px 20px', background:'#0e0e1a', borderTop:'1px solid #252538' }}>
+        <div style={{ maxWidth:700, margin:'0 auto', display:'flex', gap:10, alignItems:'flex-end', background:'#181828', border:`1px solid ${canSend?'rgba(200,160,74,.35)':'#252538'}`, borderRadius:14, padding:'9px 9px 9px 18px', transition:'border-color .2s' }}>
+          <textarea ref={inputRef} value={input} onChange={onInput} onKeyDown={onKey} rows={1}
+            placeholder="اكتب ردك هنا... · Type your response..."
+            style={{ flex:1, background:'transparent', border:'none', color:'#ede8df', fontFamily:"'Tajawal',sans-serif", fontSize:15, lineHeight:1.6, resize:'none', maxHeight:130, overflowY:'auto' }}/>
+          <button onClick={send} disabled={!canSend} style={{ width:40, height:40, borderRadius:10, border:'none', flexShrink:0, background:canSend?'linear-gradient(135deg,#7a5e28,#c8a04a)':'#252538', color:canSend?'#06060e':'#7a7690', fontSize:18, cursor:canSend?'pointer':'default', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}>↑</button>
+        </div>
+        <p style={{ textAlign:'center', marginTop:8, fontSize:11, color:'#7a7690' }}>Enter للإرسال · Shift+Enter لسطر جديد</p>
+      </div>
+    </div>
+  )
+}
