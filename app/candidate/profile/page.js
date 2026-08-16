@@ -281,7 +281,6 @@ export default function ProfilePage() {
       a.href=url; a.download=`${p.name||'CV'}-Nukhba.docx`; a.click()
       URL.revokeObjectURL(url)
     } catch(e) { alert('خطأ: ' + e.message) }
-    } catch(e) { alert('خطأ: ' + e.message) }
     setLoad('word', false)
   }
 
