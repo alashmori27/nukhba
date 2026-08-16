@@ -1,4 +1,3 @@
-cat > /mnt/user-data/outputs/InterviewClient-v2.js << 'JSEOF'
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
