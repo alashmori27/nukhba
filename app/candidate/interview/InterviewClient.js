@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { STAGES, INTERVIEW_SYSTEM, PROFILE_SYSTEM } from '@/lib/constants'
+import { STAGES, buildInterviewSystem, PROFILE_SYSTEM } from '@/lib/constants'
 
 async function callChat(messages, systemPrompt) {
   const res = await fetch('/api/chat', {
@@ -22,7 +22,6 @@ function Dots() {
   )
 }
 
-const GENERAL_SYSTEM = INTERVIEW_SYSTEM
 
 function buildJobSystem(job) {
   const questionsText = job.questions?.map((q,i) => `${i+1}. ${q}`).join('\n') || ''
@@ -91,7 +90,7 @@ export default function InterviewClient() {
   async function startGeneralInterview() {
     setTyping(true)
     try {
-      const sys  = GENERAL_SYSTEM.replace('{STAGE}','basics')
+      const sys  = buildInterviewSystem('basics')
       const text = await callChat(
         [{ role:'user', content:'Start the interview. Greet the candidate warmly in Arabic and ask for their name.' }],
         sys
@@ -151,7 +150,7 @@ export default function InterviewClient() {
       const currentJob = jobRef.current
       const sys = currentJob
         ? buildJobSystem(currentJob)
-        : GENERAL_SYSTEM.replace('{STAGE}', STAGES[stageRef.current]?.id || 'basics')
+        : buildInterviewSystem(STAGES[stageRef.current]?.id || 'basics')
       reply = await callChat(nextMsgs.map(m => ({ role:m.role, content:m.content })), sys)
     } catch(e) {
       setMessages(p => [...p, { role:'assistant', content:`⚠️ خطأ: ${e.message}` }])
@@ -177,7 +176,7 @@ export default function InterviewClient() {
               const nextStage = STAGES[ni]
               const transMsg  = { role:'user', content:`انتقل إلى مرحلة "${nextStage.ar}" وابدأ بأول سؤال فيها.` }
               const allMsgs   = [...nextMsgs, aMsg, transMsg]
-              const sys2      = GENERAL_SYSTEM.replace('{STAGE}', nextStage.id)
+              const sys2      = buildInterviewSystem(nextStage.id)
               const nextReply = await callChat(allMsgs.map(m => ({ role:m.role, content:m.content })), sys2)
               const nextClean = nextReply.replace('[STAGE_COMPLETE]','').trim()
               setMessages(p => [...p,
