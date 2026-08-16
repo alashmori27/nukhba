@@ -83,7 +83,7 @@ export default function CandidateDashboard() {
               ابدأ مقابلتك الذكية المجانية الآن
             </p>
             <div style={{ display:'flex', gap:10, justifyContent:'center', flexWrap:'wrap' }}>
-              <a href="/candidate/interview" style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>🎙️ ابدأ المقابلة</a>
+              <Link href="/candidate/interview" style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>🎙️ ابدأ المقابلة</Link>
               <Link href="/candidate/jobs" style={{ padding:'11px 22px', borderRadius:10, fontSize:14, fontWeight:700, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none' }}>🏢 الوظائف</Link>
             </div>
           </div>
@@ -99,12 +99,8 @@ export default function CandidateDashboard() {
 
         {/* البطاقات */}
         <div className="dash-grid">
-          {cards.map(card => {
-            const isHardNav = card.link === '/candidate/interview'
-            const CardTag = isHardNav ? 'a' : Link
-            const tagProps = isHardNav ? { href: card.link } : { href: card.link }
-            return (
-            <CardTag key={card.title} {...tagProps} style={{ textDecoration:'none' }}>
+          {cards.map(card => (
+            <Link key={card.title} href={card.link} style={{ textDecoration:'none' }}>
               <div className="dash-card" style={{ background:'var(--card)', border:`1px solid ${card.gold?'var(--gold)':'var(--border)'}`, borderRadius:12, padding:'18px 14px', height:'100%', position:'relative', transition:'border-color .2s, transform .2s' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor='var(--gold)'; e.currentTarget.style.transform='translateY(-2px)' }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor=card.gold?'var(--gold)':'var(--border)'; e.currentTarget.style.transform='none' }}
@@ -121,8 +117,8 @@ export default function CandidateDashboard() {
                   {card.btn} ←
                 </div>
               </div>
-            </CardTag>
-          )})}
+            </Link>
+          ))}
         </div>
       </div>
     </div>
