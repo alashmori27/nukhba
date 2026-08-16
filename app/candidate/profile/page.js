@@ -419,7 +419,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div>
-                <div style={{ display:'grid', repeat(2,1fr), gap:10, marginBottom:10 }}>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10, marginBottom:10 }}>
                   {[
                     { label:'📄 PDF', onClick:() => window.print(), bg:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', border:'none' },
                     { label:loading.word?'⏳...':'📝 Word', onClick:downloadWord, bg:'transparent', color:G, border:`1px solid ${G}` },
