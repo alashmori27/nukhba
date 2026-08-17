@@ -56,7 +56,7 @@ export default function Navbar() {
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           {(pathname === '/' || pathname === '/for-companies') && (
             <>
-              <Link href="/#how-it-works"
+              <Link href={`${pathname}#how-it-works`}
                 className="nav-hide-sm"
                 style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:500, color:'var(--muted)', background:'transparent', textDecoration:'none', transition:'color .2s' }}
                 onMouseEnter={e => e.currentTarget.style.color='var(--text)'}
@@ -64,7 +64,7 @@ export default function Navbar() {
               >
                 كيف يعمل
               </Link>
-              <Link href="/#value"
+              <Link href={`${pathname}#value`}
                 className="nav-hide-sm"
                 style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:500, color:'var(--muted)', background:'transparent', textDecoration:'none', transition:'color .2s' }}
                 onMouseEnter={e => e.currentTarget.style.color='var(--text)'}
