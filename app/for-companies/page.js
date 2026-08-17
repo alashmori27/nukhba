@@ -221,7 +221,7 @@ export default function ForCompanies() {
         <div className="divider"/>
 
         {/* ══ المميزات ══ */}
-        <section id="value" className="section->
+        <section id="value" className="section">
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
               <span className="eyebrow">المميزات</span>
