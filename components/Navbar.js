@@ -75,6 +75,15 @@ export default function Navbar() {
               <div className="nav-divider nav-hide-sm"/>
             </>
           )}
+          <Link href="/faq"
+            className="nav-hide-sm"
+            style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:500, color:'var(--muted)', background:'transparent', textDecoration:'none', transition:'color .2s' }}
+            onMouseEnter={e => e.currentTarget.style.color='var(--text)'}
+            onMouseLeave={e => e.currentTarget.style.color='var(--muted)'}
+          >
+            الأسئلة الشائعة
+          </Link>
+          <div className="nav-divider nav-hide-sm"/>
           {user ? (
             <Link href={user.role==='company'?'/company/dashboard':'/candidate/dashboard'}
               style={{ padding:'7px 16px', borderRadius:8, fontSize:13, fontWeight:600, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none', transition:'all .2s' }}
