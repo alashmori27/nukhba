@@ -54,7 +54,7 @@ export default function Navbar() {
 
         {/* Right */}
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          {pathname === '/' && (
+          {(pathname === '/' || pathname === '/for-companies') && (
             <>
               <Link href="/#how-it-works"
                 className="nav-hide-sm"

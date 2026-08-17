@@ -193,7 +193,7 @@ export default function ForCompanies() {
         <div className="divider"/>
 
         {/* ══ كيف يعمل ══ */}
-        <section className="section-alt">
+        <section id="how-it-works" className="section">
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
               <span className="eyebrow">كيف يعمل</span>
@@ -221,7 +221,7 @@ export default function ForCompanies() {
         <div className="divider"/>
 
         {/* ══ المميزات ══ */}
-        <section className="section">
+        <section id="value" className="section->
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: 56 }}>
               <span className="eyebrow">المميزات</span>
