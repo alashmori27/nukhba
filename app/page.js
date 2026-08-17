@@ -273,7 +273,7 @@ export default function Home() {
         <div className="divider"/>
 
         {/* ══ كيف تعمل ══ */}
-        <section className="section-alt">
+        <section id="how-it-works" className="section-alt">
           <div style={{ maxWidth: 1100, margin: '0 auto' }}>
             <div style={{ marginBottom: 56 }}>
               <span className="eyebrow">كيف تعمل نخبة؟</span>
@@ -304,7 +304,7 @@ export default function Home() {
         <div className="divider"/>
 
         {/* ══ القيمة ══ */}
-        <section className="section">
+        <section id="value" className="section">
           <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
             <span className="eyebrow">القيمة الكاملة</span>
             <h2 style={{ fontSize: 'clamp(22px, 4vw, 38px)', fontWeight: 700, letterSpacing: '-1px', color: 'var(--color-foreground)', marginBottom: 12 }}>
