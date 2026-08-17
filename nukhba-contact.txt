@@ -21,9 +21,9 @@ export default function Contact() {
         {/* Contact Cards */}
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:20, marginBottom:56, textAlign:'right' }}>
           {[
-            { icon:'📧', title:'الاستفسارات العامة', value:'info@nukhbahr.com', link:'mailto:info@nukhbahr.com', label:'أرسل رسالة' },
-            { icon:'🛠️', title:'الدعم الفني', value:'support@nukhbahr.com', link:'mailto:support@nukhbahr.com', label:'أرسل رسالة' },
+            { icon:'📧', title:'البريد الإلكتروني', value:'soonh127@gmail.com', link:'mailto:soonh127@gmail.com', label:'أرسل رسالة' },
             { icon:'⏰', title:'وقت الاستجابة', value:'خلال 24 ساعة', link:null, label:null },
+            { icon:'🌍', title:'نخدم', value:'المملكة العربية السعودية والوطن العربي', link:null, label:null },
           ].map(c => (
             <div key={c.title} style={{ background:'#181828', border:'1px solid #252538', borderRadius:14, padding:24 }}>
               <div style={{ fontSize:28, marginBottom:12 }}>{c.icon}</div>
@@ -37,13 +37,13 @@ export default function Contact() {
         </div>
 
         {/* Direct email button */}
-        <a href="mailto:info@nukhbahr.com?subject=استفسار من نخبة" style={{ display:'inline-flex', padding:'14px 40px', borderRadius:10, fontSize:16, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>
+        <a href="mailto:soonh127@gmail.com?subject=استفسار من نخبة" style={{ display:'inline-flex', padding:'14px 40px', borderRadius:10, fontSize:16, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', textDecoration:'none' }}>
           📧 راسلنا الآن
         </a>
 
         <p style={{ marginTop:24, fontSize:13, color:'#7a7690' }}>
-          للدعم الفني راسلنا على:<br/>
-          <a href="mailto:support@nukhbahr.com" style={{ color:'#c8a04a', textDecoration:'none' }}>support@nukhbahr.com</a>
+          أو راسلنا مباشرة على:<br/>
+          <a href="mailto:soonh127@gmail.com" style={{ color:'#c8a04a', textDecoration:'none' }}>soonh127@gmail.com</a>
         </p>
 
         {/* FAQ */}
