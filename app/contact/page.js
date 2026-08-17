@@ -46,21 +46,9 @@ export default function Contact() {
           <a href="mailto:support@nukhbahr.com" style={{ color:'#c8a04a', textDecoration:'none' }}>support@nukhbahr.com</a>
         </p>
 
-        {/* FAQ */}
-        <div style={{ marginTop:64, textAlign:'right' }}>
-          <h2 style={{ fontSize:22, fontWeight:800, color:'#f8f5ef', marginBottom:32, textAlign:'center' }}>أسئلة شائعة</h2>
-          {[
-            { q:'كيف أبدأ كباحث عن عمل؟', a:'أنشئ حساباً مجانياً ثم ابدأ مقابلتك الذكية — ما تحتاج CV ولا تحضير مسبق.' },
-            { q:'كيف تعمل المقابلة الذكية؟', a:'الذكاء الاصطناعي يسألك أسئلة عميقة عن خبراتك وإنجازاتك ويبني ملفك المهني تلقائياً.' },
-            { q:'هل الخدمة مجانية؟', a:'المقابلة العامة مجانية. تحميل CV يتطلب رسوماً رمزية. الشركات لها خطط اشتراك مناسبة.' },
-            { q:'هل بياناتي آمنة؟', a:'نعم — بياناتك مشفرة ولا تُشارك مع أي جهة بدون موافقتك الصريحة.' },
-          ].map(f => (
-            <div key={f.q} style={{ marginBottom:24, padding:20, background:'#13131f', borderRadius:12, border:'1px solid #252538' }}>
-              <div style={{ fontSize:15, fontWeight:700, color:'#c8a04a', marginBottom:8 }}>{f.q}</div>
-              <div style={{ fontSize:14, color:'#7a7690', lineHeight:1.75 }}>{f.a}</div>
-            </div>
-          ))}
-        </div>
+        <p style={{ marginTop:40, fontSize:14, color:'#7a7690' }}>
+          عندك سؤال عام؟ <Link href="/faq" style={{ color:'#c8a04a', textDecoration:'none', fontWeight:700 }}>شوف الأسئلة الشائعة ←</Link>
+        </p>
       </div>
 
       <footer style={{ padding:'32px 40px', borderTop:'1px solid #252538', display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
@@ -68,6 +56,7 @@ export default function Contact() {
         <div style={{ display:'flex', gap:20 }}>
           <Link href="/privacy" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>سياسة الخصوصية</Link>
           <Link href="/terms" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>الشروط</Link>
+          <Link href="/faq" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>الأسئلة الشائعة</Link>
           <Link href="/contact" style={{ fontSize:13, color:'#c8a04a', textDecoration:'none' }}>تواصل معنا</Link>
         </div>
       </footer>
