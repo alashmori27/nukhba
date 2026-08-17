@@ -335,38 +335,6 @@ export default function Home() {
 
         <div className="divider"/>
 
-        {/* ══ ميزة ATS ══ */}
-        <section className="section">
-          <div style={{ maxWidth: 900, margin: '0 auto' }}>
-            <div className="card-base" style={{ padding: '40px 32px', textAlign: 'center', borderColor: 'var(--color-border-strong)', background: 'rgba(74,156,110,.04)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRadius: 20, background: 'rgba(74,156,110,.12)', border: '1px solid rgba(74,156,110,.35)', color: '#4a9c6e', fontSize: 11, fontWeight: 700, marginBottom: 20 }}>
-                🎯 مميزة حصرية
-              </div>
-              <h2 style={{ fontSize: 'clamp(22px, 4vw, 34px)', fontWeight: 700, letterSpacing: '-1px', color: 'var(--color-foreground)', marginBottom: 14, maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
-                سيرتك الذاتية تتخطى أنظمة الفرز الآلي (ATS)
-              </h2>
-              <p style={{ fontSize: 14, color: 'var(--color-foreground-muted)', lineHeight: 1.85, maxWidth: 540, margin: '0 auto 28px' }}>
-                أغلب الشركات الكبرى تستخدم أنظمة آلية تفرز السير الذاتية قبل ما توصل لعين بشرية — وكثير من السير الجميلة تُرفض تلقائياً بسبب تنسيق غير متوافق. نخبة يصدّر لك نسخة إضافية مصمّمة خصيصاً لتجتاز هذي الأنظمة بنجاح.
-              </p>
-              <div className="grid-3" style={{ maxWidth: 680, margin: '0 auto' }}>
-                {[
-                  { icon: '✓', title: 'بنية معتمدة', desc: 'عناوين وتنسيق يقرأها أي نظام آلي بدقة' },
-                  { icon: '✓', title: 'نص خالص', desc: 'بدون صور أو تصميم يُربك الفرز الآلي' },
-                  { icon: '✓', title: 'جاهزة فوراً', desc: 'زر تحميل واحد ضمن ملفك الاحترافي' },
-                ].map(f => (
-                  <div key={f.title} style={{ textAlign: 'center' }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(74,156,110,.12)', color: '#4a9c6e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, margin: '0 auto 10px' }}>{f.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)', marginBottom: 4 }}>{f.title}</div>
-                    <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', lineHeight: 1.7 }}>{f.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="divider"/>
-
         {/* ══ مقارنة ══ */}
         <section className="section-alt">
           <div style={{ maxWidth: 800, margin: '0 auto' }}>
