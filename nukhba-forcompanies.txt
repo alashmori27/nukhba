@@ -179,7 +179,7 @@ export default function ForCompanies() {
             </div>
 
             <div className="f5" style={{ display: 'flex', gap: 56, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {[['6', 'محاور تقييم لكل مرشح'], ['100%', 'مقابلات مكتملة فقط'], ['0', 'CVs عشوائية']].map((s, i) => (
+              {[['٦', 'محاور تقييم لكل مرشح'], ['١٠٠٪', 'مقابلات مكتملة فقط'], ['٠', 'CVs عشوائية']].map((s, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 44, fontWeight: 600, color: 'var(--color-primary)', lineHeight: 1, marginBottom: 6 }}>{s[0]}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', letterSpacing: '.5px' }}>{s[1]}</div>
@@ -296,7 +296,7 @@ export default function ForCompanies() {
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground-muted)', marginBottom: 16 }}>تجريبي</div>
                 <div style={{ fontSize: 40, fontWeight: 700, color: 'var(--color-foreground)', marginBottom: 4 }}>مجاني</div>
                 <div style={{ fontSize: 12, color: 'var(--color-foreground-muted)', marginBottom: 28 }}>للبدء والتجربة</div>
-                {['3 وظائف مجانية', 'تصفح المرشحين', 'مقابلات ذكية لمرشحيك', 'لوحة تحكم كاملة'].map(f => (
+                {['٣ وظائف مجانية', 'تصفح المرشحين', 'مقابلات ذكية لمرشحيك', 'لوحة تحكم كاملة'].map(f => (
                   <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, fontSize: 13, color: 'var(--color-foreground)' }}>
                     <span style={{ color: 'var(--color-success)' }}>✓</span>{f}
                   </div>

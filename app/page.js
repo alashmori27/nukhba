@@ -259,7 +259,7 @@ export default function Home() {
 
             {/* Stats */}
             <div className="f5" style={{ display: 'flex', gap: 56, justifyContent: 'center', flexWrap: 'wrap' }}>
-              {[['٦', 'محاور تقييم'], ['٣٩', 'ريال فقط'], ['٢', 'لغة للـ CV']].map((s, i) => (
+              {[['6', 'محاور تقييم'], ['39', 'ريال فقط'], ['2', 'لغة للـ CV']].map((s, i) => (
                 <div key={i} style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 44, fontWeight: 600, color: 'var(--color-primary)', lineHeight: 1, marginBottom: 6 }}>{s[0]}</div>
                   <div style={{ fontSize: 11, color: 'var(--color-foreground-muted)', letterSpacing: '.5px' }}>{s[1]}</div>
@@ -314,7 +314,7 @@ export default function Home() {
               ابدأ مجاناً · شاهد النتيجة · ادفع إذا أعجبتك
             </p>
             <p style={{ fontSize: 13, color: 'var(--color-primary)', marginBottom: 56, fontWeight: 600 }}>
-              ٣٩ ريال · دفعة واحدة · لا اشتراك
+              39 ريال · دفعة واحدة · لا اشتراك
             </p>
             <div className="grid-3" style={{ maxWidth: 800, margin: '0 auto 48px' }}>
               {[
@@ -415,7 +415,7 @@ export default function Home() {
               ابدأ مجاناً — ادفع فقط إذا أعجبك الناتج.
             </p>
             <p style={{ fontSize: 13, color: 'var(--color-primary)', marginBottom: 40, fontWeight: 600 }}>
-              ٣٩ ريال · لا اشتراك · لا تجديد تلقائي
+              39 ريال · لا اشتراك · لا تجديد تلقائي
             </p>
             <div className="btn-row" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/auth/login" className="btn-gold">ابدأ مقابلتك المجانية ←</Link>
