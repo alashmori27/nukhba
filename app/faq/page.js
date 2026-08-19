@@ -1,21 +1,23 @@
+'use client'
 import Link from 'next/link'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 export default function FAQ() {
   return (
     <>
-      <style>{`*{box-sizing:border-box;margin:0;padding:0}body{background:#080810;color:#ede8df;font-family:'Tajawal',sans-serif}`}</style>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap');
+        body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
+      `}</style>
 
-      <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 40px', height:60, background:'#0e0e1a', borderBottom:'1px solid #252538' }}>
-        <Link href="/" style={{ fontSize:20, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', textDecoration:'none' }}>نخبة</Link>
-        <Link href="/" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>← الرئيسية</Link>
-      </nav>
+      <Navbar/>
 
       <div style={{ maxWidth:700, margin:'0 auto', padding:'80px 24px', textAlign:'center' }}>
-        <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:12, letterSpacing:5, color:'#c8a04a', textTransform:'uppercase', marginBottom:16 }}>FAQ</p>
-        <h1 style={{ fontSize:36, fontWeight:800, color:'#f8f5ef', marginBottom:16 }}>الأسئلة الشائعة</h1>
-        <p style={{ fontSize:16, color:'#7a7690', lineHeight:1.8, marginBottom:56 }}>
-          كل اللي تحتاج تعرفه عن نخبة كباحث عن عمل.<br/>ما لقيت إجابة سؤالك؟ <Link href="/contact" style={{ color:'#c8a04a', textDecoration:'none' }}>تواصل معنا مباشرة</Link>
+        <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:12, letterSpacing:5, color:'var(--color-primary)', textTransform:'uppercase', marginBottom:16 }}>FAQ</p>
+        <h1 style={{ fontSize:36, fontWeight:800, color:'var(--color-foreground)', marginBottom:16 }}>الأسئلة الشائعة</h1>
+        <p style={{ fontSize:16, color:'var(--color-foreground-muted)', lineHeight:1.8, marginBottom:56 }}>
+          كل اللي تحتاج تعرفه عن نخبة كباحث عن عمل.<br/>ما لقيت إجابة سؤالك؟ <Link href="/contact" style={{ color:'var(--color-primary)', textDecoration:'none' }}>تواصل معنا مباشرة</Link>
         </p>
 
         <div style={{ textAlign:'right' }}>
@@ -31,22 +33,15 @@ export default function FAQ() {
             { q:'هل بياناتي آمنة؟', a:'نعم — بياناتك مشفّرة بالكامل ولا تُشارك مع أي جهة خارج المنصة بدون موافقتك الصريحة.' },
             { q:'هل أقدر أسوي أكثر من مقابلة؟', a:'نعم، تقدر تسوي مقابلة عامة لبناء ملفك الأساسي، وكمان مقابلات مخصصة لكل وظيفة تتقدّم عليها.' },
           ].map(f => (
-            <div key={f.q} style={{ marginBottom:24, padding:20, background:'#13131f', borderRadius:12, border:'1px solid #252538' }}>
-              <div style={{ fontSize:15, fontWeight:700, color:'#c8a04a', marginBottom:8 }}>{f.q}</div>
-              <div style={{ fontSize:14, color:'#7a7690', lineHeight:1.75 }}>{f.a}</div>
+            <div key={f.q} style={{ marginBottom:24, padding:20, background:'var(--color-surface)', borderRadius:12, border:'1px solid var(--color-border)' }}>
+              <div style={{ fontSize:15, fontWeight:700, color:'var(--color-primary)', marginBottom:8 }}>{f.q}</div>
+              <div style={{ fontSize:14, color:'var(--color-foreground-muted)', lineHeight:1.75 }}>{f.a}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <footer style={{ padding:'32px 40px', borderTop:'1px solid #252538', display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
-        <div style={{ fontSize:16, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · Nukhba</div>
-        <div style={{ display:'flex', gap:20 }}>
-          <Link href="/privacy" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>سياسة الخصوصية</Link>
-          <Link href="/terms" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>الشروط</Link>
-          <Link href="/contact" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>تواصل معنا</Link>
-        </div>
-      </footer>
+      <Footer/>
     </>
   )
 }
