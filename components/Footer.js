@@ -12,7 +12,7 @@ export default function Footer() {
       </Link>
       <p style={{ fontSize: 11, color: 'var(--color-foreground-muted)' }}>© {new Date().getFullYear()} نخبة. جميع الحقوق محفوظة.</p>
       <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-        {[['سياسة الخصوصية', '/privacy'], ['الشروط', '/terms'], ['الأسئلة الشائعة', '/faq'], ['تواصل معنا', '/contact']].map(([l, h]) => (
+        {[['للشركات', '/for-companies'], ['سياسة الخصوصية', '/privacy'], ['الشروط', '/terms'], ['الأسئلة الشائعة', '/faq'], ['تواصل معنا', '/contact']].map(([l, h]) => (
           <Link key={h} href={h} style={{ fontSize: 11, color: 'var(--color-foreground-muted)', textDecoration: 'none', transition: 'color var(--duration-fast)' }}
             onMouseEnter={e => e.currentTarget.style.color = 'var(--color-primary)'}
             onMouseLeave={e => e.currentTarget.style.color = 'var(--color-foreground-muted)'}>
