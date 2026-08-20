@@ -1,22 +1,21 @@
-'use client'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import Link from 'next/link'
 
 export default function Terms() {
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap');
-        body { font-family: 'IBM Plex Sans Arabic', sans-serif; }
-      `}</style>
+      <style>{`*{box-sizing:border-box;margin:0;padding:0}body{background:#080810;color:#ede8df;font-family:'Tajawal',sans-serif}`}</style>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
-      <Navbar/>
+      <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 40px', height:60, background:'#0e0e1a', borderBottom:'1px solid #252538' }}>
+        <Link href="/" style={{ fontSize:20, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', textDecoration:'none' }}>نخبة</Link>
+        <Link href="/" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>← الرئيسية</Link>
+      </nav>
 
       <div style={{ maxWidth:800, margin:'0 auto', padding:'60px 24px' }}>
         <div style={{ marginBottom:48 }}>
-          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:12, letterSpacing:5, color:'var(--color-primary)', textTransform:'uppercase', marginBottom:12 }}>Legal</p>
-          <h1 style={{ fontSize:36, fontWeight:800, color:'var(--color-foreground)', marginBottom:8 }}>الشروط والأحكام</h1>
-          <p style={{ fontSize:13, color:'var(--color-foreground-muted)' }}>آخر تحديث: يوليو 2025</p>
+          <p style={{ fontFamily:"'Cormorant Garamond',serif", fontSize:12, letterSpacing:5, color:'#c8a04a', textTransform:'uppercase', marginBottom:12 }}>Legal</p>
+          <h1 style={{ fontSize:36, fontWeight:800, color:'#f8f5ef', marginBottom:8 }}>الشروط والأحكام</h1>
+          <p style={{ fontSize:13, color:'#7a7690' }}>آخر تحديث: يوليو 2025</p>
         </div>
 
         {[
@@ -58,17 +57,24 @@ export default function Terms() {
           },
           {
             title:'١٠. التواصل',
-            content:'لأي استفسارات تتعلق بهذه الشروط: info@nukhbahr.com'
+            content:'لأي استفسارات تتعلق بهذه الشروط: soonh127@gmail.com'
           },
         ].map(s => (
-          <div key={s.title} style={{ marginBottom:36, paddingBottom:36, borderBottom:'1px solid var(--color-border)' }}>
-            <h2 style={{ fontSize:18, fontWeight:700, color:'var(--color-primary)', marginBottom:14 }}>{s.title}</h2>
-            <p style={{ fontSize:15, color:'var(--color-foreground)', lineHeight:1.9 }}>{s.content}</p>
+          <div key={s.title} style={{ marginBottom:36, paddingBottom:36, borderBottom:'1px solid #252538' }}>
+            <h2 style={{ fontSize:18, fontWeight:700, color:'#c8a04a', marginBottom:14 }}>{s.title}</h2>
+            <p style={{ fontSize:15, color:'#ede8df', lineHeight:1.9 }}>{s.content}</p>
           </div>
         ))}
       </div>
 
-      <Footer/>
+      <footer style={{ padding:'32px 40px', borderTop:'1px solid #252538', display:'flex', justifyContent:'space-between', flexWrap:'wrap', gap:16 }}>
+        <div style={{ fontSize:16, fontWeight:800, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · Nukhba</div>
+        <div style={{ display:'flex', gap:20 }}>
+          <Link href="/privacy" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>سياسة الخصوصية</Link>
+          <Link href="/terms" style={{ fontSize:13, color:'#c8a04a', textDecoration:'none' }}>الشروط</Link>
+          <Link href="/contact" style={{ fontSize:13, color:'#7a7690', textDecoration:'none' }}>تواصل معنا</Link>
+        </div>
+      </footer>
     </>
   )
 }
