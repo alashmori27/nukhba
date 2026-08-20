@@ -43,8 +43,10 @@ export async function POST(req) {
 
     const body = await req.json()
     console.log('🔍 nationality_preference received:', body.nationality_preference)
-    if (error) throw error
-    return Response.json({ id: data.id })
+    const { data, error } = await supabase
+      .from('jobs')
+      .insert([{
+        company_id:   user.id,
         company_name: company?.name || body.company_name,
         title:        body.title,
         description:  body.description,
@@ -60,10 +62,6 @@ export async function POST(req) {
       .select()
       .single()
     if (error) throw error
-
-    // زيادة العداد التراكمي (لا يتأثر بالحذف لاحقاً)
-    await supabase.from('users').update({ jobs_posted_count: (company?.jobs_posted_count || 0) + 1 }).eq('id', user.id)
-
     return Response.json({ id: data.id })
   } catch(e) {
     return Response.json({ error: e.message }, { status: 500 })
