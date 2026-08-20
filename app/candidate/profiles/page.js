@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Navbar from '@/components/Navbar'
 
 const C = {
   bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
@@ -69,9 +70,8 @@ export default function CandidateProfiles() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
-
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
         .profile-card { transition: border-color .2s; }
         .profile-card:hover { border-color: rgba(200,160,74,.4) !important; }
         .actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -82,11 +82,7 @@ export default function CandidateProfiles() {
         }
       `}</style>
 
-      {/* Nav */}
-      <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
-        <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
-        <Link href="/candidate/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}`, textDecoration:'none' }}>← لوحة التحكم</Link>
-      </nav>
+      <Navbar/>
 
       <div style={{ maxWidth:860, margin:'0 auto', padding:'32px 16px' }}>
 
