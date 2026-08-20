@@ -43,8 +43,8 @@ export default function CompanyDashboard() {
   const freeAlmost = stats.jobs === FREE_LIMIT - 1
 
   return (
-    <div style={{ minHeight:'100vh', background:'var(--bg)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", color:'var(--text)' }}>
-      <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+    <div style={{ minHeight:'100vh', background:'var(--bg)', fontFamily:"'Tajawal',sans-serif", color:'var(--text)' }}>
+      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
 
       <style>{`
         .co-grid  { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
@@ -72,7 +72,7 @@ export default function CompanyDashboard() {
             <span>🔒</span>
             <span style={{ fontSize:13, color:'#f8c4c4', fontWeight:600 }}>استهلكت الوظائف المجانية — اشترك للمزيد</span>
           </div>
-          <button onClick={() => alert('Moyasar — قريباً!')} style={{ padding:'6px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', border:'none', cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
+          <button onClick={() => alert('Moyasar — قريباً!')} style={{ padding:'6px 16px', borderRadius:8, fontSize:12, fontWeight:700, background:'linear-gradient(135deg,#7a5e28,#c8a04a)', color:'#06060e', border:'none', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
             اشترك الآن
           </button>
         </div>
