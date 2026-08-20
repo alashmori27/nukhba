@@ -1,13 +1,10 @@
 'use client'
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import Navbar from '@/components/Navbar'
 
-const C = {
-  bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
-  border:'#252538', gold:'#c8a04a', goldDk:'#7a5e28', text:'#ede8df', muted:'#7a7690',
-  success:'#4a9c6e', error:'#c94a4a'
-}
+const G  = 'var(--color-primary)'
+const GD = 'var(--color-primary-dark, #7a5e28)'
 
 export default function AccountPage() {
   const router = useRouter()
@@ -82,87 +79,98 @@ export default function AccountPage() {
   const initial = (user.name || '؟')[0]
 
   return (
-    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet"/>
+    <div style={{ minHeight:'100vh', background:'var(--color-background)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", color:'var(--color-foreground)' }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');`}</style>
 
-      <nav style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
-        <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة</div>
-        <Link href="/candidate/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}`, textDecoration:'none' }}>← لوحة التحكم</Link>
-      </nav>
+      <Navbar/>
 
-      <div style={{ maxWidth:520, margin:'0 auto', padding:'48px 24px' }}>
+      <div style={{ maxWidth:600, margin:'0 auto', padding:'56px 20px 80px' }}>
 
-        {/* Avatar */}
-        <div style={{ textAlign:'center', marginBottom:32 }}>
-          <div style={{ width:68, height:68, borderRadius:'50%', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, fontWeight:800, color:'#06060e', margin:'0 auto 12px' }}>
+        {/* Header + Avatar */}
+        <div style={{ display:'flex', alignItems:'center', gap:18, marginBottom:40, padding:'28px 28px', background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:18 }}>
+          <div style={{ width:64, height:64, borderRadius:'50%', background:`linear-gradient(135deg,${GD},${G})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:800, color:'#06060e', flexShrink:0 }}>
             {initial}
           </div>
-          <div style={{ fontSize:17, fontWeight:700, color:C.text }}>{user.name}</div>
-          <div style={{ fontSize:12, color:C.muted, marginTop:3 }}>{user.email}</div>
+          <div style={{ minWidth:0 }}>
+            <div style={{ fontSize:19, fontWeight:800, color:'var(--color-foreground)', marginBottom:3, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user.name}</div>
+            <div style={{ fontSize:13, color:'var(--color-foreground-muted)' }}>{user.email}</div>
+          </div>
         </div>
 
         {/* معلومات الحساب */}
-        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:24, marginBottom:16 }}>
-          <h2 style={{ fontSize:16, fontWeight:800, marginBottom:20 }}>معلومات الحساب</h2>
-
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div>
-              <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>البريد الإلكتروني</label>
-              <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.muted, fontSize:13 }}>{user.email}</div>
-            </div>
-            <div>
-              <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>الاسم الكامل</label>
-              <input value={form.name} onChange={e => setForm(p => ({...p, name:e.target.value}))}
-                placeholder="اسمك الكامل"
-                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13 }}/>
-            </div>
-            <div>
-              <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>رقم الجوال <span style={{ fontSize:10 }}>(يظهر في الـ CV)</span></label>
-              <input value={form.phone} onChange={e => setForm(p => ({...p, phone:e.target.value.replace(/\D/g,'').slice(0,10)}))}
-                placeholder="05XXXXXXXX" dir="ltr" maxLength={10}
-                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13 }}/>
-            </div>
+        <div style={{ marginBottom:32 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+            <span style={{ fontSize:16 }}>👤</span>
+            <h2 style={{ fontSize:15, fontWeight:800, color:'var(--color-foreground)' }}>معلومات الحساب</h2>
           </div>
 
-          {error   && <div style={{ marginTop:12, padding:'9px 14px', background:'rgba(201,74,74,.1)', border:'1px solid rgba(201,74,74,.3)', borderRadius:8, fontSize:12, color:C.error }}>{error}</div>}
-          {success && <div style={{ marginTop:12, padding:'9px 14px', background:'rgba(74,156,110,.1)', border:'1px solid rgba(74,156,110,.3)', borderRadius:8, fontSize:12, color:C.success }}>{success}</div>}
+          <div style={{ background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:16, padding:24 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>البريد الإلكتروني</label>
+                <div style={{ background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground-muted)', fontSize:13 }}>{user.email}</div>
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>الاسم الكامل</label>
+                <input value={form.name} onChange={e => setForm(p => ({...p, name:e.target.value}))}
+                  placeholder="اسمك الكامل"
+                  style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>رقم الجوال <span style={{ fontSize:10, opacity:0.7 }}>(يظهر في الـ CV)</span></label>
+                <input value={form.phone} onChange={e => setForm(p => ({...p, phone:e.target.value.replace(/\D/g,'').slice(0,10)}))}
+                  placeholder="05XXXXXXXX" dir="ltr" maxLength={10}
+                  style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
+              </div>
+            </div>
 
-          <button onClick={saveChanges} disabled={loading} style={{ width:'100%', marginTop:16, padding:'12px', borderRadius:10, border:'none', background:loading?C.border:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:loading?C.muted:'#06060e', fontSize:14, fontWeight:800, cursor:loading?'default':'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-            {loading ? '⏳ جاري الحفظ...' : 'حفظ التغييرات'}
-          </button>
+            {error   && <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(201,74,74,.08)', border:'1px solid rgba(201,74,74,.25)', borderRadius:8, fontSize:12, color:'#c94a4a' }}>{error}</div>}
+            {success && <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(74,156,110,.08)', border:'1px solid rgba(74,156,110,.25)', borderRadius:8, fontSize:12, color:'#4a9c6e' }}>{success}</div>}
+
+            <button onClick={saveChanges} disabled={loading} style={{ width:'100%', marginTop:18, padding:'13px', borderRadius:10, border:'none', background:loading?'var(--color-border)':`linear-gradient(135deg,${GD},${G})`, color:loading?'var(--color-foreground-muted)':'#06060e', fontSize:14, fontWeight:800, cursor:loading?'default':'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif", transition:'filter .2s' }}>
+              {loading ? '⏳ جاري الحفظ...' : 'حفظ التغييرات'}
+            </button>
+          </div>
         </div>
 
         {/* تغيير كلمة المرور */}
-        <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:16, padding:24 }}>
-          <h2 style={{ fontSize:16, fontWeight:800, marginBottom:20 }}>تغيير كلمة المرور</h2>
-
-          <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
-            <div>
-              <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>كلمة المرور الحالية</label>
-              <input type="password" value={passForm.current} onChange={e => setPassForm(p => ({...p, current:e.target.value}))}
-                placeholder="••••••••" dir="ltr"
-                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13 }}/>
-            </div>
-            <div>
-              <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>كلمة المرور الجديدة</label>
-              <input type="password" value={passForm.newPass} onChange={e => setPassForm(p => ({...p, newPass:e.target.value}))}
-                placeholder="••••••••" dir="ltr"
-                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13 }}/>
-            </div>
-            <div>
-              <label style={{ fontSize:12, color:C.muted, marginBottom:5, display:'block' }}>تأكيد كلمة المرور</label>
-              <input type="password" value={passForm.confirm} onChange={e => setPassForm(p => ({...p, confirm:e.target.value}))}
-                placeholder="••••••••" dir="ltr"
-                style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, padding:'10px 14px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13 }}/>
-            </div>
+        <div>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+            <span style={{ fontSize:16 }}>🔒</span>
+            <h2 style={{ fontSize:15, fontWeight:800, color:'var(--color-foreground)' }}>تغيير كلمة المرور</h2>
           </div>
 
-          {passError   && <div style={{ marginTop:12, padding:'9px 14px', background:'rgba(201,74,74,.1)', border:'1px solid rgba(201,74,74,.3)', borderRadius:8, fontSize:12, color:C.error }}>{passError}</div>}
-          {passSuccess && <div style={{ marginTop:12, padding:'9px 14px', background:'rgba(74,156,110,.1)', border:'1px solid rgba(74,156,110,.3)', borderRadius:8, fontSize:12, color:C.success }}>{passSuccess}</div>}
+          <div style={{ background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:16, padding:24 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              <div>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>كلمة المرور الحالية</label>
+                <input type="password" value={passForm.current} onChange={e => setPassForm(p => ({...p, current:e.target.value}))}
+                  placeholder="••••••••" dir="ltr"
+                  style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>كلمة المرور الجديدة</label>
+                <input type="password" value={passForm.newPass} onChange={e => setPassForm(p => ({...p, newPass:e.target.value}))}
+                  placeholder="••••••••" dir="ltr"
+                  style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
+              </div>
+              <div>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>تأكيد كلمة المرور</label>
+                <input type="password" value={passForm.confirm} onChange={e => setPassForm(p => ({...p, confirm:e.target.value}))}
+                  placeholder="••••••••" dir="ltr"
+                  style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
+              </div>
+            </div>
 
-          <button onClick={changePassword} disabled={passLoading} style={{ width:'100%', marginTop:16, padding:'12px', borderRadius:10, border:`1px solid ${C.border}`, background:'transparent', color:C.text, fontSize:14, fontWeight:700, cursor:passLoading?'default':'pointer', fontFamily:"'Tajawal',sans-serif", opacity:passLoading?.7:1 }}>
-            {passLoading ? '⏳ جاري التغيير...' : 'تغيير كلمة المرور'}
-          </button>
+            {passError   && <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(201,74,74,.08)', border:'1px solid rgba(201,74,74,.25)', borderRadius:8, fontSize:12, color:'#c94a4a' }}>{passError}</div>}
+            {passSuccess && <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(74,156,110,.08)', border:'1px solid rgba(74,156,110,.25)', borderRadius:8, fontSize:12, color:'#4a9c6e' }}>{passSuccess}</div>}
+
+            <button onClick={changePassword} disabled={passLoading} style={{ width:'100%', marginTop:18, padding:'13px', borderRadius:10, border:'1px solid var(--color-border)', background:'transparent', color:'var(--color-foreground)', fontSize:14, fontWeight:700, cursor:passLoading?'default':'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif", opacity:passLoading?.7:1, transition:'border-color .2s' }}
+              onMouseEnter={e => !passLoading && (e.currentTarget.style.borderColor = 'var(--color-primary)')}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
+              {passLoading ? '⏳ جاري التغيير...' : 'تغيير كلمة المرور'}
+            </button>
+          </div>
         </div>
 
       </div>
