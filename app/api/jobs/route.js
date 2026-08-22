@@ -62,6 +62,10 @@ export async function POST(req) {
       .select()
       .single()
     if (error) throw error
+
+    // زيادة العداد التراكمي (لا يتأثر بالحذف لاحقاً)
+    await supabase.from('users').update({ jobs_posted_count: (company?.jobs_posted_count || 0) + 1 }).eq('id', user.id)
+
     return Response.json({ id: data.id })
   } catch(e) {
     return Response.json({ error: e.message }, { status: 500 })
