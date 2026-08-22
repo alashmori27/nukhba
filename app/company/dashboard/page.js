@@ -11,6 +11,7 @@ export default function CompanyDashboard() {
   const router = useRouter()
   const [user, setUser]   = useState(null)
   const [stats, setStats] = useState({ jobs:0, applicants:0 })
+  const [limits, setLimits] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -25,22 +26,25 @@ export default function CompanyDashboard() {
   async function fetchStats(u) {
     try {
       const headers = { 'Content-Type':'application/json', 'x-user-id':u.id, 'x-user-role':u.role }
-      const [jobsRes, appRes] = await Promise.all([
+      const [jobsRes, appRes, limitsRes] = await Promise.all([
         fetch('/api/jobs'),
-        fetch(`/api/candidates?company_id=${u.id}`, { headers })
+        fetch(`/api/candidates?company_id=${u.id}`, { headers }),
+        fetch('/api/company/limits', { headers })
       ])
-      const jobsData = await jobsRes.json()
-      const appData  = await appRes.json()
-      const myJobs   = (jobsData.jobs||[]).filter(j => j.company_id === u.id)
+      const jobsData   = await jobsRes.json()
+      const appData    = await appRes.json()
+      const limitsData = await limitsRes.json()
+      const myJobs     = (jobsData.jobs||[]).filter(j => j.company_id === u.id)
       setStats({ jobs:myJobs.length, applicants:(appData.candidates||[]).length })
+      setLimits(limitsData)
     } catch(e) { console.error(e) }
     setLoading(false)
   }
 
   if (!user) return null
 
-  const freeDone   = stats.jobs >= FREE_LIMIT
-  const freeAlmost = stats.jobs === FREE_LIMIT - 1
+  const freeDone   = limits ? (!limits.isPaid && limits.remaining === 0) : false
+  const freeAlmost = limits ? (!limits.isPaid && limits.remaining === 1) : false
 
   return (
     <div style={{ minHeight:'100vh', background:'var(--bg)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", color:'var(--text)' }}>
@@ -94,12 +98,12 @@ export default function CompanyDashboard() {
         {/* شريط الخطة المجانية */}
         <div style={{ background:'var(--surface)', border:'1px solid var(--border)', borderRadius:10, padding:'12px 16px', marginBottom:20, display:'flex', alignItems:'center', gap:14, flexWrap:'wrap' }}>
           <div style={{ flex:1, minWidth:140 }}>
-            <div style={{ fontSize:11, color:'var(--muted)', marginBottom:5 }}>الخطة المجانية — وظائف منشورة</div>
+            <div style={{ fontSize:11, color:'var(--muted)', marginBottom:5 }}>الخطة المجانية — وظائف منشورة (تراكمي)</div>
             <div style={{ height:5, background:'var(--border)', borderRadius:10, overflow:'hidden' }}>
-              <div style={{ height:'100%', width:`${Math.min((stats.jobs/FREE_LIMIT)*100,100)}%`, background:freeDone?'var(--error)':'var(--gold)', borderRadius:10, transition:'width .3s' }}/>
+              <div style={{ height:'100%', width:`${Math.min(((limits?.posted||0)/FREE_LIMIT)*100,100)}%`, background:freeDone?'var(--error)':'var(--gold)', borderRadius:10, transition:'width .3s' }}/>
             </div>
           </div>
-          <div style={{ fontSize:13, fontWeight:700, color:freeDone?'var(--error)':'var(--gold)', flexShrink:0 }}>{stats.jobs} / {FREE_LIMIT}</div>
+          <div style={{ fontSize:13, fontWeight:700, color:freeDone?'var(--error)':'var(--gold)', flexShrink:0 }}>{limits?.posted||0} / {FREE_LIMIT}</div>
         </div>
 
         {/* إحصائيتان */}
