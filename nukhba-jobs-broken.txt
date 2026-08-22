@@ -24,15 +24,33 @@ export default function CompanyJobs() {
   const [editing, setEditing] = useState(null) // الوظيفة قيد التعديل
   const [editForm, setEditForm] = useState({})
   const [saving, setSaving]   = useState(false)
+  const [limits, setLimits]   = useState(null)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
     if (!u) { router.push('/auth/login'); return }
     const parsed = JSON.parse(u)
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
-    setUser(parsed)
+        setUser(parsed)
     fetchJobs(parsed.id)
+    fetchLimits(parsed)
   }, [])
+
+  async function fetchLimits(u) {
+    try {
+      const res  = await fetch('/api/company/limits', { headers: { 'x-user-id': u.id, 'x-user-role': u.role } })
+      const data = await res.json()
+      setLimits(data)
+    } catch(e) { console.error(e) }
+  }
+
+  async function fetchLimits() {
+    try {
+      const res  = await fetch('/api/company/limits', { headers: { 'x-user-id': parsed_placeholder } })
+      const data = await res.json()
+      setLimits(data)
+    } catch(e) { console.error(e) }
+  }
 
   async function fetchJobs(companyId) {
     try {
@@ -99,9 +117,20 @@ export default function CompanyJobs() {
             <h1 style={{ fontSize:22, fontWeight:800, color:C.text, marginBottom:4 }}>وظائفي المنشورة</h1>
             <p style={{ fontSize:13, color:C.muted }}>{loading?'...':jobs.length} وظيفة</p>
           </div>
-          <Link href="/company/post-job" style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>
-            + وظيفة جديدة
-          </Link>
+          {limits && !limits.isPaid && limits.remaining === 0 ? (
+            <button onClick={() => alert('استهلكت وظائفك المجانية الثلاث. Moyasar — قريباً!')} style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:C.surface, border:`1px solid ${C.border}`, color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+              🔒 استهلكت الوظائف المجانية
+            </button>
+          ) : (
+                      {limits && !limits.isPaid && limits.remaining === 0 ? (
+            <button onClick={() => alert('استهلكت وظائفك المجانية الثلاث. Moyasar — قريباً!')} style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:C.surface, border:`1px solid ${C.border}`, color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+              🔒 استهلكت الوظائف المجانية
+            </button>
+          ) : (
+            <Link href="/company/post-job" style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>
+              + وظيفة جديدة
+            </Link>
+          )}
         </div>
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}

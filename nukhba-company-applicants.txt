@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Navbar from '@/components/Navbar'
 
 const C = {
   bg:'#080810', bg2:'#0e0e1a', surface:'#13131f', card:'#181828',
@@ -102,13 +103,10 @@ export default function CompanyApplicants() {
   if (!user) return null
 
   return (
-    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Cormorant+Garamond:wght@300;400;600&display=swap" rel="stylesheet"/>
+    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'IBM Plex Sans Arabic', sans-serif", color:C.text }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@300;400;600&display=swap');`}</style>
 
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 32px', height:60, background:C.bg2, borderBottom:`1px solid ${C.border}` }}>
-        <div style={{ fontSize:18, fontWeight:800, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>نخبة · للشركات</div>
-        <Link href="/company/dashboard" style={{ fontSize:13, color:C.muted, padding:'6px 14px', borderRadius:8, border:`1px solid ${C.border}`, textDecoration:'none' }}>← لوحة التحكم</Link>
-      </div>
+      <Navbar/>
 
       <div style={{ maxWidth:1000, margin:'0 auto', padding:'36px 24px' }}>
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:28, flexWrap:'wrap', gap:16 }}>
@@ -118,7 +116,7 @@ export default function CompanyApplicants() {
           </div>
           <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
             {[['all','الكل'], ...STATUSES.map(s => [s.value, s.label])].map(([val, label]) => (
-              <button key={val} onClick={() => setFilter(val)} style={{ padding:'7px 14px', borderRadius:20, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${filter===val?C.gold:C.border}`, background:filter===val?'rgba(200,160,74,.1)':'transparent', color:filter===val?C.gold:C.muted }}>
+              <button key={val} onClick={() => setFilter(val)} style={{ padding:'7px 14px', borderRadius:20, fontSize:12, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif", border:`1px solid ${filter===val?C.gold:C.border}`, background:filter===val?'rgba(200,160,74,.1)':'transparent', color:filter===val?C.gold:C.muted }}>
                 {label}
               </button>
             ))}
@@ -182,11 +180,11 @@ export default function CompanyApplicants() {
                     </div>
 
                     <div style={{ display:'flex', flexDirection:'column', gap:8, flexShrink:0 }}>
-                      <button onClick={() => setSelected(selected===c.id?null:c.id)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                      <button onClick={() => setSelected(selected===c.id?null:c.id)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
                         {selected===c.id?'إخفاء ▲':'تفاصيل ▼'}
                       </button>
-                      {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 واتساب</button>}
-                      {email && <button onClick={() => contactEmail(email, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 إيميل</button>}
+                      {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>💬 واتساب</button>}
+                      {email && <button onClick={() => contactEmail(email, name)} style={{ padding:'7px 14px', borderRadius:8, fontSize:12, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>📧 إيميل</button>}
                     </div>
                   </div>
 
@@ -201,7 +199,7 @@ export default function CompanyApplicants() {
                             <button key={s.value}
                               onClick={() => updateStatus(c.id, s.value, c.user_id, p.specialization)}
                               disabled={(c.status||'pending')===s.value || updating===c.id}
-                              style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:(c.status||'pending')===s.value?'default':'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${s.color}44`, background:(c.status||'pending')===s.value?`${s.color}22`:'transparent', color:s.color, opacity:updating===c.id?.6:1 }}>
+                              style={{ padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600, cursor:(c.status||'pending')===s.value?'default':'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif", border:`1px solid ${s.color}44`, background:(c.status||'pending')===s.value?`${s.color}22`:'transparent', color:s.color, opacity:updating===c.id?.6:1 }}>
                               {(c.status||'pending')===s.value?'✓ ':''}{s.label}
                             </button>
                           ))}
@@ -262,8 +260,8 @@ export default function CompanyApplicants() {
 
                       {/* أزرار تواصل */}
                       <div style={{ display:'flex', gap:10, marginTop:16, flexWrap:'wrap' }}>
-                        {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>💬 تواصل عبر واتساب</button>}
-                        {email && <button onClick={() => contactEmail(email, name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>📧 تواصل عبر إيميل</button>}
+                        {phone && <button onClick={() => contactWhatsapp(phone, name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:'none', background:'#25D366', color:'#fff', cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>💬 تواصل عبر واتساب</button>}
+                        {email && <button onClick={() => contactEmail(email, name)} style={{ flex:1, padding:'11px', borderRadius:10, fontSize:13, fontWeight:700, border:`1px solid ${C.gold}`, background:'transparent', color:C.gold, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>📧 تواصل عبر إيميل</button>}
                       </div>
                     </div>
                   )}

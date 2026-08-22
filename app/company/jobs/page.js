@@ -24,6 +24,7 @@ export default function CompanyJobs() {
   const [editing, setEditing] = useState(null) // الوظيفة قيد التعديل
   const [editForm, setEditForm] = useState({})
   const [saving, setSaving]   = useState(false)
+  const [limits, setLimits]   = useState(null)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -32,7 +33,16 @@ export default function CompanyJobs() {
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
     fetchJobs(parsed.id)
+    fetchLimits(parsed)
   }, [])
+
+  async function fetchLimits(u) {
+    try {
+      const res  = await fetch('/api/company/limits', { headers: { 'x-user-id': u.id, 'x-user-role': u.role } })
+      const data = await res.json()
+      setLimits(data)
+    } catch(e) { console.error(e) }
+  }
 
   async function fetchJobs(companyId) {
     try {
@@ -88,7 +98,7 @@ export default function CompanyJobs() {
   if (!user) return null
 
   return (
-    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'Tajawal',sans-serif", color:C.text }}>
+    <div style={{ minHeight:'100vh', background:C.bg, fontFamily:"'IBM Plex Sans Arabic', sans-serif", color:C.text }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');`}</style>
 
       <Navbar/>
@@ -99,9 +109,15 @@ export default function CompanyJobs() {
             <h1 style={{ fontSize:22, fontWeight:800, color:C.text, marginBottom:4 }}>وظائفي المنشورة</h1>
             <p style={{ fontSize:13, color:C.muted }}>{loading?'...':jobs.length} وظيفة</p>
           </div>
-          <Link href="/company/post-job" style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>
-            + وظيفة جديدة
-          </Link>
+          {limits && !limits.isPaid && limits.remaining === 0 ? (
+            <button onClick={() => alert('استهلكت وظائفك المجانية الثلاث. Moyasar — قريباً!')} style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:C.surface, border:`1px solid ${C.border}`, color:C.muted, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
+              🔒 استهلكت الوظائف المجانية
+            </button>
+          ) : (
+            <Link href="/company/post-job" style={{ padding:'10px 20px', borderRadius:10, fontSize:13, fontWeight:700, background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', textDecoration:'none' }}>
+              + وظيفة جديدة
+            </Link>
+          )}
         </div>
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}
@@ -150,18 +166,18 @@ export default function CompanyJobs() {
                     <select
                       value={job.status || 'open'}
                       onChange={e => updateStatus(job.id, e.target.value)}
-                      style={{ padding:'6px 10px', borderRadius:8, fontSize:11, border:`1px solid ${C.border}`, background:C.surface, color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}
+                      style={{ padding:'6px 10px', borderRadius:8, fontSize:11, border:`1px solid ${C.border}`, background:C.surface, color:C.muted, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}
                     >
                       <option value="open">مفتوحة</option>
                       <option value="paused">متوقفة</option>
                       <option value="closed">مغلقة</option>
                     </select>
 
-                    <button onClick={() => isEditing ? setEditing(null) : startEdit(job)} style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                    <button onClick={() => isEditing ? setEditing(null) : startEdit(job)} style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
                       {isEditing ? '✕ إلغاء' : '✏️ تعديل'}
                     </button>
 
-                    <button onClick={() => deleteJob(job.id)} style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:`1px solid ${C.error}`, background:'transparent', color:C.error, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
+                    <button onClick={() => deleteJob(job.id)} style={{ padding:'6px 12px', borderRadius:8, fontSize:12, border:`1px solid ${C.error}`, background:'transparent', color:C.error, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
                       🗑️
                     </button>
                   </div>
@@ -183,7 +199,7 @@ export default function CompanyJobs() {
                           <input
                             value={editForm[key] || ''}
                             onChange={e => setEditForm(p => ({...p, [key]:e.target.value}))}
-                            style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'9px 12px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13 }}
+                            style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'9px 12px', color:C.text, fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13 }}
                           />
                         </div>
                       ))}
@@ -194,11 +210,11 @@ export default function CompanyJobs() {
                           value={editForm.description || ''}
                           onChange={e => setEditForm(p => ({...p, description:e.target.value}))}
                           rows={4}
-                          style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'9px 12px', color:C.text, fontFamily:"'Tajawal',sans-serif", fontSize:13, resize:'vertical' }}
+                          style={{ width:'100%', background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:'9px 12px', color:C.text, fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, resize:'vertical' }}
                         />
                       </div>
 
-                      <button onClick={() => saveEdit(job.id)} disabled={saving} style={{ padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:14, fontWeight:700, cursor:saving?'default':'pointer', fontFamily:"'Tajawal',sans-serif", opacity:saving?.7:1 }}>
+                      <button onClick={() => saveEdit(job.id)} disabled={saving} style={{ padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${C.goldDk},${C.gold})`, color:'#06060e', fontSize:14, fontWeight:700, cursor:saving?'default':'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif", opacity:saving?.7:1 }}>
                         {saving ? '⏳ جاري الحفظ...' : 'حفظ التعديلات'}
                       </button>
                     </div>

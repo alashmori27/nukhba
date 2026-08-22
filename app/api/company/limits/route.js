@@ -15,8 +15,8 @@ export async function GET(req) {
 
     const { data: company } = await supabase.from('users').select('jobs_posted_count, plan').eq('id', user.id).single()
 
-    const isPaid   = company?.plan && company.plan !== 'free'
-    const posted   = company?.jobs_posted_count || 0
+    const isPaid    = company?.plan && company.plan !== 'free'
+    const posted    = company?.jobs_posted_count || 0
     const remaining = isPaid ? null : Math.max(FREE_LIMIT - posted, 0)
 
     return Response.json({ isPaid, posted, remaining, limit: FREE_LIMIT })
