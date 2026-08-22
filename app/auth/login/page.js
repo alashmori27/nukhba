@@ -163,6 +163,11 @@ localStorage.removeItem('nukhba_profile_edited')
               <input className="login-input" type="password" value={password} onChange={e => setPass(e.target.value)}
                 onKeyDown={onKey} placeholder="••••••••" dir="ltr"/>
             </div>
+            {mode === 'login' && (
+              <Link href="/auth/forgot-password" style={{ fontSize:12, color:'var(--gold)', textDecoration:'none', textAlign:'left', display:'block' }}>
+                نسيت كلمة المرور؟
+              </Link>
+            )}
           </div>
 
           {/* رسائل */}
