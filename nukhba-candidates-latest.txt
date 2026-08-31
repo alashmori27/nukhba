@@ -24,10 +24,6 @@ export default function CompanyCandidates() {
   const [loading, setLoading]  = useState(true)
   const [selected, setSelected] = useState(null)
   const [filter, setFilter]    = useState('all')
-  const [jobs, setJobs]        = useState([])
-  const [jobFilter, setJobFilter] = useState('all')
-  const [locationFilter, setLocationFilter] = useState('all')
-  const [nationalityFilter, setNationalityFilter] = useState('all')
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -36,16 +32,7 @@ export default function CompanyCandidates() {
     if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
     fetchCandidates(parsed)
-    fetchJobs(parsed.id)
   }, [])
-
-  async function fetchJobs(companyId) {
-    try {
-      const res  = await fetch('/api/jobs')
-      const data = await res.json()
-      setJobs((data.jobs || []).filter(j => j.company_id === companyId))
-    } catch(e) { console.error(e) }
-  }
 
   async function fetchCandidates(u) {
     try {
@@ -71,14 +58,8 @@ export default function CompanyCandidates() {
     window.open(`mailto:${email}?subject=${subject}&body=${body}`, '_blank')
   }
 
-  const uniqueLocations = [...new Set(candidates.map(c => (c.profile_json?.location || c.location || '').trim()).filter(Boolean))]
-  const uniqueNationalities = [...new Set(candidates.map(c => (c.profile_json?.nationality || '').trim()).filter(Boolean))]
-
   const filtered = candidates
     .filter(c => { if (filter==='high') return c.score>=80; if (filter==='mid') return c.score>=60&&c.score<80; return true })
-    .filter(c => jobFilter==='all' || c.job_id === jobFilter)
-    .filter(c => locationFilter==='all' || (c.profile_json?.location || c.location) === locationFilter)
-    .filter(c => nationalityFilter==='all' || c.profile_json?.nationality === nationalityFilter)
     .sort((a,b) => b.score - a.score)
 
   if (!user) return null
@@ -95,35 +76,11 @@ export default function CompanyCandidates() {
             <h1 style={{ fontSize:24, fontWeight:800, marginBottom:4 }}>المرشحون</h1>
             <p style={{ fontSize:13, color:C.muted }}>ملفات بُنيت من مقابلات ذكية — <span style={{ color:C.gold }}>{candidates.length} مرشح</span></p>
           </div>
-          <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          <div style={{ display:'flex', gap:8 }}>
             {[['all','الكل'],['high','ممتاز +٨٠'],['mid','جيد ٦٠-٨٠']].map(([val,label]) => (
               <button key={val} onClick={() => setFilter(val)} style={{ padding:'7px 14px', borderRadius:20, fontSize:12, cursor:'pointer', fontFamily:"'Tajawal',sans-serif", border:`1px solid ${filter===val?C.gold:C.border}`, background:filter===val?'rgba(200,160,74,.1)':'transparent', color:filter===val?C.gold:C.muted }}>{label}</button>
             ))}
           </div>
-        </div>
-
-        {/* فلاتر إضافية */}
-        <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:24 }}>
-          <select value={jobFilter} onChange={e => setJobFilter(e.target.value)} style={{ padding:'8px 14px', borderRadius:10, fontSize:12, border:`1px solid ${C.border}`, background:C.surface, color:C.text, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-            <option value="all">كل الوظائف</option>
-            {jobs.map(j => <option key={j.id} value={j.id}>{j.title}</option>)}
-          </select>
-
-          <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)} style={{ padding:'8px 14px', borderRadius:10, fontSize:12, border:`1px solid ${C.border}`, background:C.surface, color:C.text, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-            <option value="all">كل المناطق</option>
-            {uniqueLocations.map(loc => <option key={loc} value={loc}>{loc}</option>)}
-          </select>
-
-          <select value={nationalityFilter} onChange={e => setNationalityFilter(e.target.value)} style={{ padding:'8px 14px', borderRadius:10, fontSize:12, border:`1px solid ${C.border}`, background:C.surface, color:C.text, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-            <option value="all">كل الجنسيات</option>
-            {uniqueNationalities.map(nat => <option key={nat} value={nat}>{nat}</option>)}
-          </select>
-
-          {(jobFilter!=='all' || locationFilter!=='all' || nationalityFilter!=='all') && (
-            <button onClick={() => { setJobFilter('all'); setLocationFilter('all'); setNationalityFilter('all') }} style={{ padding:'8px 14px', borderRadius:10, fontSize:12, border:`1px solid ${C.error}`, background:'transparent', color:C.error, cursor:'pointer', fontFamily:"'Tajawal',sans-serif" }}>
-              ✕ مسح الفلاتر
-            </button>
-          )}
         </div>
 
         {loading && <div style={{ textAlign:'center', padding:60, color:C.muted }}>⏳ جاري التحميل...</div>}
