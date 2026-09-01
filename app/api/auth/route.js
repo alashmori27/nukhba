@@ -29,10 +29,11 @@ export async function POST(req) {
         .from('users').select('id').eq('email', email).single()
       if (existing) return Response.json({ error: 'البريد الإلكتروني مستخدم مسبقاً' })
 
+      const safeRole = role === 'company' ? 'company' : 'candidate' // لا يسمح بأي دور آخر عبر التسجيل الذاتي
       const hashedPassword = await bcrypt.hash(password, 10)
       const { data, error } = await supabase
         .from('users')
-        .insert([{ email, password: hashedPassword, name, role, crn: crn||null, phone: phone||null, created_at: new Date().toISOString() }])
+        .insert([{ email, password: hashedPassword, name, role: safeRole, crn: crn||null, phone: phone||null, created_at: new Date().toISOString() }])
         .select().single()
       if (error) throw error
       return Response.json({ success: true })

@@ -10,14 +10,7 @@ const supabase = createClient(
 
 function getAuthUser(req) {
   if (isAdminRequest(req)) return { id: 'admin', role: 'admin' }
-  // session cookie أولاً
-  const session = getSession(req)
-  if (session) return session
-  // fallback للـ headers القديمة
-  const userId   = req.headers.get('x-user-id')
-  const userRole = req.headers.get('x-user-role')
-  if (userId && userRole) return { id: userId, role: userRole }
-  return null
+  return getSession(req)
 }
 
 export async function POST(req) {
