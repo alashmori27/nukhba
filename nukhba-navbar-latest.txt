@@ -7,7 +7,6 @@ import { LogoIcon, LogoText } from './brand'
 export default function Navbar() {
   const [user, setUser]         = useState(null)
   const [scrolled, setScrolled] = useState(false)
-  const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -18,23 +17,16 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  useEffect(() => { setMenuOpen(false) }, [pathname])
-
   const isCompaniesPage = pathname === '/for-companies'
-  const showHomeLinks = pathname === '/' || pathname === '/for-companies'
 
   return (
     <>
       <style>{`
         .nav-divider { width:1px; height:16px; background:var(--border); margin:0 4px; }
-        .nav-burger { display:none; }
-        .nav-mobile-menu { display:none; }
         @media(max-width:600px){
           .nukhba-nav { padding:0 16px !important; height:54px !important; }
           .nav-hide-sm { display:none !important; }
           .nav-logo { transform: scale(0.85); transform-origin: left center; }
-          .nav-burger { display:flex !important; }
-          .nav-mobile-menu.open { display:flex !important; }
         }
       `}</style>
 
@@ -62,7 +54,7 @@ export default function Navbar() {
 
         {/* Right */}
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          {showHomeLinks && (
+          {(pathname === '/' || pathname === '/for-companies') && (
             <>
               <Link href={`${pathname}#how-it-works`}
                 className="nav-hide-sm"
@@ -92,17 +84,6 @@ export default function Navbar() {
             الأسئلة الشائعة
           </Link>
           <div className="nav-divider nav-hide-sm"/>
-
-          {/* زر القائمة الجانبية — يظهر بالجوال فقط */}
-          <button
-            className="nav-burger"
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label="القائمة"
-            style={{ width:34, height:34, alignItems:'center', justifyContent:'center', background:'transparent', border:'1px solid var(--border)', borderRadius:8, color:'var(--muted)', cursor:'pointer', fontSize:16, flexShrink:0 }}
-          >
-            {menuOpen ? '✕' : '☰'}
-          </button>
-
           {user ? (
             <Link href={user.role==='company'?'/company/dashboard':'/candidate/dashboard'}
               style={{ padding:'7px 16px', borderRadius:8, fontSize:13, fontWeight:600, border:'1px solid var(--border)', color:'var(--muted)', background:'transparent', textDecoration:'none', transition:'all .2s' }}
@@ -151,49 +132,6 @@ export default function Navbar() {
           )}
         </div>
       </nav>
-
-      {/* القائمة الجانبية — الجوال فقط */}
-      <div className={`nav-mobile-menu${menuOpen ? ' open' : ''}`} style={{
-        flexDirection:'column',
-        gap:2,
-        padding:'10px 16px 16px',
-        background:'rgba(8,8,16,.98)',
-        borderBottom:'1px solid var(--border)',
-        backdropFilter:'blur(16px)',
-        position:'sticky',
-        top:54,
-        zIndex:99,
-      }}>
-        {showHomeLinks && (
-          <>
-            <Link href={`${pathname}#how-it-works`} onClick={() => setMenuOpen(false)}
-              style={{ padding:'12px 8px', fontSize:14, color:'var(--muted)', textDecoration:'none', borderBottom:'1px solid var(--border)' }}>
-              كيف يعمل
-            </Link>
-            <Link href={`${pathname}#value`} onClick={() => setMenuOpen(false)}
-              style={{ padding:'12px 8px', fontSize:14, color:'var(--muted)', textDecoration:'none', borderBottom:'1px solid var(--border)' }}>
-              المميزات
-            </Link>
-          </>
-        )}
-        <Link href="/faq" onClick={() => setMenuOpen(false)}
-          style={{ padding:'12px 8px', fontSize:14, color:'var(--muted)', textDecoration:'none', borderBottom:'1px solid var(--border)' }}>
-          الأسئلة الشائعة
-        </Link>
-        {!user && (
-          isCompaniesPage ? (
-            <Link href="/" onClick={() => setMenuOpen(false)}
-              style={{ padding:'12px 8px', fontSize:14, color:'var(--gold)', fontWeight:600, textDecoration:'none' }}>
-              للباحثين عن عمل
-            </Link>
-          ) : (
-            <Link href="/for-companies" onClick={() => setMenuOpen(false)}
-              style={{ padding:'12px 8px', fontSize:14, color:'var(--gold)', fontWeight:600, textDecoration:'none' }}>
-              للشركات
-            </Link>
-          )
-        )}
-      </div>
     </>
   )
 }
