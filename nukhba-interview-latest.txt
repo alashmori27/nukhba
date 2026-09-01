@@ -398,7 +398,7 @@ export default function InterviewClient() {
       <div style={{ flexShrink:0, padding:'12px 20px 20px', background:'#0e0e1a', borderTop:'1px solid #252538' }}>
         <div style={{ maxWidth:700, margin:'0 auto', display:'flex', gap:10, alignItems:'flex-end', background:'#181828', border:`1px solid ${canSend?'rgba(200,160,74,.35)':'#252538'}`, borderRadius:14, padding:'9px 9px 9px 18px', transition:'border-color .2s' }}>
           <textarea ref={inputRef} value={input} onChange={onInput} onKeyDown={onKey} rows={1}
-            placeholder="اكتب ردك هنا..."
+            placeholder="اكتب ردك هنا... · Type your response..."
             style={{ flex:1, background:'transparent', border:'none', color:'#ede8df', fontFamily:"'Tajawal',sans-serif", fontSize:15, lineHeight:1.6, resize:'none', maxHeight:130, overflowY:'auto' }}/>
           <button onClick={send} disabled={!canSend} style={{ width:40, height:40, borderRadius:10, border:'none', flexShrink:0, background:canSend?'linear-gradient(135deg,#7a5e28,#c8a04a)':'#252538', color:canSend?'#06060e':'#7a7690', fontSize:18, cursor:canSend?'pointer':'default', display:'flex', alignItems:'center', justifyContent:'center', transition:'all .2s' }}>↑</button>
         </div>
