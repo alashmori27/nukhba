@@ -46,11 +46,16 @@ export async function PATCH(req, { params }) {
 
     const updates = {}
 
-    if (body.is_visible !== undefined || body.is_paid !== undefined) {
+    if (body.is_visible !== undefined) {
       const isOwner = user.role === 'candidate' && user.id === row.user_id
       if (!isOwner && user.role !== 'admin') return Response.json({ error: 'غير مصرح' }, { status: 403 })
-      if (body.is_visible !== undefined) updates.is_visible = body.is_visible === true || body.is_visible === 'true'
-      if (body.is_paid    !== undefined) updates.is_paid    = body.is_paid === true || body.is_paid === 'true'
+      updates.is_visible = body.is_visible === true || body.is_visible === 'true'
+    }
+
+    // is_paid لا يُعدَّل إلا من الأدمن — سيُستبدل لاحقاً بـ webhook دفع حقيقي (Moyasar)
+    if (body.is_paid !== undefined) {
+      if (user.role !== 'admin') return Response.json({ error: 'غير مصرح' }, { status: 403 })
+      updates.is_paid = body.is_paid === true || body.is_paid === 'true'
     }
 
     if (body.status !== undefined || body.notes !== undefined) {
