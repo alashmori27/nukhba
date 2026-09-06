@@ -67,10 +67,10 @@ export default function InterviewComplete() {
 
   async function activatePaid() {
     if (candidateId) {
-      await fetch(`/api/candidates/${candidateId}/unlock`, {
-        method: 'POST',
+      await fetch(`/api/candidates/${candidateId}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ promoCode })
+        body: JSON.stringify({ is_paid: true, is_visible: true })
       })
     }
     sessionStorage.setItem('nukhba_paid', 'true')
