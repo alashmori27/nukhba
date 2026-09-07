@@ -57,7 +57,7 @@ export default function Terms() {
           },
           {
             title:'١٠. التواصل',
-            content:'لأي استفسارات تتعلق بهذه الشروط: soonh127@gmail.com'
+            content:'لأي استفسارات تتعلق بهذه الشروط: info@nukhbahr.com'
           },
         ].map(s => (
           <div key={s.title} style={{ marginBottom:36, paddingBottom:36, borderBottom:'1px solid #252538' }}>
