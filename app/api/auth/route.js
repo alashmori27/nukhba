@@ -84,12 +84,29 @@ export async function POST(req) {
 
       if (!passwordMatch) return Response.json({ error: 'البريد أو كلمة المرور غير صحيحة' })
 
+      // التحقق من حالة التعطيل
+      if (data.is_deactivated) {
+        const deactivatedAt = new Date(data.deactivated_at)
+        const daysSince = (Date.now() - deactivatedAt.getTime()) / (1000 * 60 * 60 * 24)
+        if (daysSince > 30) {
+          return Response.json({ error: 'تم حذف هذا الحساب نهائياً' })
+        }
+        // استرجاع تلقائي خلال مهلة السماح
+        await supabase.from('users').update({ is_deactivated: false, deactivated_at: null }).eq('id', data.id)
+        if (data.role === 'candidate') {
+          await supabase.from('candidates').update({ is_visible: true }).eq('user_id', data.id)
+        } else if (data.role === 'company') {
+          await supabase.from('jobs').update({ status: 'open' }).eq('company_id', data.id)
+        }
+      }
+
       // إعادة تعيين المحاولات عند النجاح
       resetRateLimit(`auth:${ip}`)
 
       const token = createSessionToken(data.id, data.role)
       const res = Response.json({
-        user: { id: data.id, name: data.name, email: data.email, role: data.role }
+        user: { id: data.id, name: data.name, email: data.email, role: data.role },
+        reactivated: data.is_deactivated || false
       })
       res.headers.set('Set-Cookie', sessionCookieHeader(token))
       return res
