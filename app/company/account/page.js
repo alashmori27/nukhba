@@ -18,6 +18,8 @@ export default function CompanyAccountPage() {
   const [error, setError]     = useState('')
   const [passSuccess, setPassSuccess] = useState('')
   const [passError, setPassError]     = useState('')
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
+  const [deactivating, setDeactivating] = useState(false)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
@@ -224,6 +226,36 @@ export default function CompanyAccountPage() {
               onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
               {passLoading ? '⏳ جاري التغيير...' : 'تغيير كلمة المرور'}
             </button>
+          </div>
+        </div>
+
+        {/* منطقة الخطر */}
+        <div style={{ marginTop:32 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+            <span style={{ fontSize:16 }}>⚠️</span>
+            <h2 style={{ fontSize:15, fontWeight:800, color:'#c94a4a' }}>منطقة الخطر</h2>
+          </div>
+          <div style={{ background:'rgba(201,74,74,.04)', border:'1px solid rgba(201,74,74,.25)', borderRadius:16, padding:24 }}>
+            <p style={{ fontSize:13, color:'var(--color-foreground-muted)', lineHeight:1.8, marginBottom:16 }}>
+              تعطيل حسابك يخفي وظائفك المنشورة فوراً من الباحثين عن عمل. يمكنك استرجاعه خلال 30 يوماً بتسجيل الدخول مرة أخرى — بعدها يُحذف نهائياً.
+            </p>
+            {!showDeactivateConfirm ? (
+              <button onClick={() => setShowDeactivateConfirm(true)} style={{ padding:'11px 20px', borderRadius:10, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
+                تعطيل حسابي
+              </button>
+            ) : (
+              <div>
+                <p style={{ fontSize:13, color:'#c94a4a', fontWeight:700, marginBottom:12 }}>هل أنت متأكد؟ سيتم تسجيل خروجك فوراً.</p>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={deactivateAccount} disabled={deactivating} style={{ padding:'11px 20px', borderRadius:10, border:'none', background:'#c94a4a', color:'#fff', fontSize:13, fontWeight:700, cursor:deactivating?'default':'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
+                    {deactivating ? '⏳ جاري التعطيل...' : 'نعم، عطّل حسابي'}
+                  </button>
+                  <button onClick={() => setShowDeactivateConfirm(false)} style={{ padding:'11px 20px', borderRadius:10, border:'1px solid var(--color-border)', background:'transparent', color:'var(--color-foreground-muted)', fontSize:13, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
+                    إلغاء
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

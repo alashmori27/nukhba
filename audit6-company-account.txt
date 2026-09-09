@@ -6,10 +6,11 @@ import Navbar from '@/components/Navbar'
 const G  = 'var(--color-primary)'
 const GD = 'var(--color-primary-dark, #7a5e28)'
 
-export default function AccountPage() {
+export default function CompanyAccountPage() {
   const router = useRouter()
   const [user, setUser]       = useState(null)
   const [form, setForm]       = useState({ name:'', phone:'' })
+  const [limits, setLimits]   = useState(null)
   const [passForm, setPassForm] = useState({ current:'', newPass:'', confirm:'' })
   const [loading, setLoading] = useState(false)
   const [passLoading, setPassLoading] = useState(false)
@@ -17,16 +18,24 @@ export default function AccountPage() {
   const [error, setError]     = useState('')
   const [passSuccess, setPassSuccess] = useState('')
   const [passError, setPassError]     = useState('')
-  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false)
-  const [deactivating, setDeactivating] = useState(false)
 
   useEffect(() => {
     const u = localStorage.getItem('nukhba_user')
     if (!u) { router.push('/auth/login'); return }
     const parsed = JSON.parse(u)
+    if (parsed.role !== 'company') { router.push('/candidate/dashboard'); return }
     setUser(parsed)
     setForm({ name: parsed.name || '', phone: parsed.phone || '' })
+    fetchLimits(parsed)
   }, [])
+
+  async function fetchLimits(u) {
+    try {
+      const res  = await fetch('/api/company/limits', { headers: { 'x-user-id': u.id, 'x-user-role': u.role } })
+      const data = await res.json()
+      setLimits(data)
+    } catch(e) { console.error(e) }
+  }
 
   async function saveChanges() {
     setLoading(true); setError(''); setSuccess('')
@@ -76,18 +85,6 @@ export default function AccountPage() {
     setPassLoading(false)
   }
 
-    async function deactivateAccount() {
-    setDeactivating(true)
-    try {
-      await fetch('/api/account/deactivate', { method: 'POST' })
-      localStorage.removeItem('nukhba_user')
-      router.push('/auth/login')
-    } catch(e) {
-      alert('حدث خطأ، حاول مجدداً')
-      setDeactivating(false)
-    }
-  }
-
   if (!user) return null
 
   const initial = (user.name || '؟')[0]
@@ -101,7 +98,7 @@ export default function AccountPage() {
       <div style={{ maxWidth:600, margin:'0 auto', padding:'56px 20px 80px' }}>
 
         {/* Header + Avatar */}
-        <div style={{ display:'flex', alignItems:'center', gap:18, marginBottom:40, padding:'28px 28px', background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:18 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:18, marginBottom:32, padding:'28px 28px', background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:18 }}>
           <div style={{ width:64, height:64, borderRadius:'50%', background:`linear-gradient(135deg,${GD},${G})`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, fontWeight:800, color:'#06060e', flexShrink:0 }}>
             {initial}
           </div>
@@ -111,11 +108,48 @@ export default function AccountPage() {
           </div>
         </div>
 
-        {/* معلومات الحساب */}
+        {/* بطاقة الخطة الحالية */}
         <div style={{ marginBottom:32 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-            <span style={{ fontSize:16 }}>👤</span>
-            <h2 style={{ fontSize:15, fontWeight:800, color:'var(--color-foreground)' }}>معلومات الحساب</h2>
+            <span style={{ fontSize:16 }}>💳</span>
+            <h2 style={{ fontSize:15, fontWeight:800, color:'var(--color-foreground)' }}>الخطة الحالية</h2>
+          </div>
+
+          <div style={{ background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:16, padding:24 }}>
+            {!limits ? (
+              <div style={{ textAlign:'center', color:'var(--color-foreground-muted)', fontSize:13, padding:'10px 0' }}>⏳ جاري التحميل...</div>
+            ) : limits.isPaid ? (
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <div style={{ width:38, height:38, borderRadius:'50%', background:'rgba(74,156,110,.12)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>⭐</div>
+                <div>
+                  <div style={{ fontSize:14, fontWeight:700, color:'#4a9c6e' }}>خطة مدفوعة نشطة</div>
+                  <div style={{ fontSize:12, color:'var(--color-foreground-muted)', marginTop:2 }}>نشر وظائف غير محدود</div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10 }}>
+                  <span style={{ fontSize:13, color:'var(--color-foreground-muted)' }}>الخطة المجانية — وظائف منشورة (تراكمي)</span>
+                  <span style={{ fontSize:13, fontWeight:700, color: limits.remaining===0 ? '#c94a4a' : G }}>{limits.posted} / {limits.limit}</span>
+                </div>
+                <div style={{ height:6, background:'var(--color-border)', borderRadius:10, overflow:'hidden', marginBottom: limits.remaining===0 ? 14 : 0 }}>
+                  <div style={{ height:'100%', width:`${Math.min((limits.posted/limits.limit)*100,100)}%`, background: limits.remaining===0 ? '#c94a4a' : G, borderRadius:10, transition:'width .3s' }}/>
+                </div>
+                {limits.remaining === 0 && (
+                  <button onClick={() => alert('Moyasar — قريباً!')} style={{ width:'100%', padding:'11px', borderRadius:10, border:'none', background:`linear-gradient(135deg,${GD},${G})`, color:'#06060e', fontSize:13, fontWeight:800, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
+                    اشترك للمزيد — 199 ريال
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* معلومات الشركة */}
+        <div style={{ marginBottom:32 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
+            <span style={{ fontSize:16 }}>🏢</span>
+            <h2 style={{ fontSize:15, fontWeight:800, color:'var(--color-foreground)' }}>معلومات الشركة</h2>
           </div>
 
           <div style={{ background:'var(--color-surface)', border:'1px solid var(--color-border)', borderRadius:16, padding:24 }}>
@@ -125,17 +159,23 @@ export default function AccountPage() {
                 <div style={{ background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground-muted)', fontSize:13 }}>{user.email}</div>
               </div>
               <div>
-                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>الاسم الكامل</label>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>اسم الشركة</label>
                 <input value={form.name} onChange={e => setForm(p => ({...p, name:e.target.value}))}
-                  placeholder="اسمك الكامل"
+                  placeholder="اسم الشركة"
                   style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
               </div>
               <div>
-                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>رقم الجوال <span style={{ fontSize:10, opacity:0.7 }}>(يظهر في الـ CV)</span></label>
+                <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>رقم التواصل</label>
                 <input value={form.phone} onChange={e => setForm(p => ({...p, phone:e.target.value.replace(/\D/g,'').slice(0,10)}))}
                   placeholder="05XXXXXXXX" dir="ltr" maxLength={10}
                   style={{ width:'100%', background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground)', fontFamily:"'IBM Plex Sans Arabic', sans-serif", fontSize:13, outline:'none' }}/>
               </div>
+              {user.crn && (
+                <div>
+                  <label style={{ fontSize:12, color:'var(--color-foreground-muted)', marginBottom:6, display:'block', fontWeight:500 }}>رقم السجل التجاري</label>
+                  <div style={{ background:'var(--color-background)', border:'1px solid var(--color-border)', borderRadius:10, padding:'11px 14px', color:'var(--color-foreground-muted)', fontSize:13 }} dir="ltr">{user.crn}</div>
+                </div>
+              )}
             </div>
 
             {error   && <div style={{ marginTop:14, padding:'10px 14px', background:'rgba(201,74,74,.08)', border:'1px solid rgba(201,74,74,.25)', borderRadius:8, fontSize:12, color:'#c94a4a' }}>{error}</div>}
@@ -184,36 +224,6 @@ export default function AccountPage() {
               onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--color-border)'}>
               {passLoading ? '⏳ جاري التغيير...' : 'تغيير كلمة المرور'}
             </button>
-          </div>
-        </div>
-
-        {/* منطقة الخطر */}
-        <div style={{ marginTop:32 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:16 }}>
-            <span style={{ fontSize:16 }}>⚠️</span>
-            <h2 style={{ fontSize:15, fontWeight:800, color:'#c94a4a' }}>منطقة الخطر</h2>
-          </div>
-          <div style={{ background:'rgba(201,74,74,.04)', border:'1px solid rgba(201,74,74,.25)', borderRadius:16, padding:24 }}>
-            <p style={{ fontSize:13, color:'var(--color-foreground-muted)', lineHeight:1.8, marginBottom:16 }}>
-              تعطيل حسابك يخفي ملفك المهني فوراً من كل الشركات. يمكنك استرجاعه خلال 30 يوماً بتسجيل الدخول مرة أخرى — بعدها يُحذف نهائياً.
-            </p>
-            {!showDeactivateConfirm ? (
-              <button onClick={() => setShowDeactivateConfirm(true)} style={{ padding:'11px 20px', borderRadius:10, border:'1px solid #c94a4a', background:'transparent', color:'#c94a4a', fontSize:13, fontWeight:700, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
-                تعطيل حسابي
-              </button>
-            ) : (
-              <div>
-                <p style={{ fontSize:13, color:'#c94a4a', fontWeight:700, marginBottom:12 }}>هل أنت متأكد؟ سيتم تسجيل خروجك فوراً.</p>
-                <div style={{ display:'flex', gap:10 }}>
-                  <button onClick={deactivateAccount} disabled={deactivating} style={{ padding:'11px 20px', borderRadius:10, border:'none', background:'#c94a4a', color:'#fff', fontSize:13, fontWeight:700, cursor:deactivating?'default':'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
-                    {deactivating ? '⏳ جاري التعطيل...' : 'نعم، عطّل حسابي'}
-                  </button>
-                  <button onClick={() => setShowDeactivateConfirm(false)} style={{ padding:'11px 20px', borderRadius:10, border:'1px solid var(--color-border)', background:'transparent', color:'var(--color-foreground-muted)', fontSize:13, cursor:'pointer', fontFamily:"'IBM Plex Sans Arabic', sans-serif" }}>
-                    إلغاء
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
